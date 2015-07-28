@@ -1,0 +1,4 @@
+{
+  "db": "mongodb://localhost:27017/mapi",
+  "test": "mongodb://localhost:27017/mapi-test"
+}
