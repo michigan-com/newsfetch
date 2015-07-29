@@ -1,9 +1,9 @@
 package newsFetch
 
 import (
-	"../lib/"
 	"fmt"
 	"github.com/bitly/go-simplejson"
+	"github.com/michigan-com/newsFetch/lib"
 	"log"
 	"net/http"
 	"regexp"
@@ -11,31 +11,29 @@ import (
 	"time"
 )
 
-var db = lib.DB
-
 type PhotoInfo struct {
-	url    string
-	width  int
-	height int
+	Url    string
+	Width  int
+	Height int
 }
 
 type Photo struct {
-	caption   string
-	credit    string
-	full      PhotoInfo
-	thumbnail PhotoInfo
+	Caption   string
+	Credit    string
+	Full      PhotoInfo
+	Thumbnail PhotoInfo
 }
 
 type Article struct {
-	headline    string
-	subheadline string
-	section     string
-	subsection  string
-	source      string
-	summary     string
-	created_at  time.Time
-	url         string
-	photo       Photo
+	Headline    string
+	Subheadline string
+	Section     string
+	Subsection  string
+	Source      string
+	Summary     string
+	Created_at  time.Time
+	Url         string
+	Photo       Photo
 }
 
 func getUrl(url string) {
@@ -53,6 +51,10 @@ func getUrl(url string) {
 		return
 	}
 
+	session := lib.DBConnect()
+	db := session.DB("mapi")
+	defer session.Close()
+
 	content := json.Get("content")
 	arrContent := content.MustArray()
 
@@ -69,33 +71,33 @@ func getUrl(url string) {
 		photoAttrs := articleJson.Get("photo_attrs")
 		ssts := articleJson.Get("ssts")
 
-		article := Article{
-			headline:    articleJson.Get("headline").MustString(),
-			subheadline: articleJson.Get("attrs").Get("brief").MustString(),
-			section:     ssts.Get("section").MustString(),
-			subsection:  ssts.Get("subsection").MustString(),
-			source:      site,
-			summary:     articleJson.Get("summary").MustString(),
-			created_at:  time.Now(),
-			url:         fmt.Sprintf("http://%s.com%s", site, articleJson.Get("url").MustString()),
-			photo: Photo{
-				caption: photoAttrs.Get("caption").MustString(),
-				credit:  photoAttrs.Get("credit").MustString(),
-				full: PhotoInfo{
-					url:    strings.Join([]string{photoAttrs.Get("publishurl").MustString(), photoAttrs.Get("basename").MustString()}, ""),
-					width:  photoAttrs.Get("oimagewidth").MustInt(),
-					height: photoAttrs.Get("oimageheight").MustInt(),
+		//fmt.Println("Saving article %s", article.headline)
+
+		err = db.C("articles").Insert(&Article{
+			articleJson.Get("headline").MustString(),
+			articleJson.Get("attrs").Get("brief").MustString(),
+			ssts.Get("section").MustString(),
+			ssts.Get("subsection").MustString(),
+			site,
+			articleJson.Get("summary").MustString(),
+			time.Now(),
+			fmt.Sprintf("http://%s.com%s", site, articleJson.Get("url").MustString()),
+			Photo{
+				photoAttrs.Get("caption").MustString(),
+				photoAttrs.Get("credit").MustString(),
+				PhotoInfo{
+					strings.Join([]string{photoAttrs.Get("publishurl").MustString(), photoAttrs.Get("basename").MustString()}, ""),
+					photoAttrs.Get("oimagewidth").MustInt(),
+					photoAttrs.Get("oimageheight").MustInt(),
 				},
-				thumbnail: PhotoInfo{
-					url:    "TODO",
-					width:  photoAttrs.Get("simagewidth").MustInt(),
-					height: photoAttrs.Get("simageheight").MustInt(),
+				PhotoInfo{
+					"TODO",
+					photoAttrs.Get("simagewidth").MustInt(),
+					photoAttrs.Get("simageheight").MustInt(),
 				},
 			},
-		}
+		})
 
-		fmt.Println("Saving article %s", article.headline)
-		err := db.C("articles").Insert(&PhotoInfo{url: "testtesttest", width: 10, height: 10})
 		if err != nil {
 			panic(err)
 		}

@@ -4,9 +4,7 @@ import (
 	"gopkg.in/mgo.v2"
 )
 
-var DB = DBConnect()
-
-func DBConnect() *mgo.Database {
+func DBConnect() *mgo.Session {
 	// TODO read this from config
 	session, err := mgo.Dial("mongodb://localhost:27017/")
 	if err != nil {
@@ -14,7 +12,7 @@ func DBConnect() *mgo.Database {
 	}
 
 	session.SetMode(mgo.Monotonic, true)
-	return session.DB("mapi")
+	return session
 }
 
 func DBClose(session *mgo.Session) {
