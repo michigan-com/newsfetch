@@ -1,7 +1,6 @@
 package newsFetch
 
 import (
-	//"gopkg.in/mgo.v2"
 	"../lib/"
 	"fmt"
 	"github.com/bitly/go-simplejson"
@@ -40,7 +39,7 @@ type Article struct {
 }
 
 func getUrl(url string) {
-	log.Print(fmt.Sprintf("Fetching %s", url))
+	fmt.Println("Fetching %s", url)
 
 	resp, err := http.Get(url)
 	if err != nil {
@@ -95,7 +94,11 @@ func getUrl(url string) {
 			},
 		}
 
-		log.Print(article)
+		fmt.Println("Saving article %s", article.headline)
+		err := db.C("articles").Insert(&PhotoInfo{url: "testtesttest", width: 10, height: 10})
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	log.Print(fmt.Sprintf("Successfully fetched %s", url))
@@ -127,8 +130,8 @@ func FetchArticles() {
 	log.Print("Fetching articles")
 
 	urls := formatUrls()
+	for i := 0; i < len(urls); i++ {
 
-	for i := 0; i < 1; /*len(urls)*/ i++ {
 		go getUrl(urls[i])
 	}
 }

@@ -13,6 +13,7 @@ func DBConnect() *mgo.Database {
 		panic(err)
 	}
 
+	session.SetMode(mgo.Monotonic, true)
 	return session.DB("mapi")
 }
 
