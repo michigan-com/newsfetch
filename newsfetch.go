@@ -95,17 +95,53 @@ func getFeedUrl(url string) ([]Article, error) {
 
 	for i := 0; i < len(arrContent); i++ {
 		articleJson := content.GetIndex(i)
-		photoAttrs := articleJson.Get("photo_attrs")
 		ssts := articleJson.Get("ssts")
 		articleUrl := fmt.Sprintf("http://%s.com%s", site, articleJson.Get("url").MustString())
 		articleId := getArticleId(articleUrl)
 
 		// Check to make sure we could parse the ID
 		if articleId < 0 {
+			log.Print(fmt.Sprintf("Failed to parse an article ID, likely not a news article: %s", articleUrl))
 			continue
 		}
 
-		//fmt.Println("Saving article %s", article.headline)
+		photoAttrs, ok := articleJson.Get("photo").CheckGet("attrs")
+		photo := Photo{}
+		if !ok {
+			log.Print(fmt.Sprintf("Failed to get photos for %s", articleUrl))
+		} else {
+			// Height/width stuff
+			owidth, _ := strconv.Atoi(photoAttrs.Get("oimagewidth").MustString())
+			oheight, _ := strconv.Atoi(photoAttrs.Get("oimageheight").MustString())
+			swidth, _ := strconv.Atoi(photoAttrs.Get("simageWidth").MustString())
+			sheight, _ := strconv.Atoi(photoAttrs.Get("simageheight").MustString())
+
+			// URLs
+			publishUrl := photoAttrs.Get("publishurl").MustString()
+			photoUrl := strings.Join([]string{publishUrl, photoAttrs.Get("basename").MustString()}, "")
+			thumbUrl := ""
+			if smallBaseName, ok := photoAttrs.CheckGet("smallbasename"); ok {
+				thumbUrl = strings.Join([]string{publishUrl, smallBaseName.MustString()}, "")
+			} else if thumbPath, ok := photoAttrs.CheckGet("thumbnailPath"); ok {
+				thumbUrl = strings.Join([]string{publishUrl, thumbPath.MustString()}, "")
+			}
+
+			photo = Photo{
+				photoAttrs.Get("caption").MustString(),
+				photoAttrs.Get("credit").MustString(),
+				PhotoInfo{
+					photoUrl,
+					owidth,
+					oheight,
+				},
+				PhotoInfo{
+					thumbUrl,
+					swidth,
+					sheight,
+				},
+			}
+		}
+
 		article := Article{
 			Id:          articleId,
 			Headline:    articleJson.Get("headline").MustString(),
@@ -116,20 +152,7 @@ func getFeedUrl(url string) ([]Article, error) {
 			Summary:     articleJson.Get("summary").MustString(),
 			Created_at:  time.Now(),
 			Url:         articleUrl,
-			Photo: Photo{
-				photoAttrs.Get("caption").MustString(),
-				photoAttrs.Get("credit").MustString(),
-				PhotoInfo{
-					strings.Join([]string{photoAttrs.Get("publishurl").MustString(), photoAttrs.Get("basename").MustString()}, ""),
-					photoAttrs.Get("oimagewidth").MustInt(),
-					photoAttrs.Get("oimageheight").MustInt(),
-				},
-				PhotoInfo{
-					"TODO",
-					photoAttrs.Get("simagewidth").MustInt(),
-					photoAttrs.Get("simageheight").MustInt(),
-				},
-			},
+			Photo:       photo,
 		}
 
 		articles = append(articles, article)
