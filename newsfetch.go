@@ -14,6 +14,8 @@ import (
 	"time"
 )
 
+const maxarticles = 20 // Expected number of articles to be returned per URL
+
 type PhotoInfo struct {
 	Url    string
 	Width  int
@@ -68,7 +70,7 @@ func getArticleId(url string) int {
 func getFeedUrl(url string) ([]Article, error) {
 	fmt.Println("Fetching %s", url)
 
-	articles := make([]Article, 0)
+	articles := make([]Article, 0, maxarticles)
 
 	resp, err := http.Get(url)
 	if err != nil {
@@ -140,7 +142,7 @@ func formatUrls() []string {
 
 	sites := lib.Sites
 	sections := lib.Sections
-	urls := make([]string, 0)
+	urls := make([]string, 0, len(sites)*len(sections))
 
 	for i := 0; i < len(sites); i++ {
 		site := sites[i]
@@ -164,7 +166,7 @@ func FetchArticles() {
 	// Fetch articles from urls
 	var wg sync.WaitGroup
 	urls := formatUrls()
-	articles := make([]Article, 0, len(urls)*20) // Expect 20 articles per URL to be returned
+	articles := make([]Article, 0, len(urls)*maxarticles)
 
 	for i := 0; i < len(urls); i++ {
 		wg.Add(1)
@@ -175,11 +177,7 @@ func FetchArticles() {
 				log.Print(err)
 			} else {
 				// If we returned successfully, append all the articles we found
-				for j := 0; j < len(returnedArticles); j++ {
-
-					//log.Print(fmt.Sprintf("Length: %d, Cap: %d", len(articles), cap(articles)))
-					articles = append(articles, returnedArticles[j])
-				}
+				articles = append(articles, returnedArticles...)
 			}
 			// Donezo
 			wg.Done()
