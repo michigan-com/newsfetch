@@ -164,7 +164,7 @@ func FetchArticles() {
 	// Fetch articles from urls
 	var wg sync.WaitGroup
 	urls := formatUrls()
-	articles := make([]Article, 0)
+	articles := make([]Article, 0, 100)
 
 	for i := 0; i < len(urls); i++ {
 		wg.Add(1)
