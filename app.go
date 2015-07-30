@@ -1,18 +1,20 @@
 package main
 
 import (
-	"github.com/michigan-com/newsFetch/newsFetch"
 	"log"
 	"time"
 )
 
 func run() {
-	log.Print("Running loop")
 
-	newsFetch.FetchArticles()
+	for {
+		log.Print("Running loop")
 
-	log.Print("Sleeping again")
-	time.Sleep(10 * time.Minute) // Sleep for 10 minutes
+		FetchArticles()
+
+		log.Print("Sleeping, don't bother me")
+		time.Sleep(10 * time.Minute) // Sleep for 10 minutes
+	}
 }
 
 func main() {

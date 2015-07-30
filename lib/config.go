@@ -9,6 +9,9 @@ import (
 	"runtime/debug"
 )
 
+// This will be a viper object, use .Get() to get attributes from config
+var Config = getConfig()
+
 func ErrorCheck(err error) {
 	if err != nil {
 		fmt.Println(debug.Stack())
@@ -16,7 +19,7 @@ func ErrorCheck(err error) {
 	}
 }
 
-func Config(prop string) {
+func getConfig() module {
 
 	_, filename, _, _ := runtime.Caller(1)
 	baseDir := path.Join(path.Dir(filename), "..")
@@ -34,4 +37,5 @@ func Config(prop string) {
 		panic(fmt.Errorf("Fatal error config file: %s \n", err))
 	}
 
+	return viper
 }

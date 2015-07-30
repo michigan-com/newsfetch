@@ -1,9 +1,9 @@
-package newsFetch
+package main
 
 import (
+	"./lib"
 	"fmt"
 	"github.com/bitly/go-simplejson"
-	"github.com/michigan-com/newsFetch/lib"
 	"log"
 	"net/http"
 	"regexp"
