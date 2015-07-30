@@ -164,7 +164,7 @@ func FetchArticles() {
 	// Fetch articles from urls
 	var wg sync.WaitGroup
 	urls := formatUrls()
-	articles := make([]Article, 0, 100)
+	articles := make([]Article, 0, len(urls)*20) // Expect 20 articles per URL to be returned
 
 	for i := 0; i < len(urls); i++ {
 		wg.Add(1)
@@ -176,6 +176,8 @@ func FetchArticles() {
 			} else {
 				// If we returned successfully, append all the articles we found
 				for j := 0; j < len(returnedArticles); j++ {
+
+					//log.Print(fmt.Sprintf("Length: %d, Cap: %d", len(articles), cap(articles)))
 					articles = append(articles, returnedArticles[j])
 				}
 			}
