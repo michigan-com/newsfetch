@@ -17,7 +17,7 @@ Go into the directory and build it
 
 ## Run
 Run the executable
-* `newsfetch`
+* `./newsfetch`
 
 ## Credits
 * Eric Bower

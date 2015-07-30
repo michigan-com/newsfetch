@@ -1,14 +1,16 @@
 package main
 
 import (
-	"github.com/michigan-com/newsFetch/lib"
+	"errors"
 	"fmt"
 	"github.com/bitly/go-simplejson"
+	"github.com/michigan-com/newsFetch/lib"
 	"log"
 	"net/http"
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -63,22 +65,20 @@ func getArticleId(url string) int {
 
 // Fetch a feed url and parse the articles that get retuned
 // Each successfully parsed article
-func getFeedUrl(url string) []Article {
+func getFeedUrl(url string) ([]Article, error) {
 	fmt.Println("Fetching %s", url)
 
 	articles := make([]Article, 0)
 
 	resp, err := http.Get(url)
 	if err != nil {
-		log.Print(fmt.Sprintf("Error fetching %s: %e", url, err))
-		return articles
+		return articles, err
 	}
 	log.Print(fmt.Sprintf("Successfully fetched %s", url))
 
 	json, err := simplejson.NewFromReader(resp.Body)
 	if err != nil {
-		log.Print(fmt.Sprintf("Error parseing response body for %s: %e", url, err))
-		return articles
+		return articles, err
 	}
 
 	content := json.Get("content")
@@ -87,8 +87,7 @@ func getFeedUrl(url string) []Article {
 	replace := regexp.MustCompile("^w{3}[.](.+)[.].+$")
 	match := replace.FindStringSubmatch(resp.Request.URL.Host)
 	if len(match) < 2 {
-		log.Print(fmt.Println("Could not parse %s for host", resp.Request.URL.Host))
-		return articles
+		return articles, errors.New(fmt.Sprintf("Could not parse %s for host", resp.Request.URL.Host))
 	}
 	site := match[1]
 
@@ -134,7 +133,7 @@ func getFeedUrl(url string) []Article {
 		articles = append(articles, article)
 	}
 
-	return articles
+	return articles, nil
 }
 
 func formatUrls() []string {
@@ -163,29 +162,37 @@ func FetchArticles() {
 	log.Print("Fetching articles")
 
 	// Fetch articles from urls
+	var wg sync.WaitGroup
 	urls := formatUrls()
-	c := make(chan []Article)
 	articles := make([]Article, 0)
+
 	for i := 0; i < len(urls); i++ {
-
-		go func(url string, c chan<- []Article) {
-			c <- getFeedUrl(url)
-
-		}(urls[i], c)
+		wg.Add(1)
+		go func(url string) {
+			// Fetch the url
+			returnedArticles, err := getFeedUrl(url)
+			if err != nil {
+				log.Print(err)
+			} else {
+				// If we returned successfully, append all the articles we found
+				for j := 0; j < len(returnedArticles); j++ {
+					articles = append(articles, returnedArticles[j])
+				}
+			}
+			// Donezo
+			wg.Done()
+		}(urls[i])
 	}
 
-	// Wait until all return and parse the results
-	for i := 0; i < len(urls); i++ {
-		returnedArticles := <-c
-		for j := 0; j < len(returnedArticles); j++ {
-			articles = append(articles, returnedArticles[j])
-		}
-	}
+	// Wait for all the fetching to return and save the data
+	wg.Wait()
+	log.Print("Done fetching and parsing URLs")
 
 	// DB stuff
 	session := lib.DBConnect()
 	defer session.Close()
 
+	// Save the snapshot
 	snapshotCollection := session.DB("mapi").C("Snapshot")
 	err := snapshotCollection.Insert(&Snapshot{
 		Articles:   articles,
