@@ -6,12 +6,13 @@ Fetching the live feeds of all Gannett news sources in Michigan, parse them down
 Set up your workspace as specified on the Golang documentation:
 * [http://golang.org/doc/code.html#Workspaces]( http://golang.org/doc/code.html#Workspaces )
 
-Next, checkout this repo into your src/ folder
-* ` git checkout git@github.com:michigan-com/newsfetch.git`
+Use go to get the github repo (make sure you're in the `$GOPATH/src`)
+* `go get github.com/michigan-com/newsfetch`
+
 
 ## Build
 Go into the directory and build it
-* `cd newsfetch`
+* `cd github.com/michigan-com/newsfetch`
 * `go build`
 
 ## Run
