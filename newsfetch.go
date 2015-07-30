@@ -59,8 +59,6 @@ func getArticleId(url string) int {
 		}
 		return i
 	} else {
-
-		fmt.Println("Failed to get ID from %s", url)
 		return -1
 	}
 }
@@ -179,7 +177,6 @@ func formatUrls() []string {
 			urls = append(urls, url)
 		}
 	}
-
 	return urls
 }
 
