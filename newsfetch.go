@@ -1,7 +1,7 @@
 package main
 
 import (
-	"./lib"
+	"github.com/michigan-com/newsFetch/lib"
 	"fmt"
 	"github.com/bitly/go-simplejson"
 	"log"
