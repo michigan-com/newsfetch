@@ -4,8 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/bitly/go-simplejson"
-	"github.com/michigan-com/newsFetch/lib"
-	"log"
+	"github.com/michigan-com/newsfetch/lib"
 	"net/http"
 	"regexp"
 	"strconv"
@@ -74,7 +73,7 @@ func getFeedUrl(url string) ([]Article, error) {
 	if err != nil {
 		return articles, err
 	}
-	log.Print(fmt.Sprintf("Successfully fetched %s", url))
+	log.Info(fmt.Sprintf("Successfully fetched %s", url))
 
 	json, err := simplejson.NewFromReader(resp.Body)
 	if err != nil {
@@ -99,14 +98,14 @@ func getFeedUrl(url string) ([]Article, error) {
 
 		// Check to make sure we could parse the ID
 		if articleId < 0 {
-			log.Print(fmt.Sprintf("Failed to parse an article ID, likely not a news article: %s", articleUrl))
+			log.Info(fmt.Sprintf("Failed to parse an article ID, likely not a news article: %s", articleUrl))
 			continue
 		}
 
 		photoAttrs, ok := articleJson.Get("photo").CheckGet("attrs")
 		photo := Photo{}
 		if !ok {
-			log.Print(fmt.Sprintf("Failed to get photos for %s", articleUrl))
+			log.Info(fmt.Sprintf("Failed to get photos for %s", articleUrl))
 		} else {
 			// Height/width stuff
 			owidth, _ := strconv.Atoi(photoAttrs.Get("oimagewidth").MustString())
@@ -181,7 +180,7 @@ func formatUrls() []string {
 }
 
 func FetchArticles() {
-	log.Print("Fetching articles")
+	log.Info("Fetching articles")
 
 	// Fetch articles from urls
 	var wg sync.WaitGroup
@@ -194,7 +193,7 @@ func FetchArticles() {
 			// Fetch the url
 			returnedArticles, err := getFeedUrl(url)
 			if err != nil {
-				log.Print(err)
+				log.Error("%v", err)
 			} else {
 				// If we returned successfully, append all the articles we found
 				articles = append(articles, returnedArticles...)
@@ -206,7 +205,7 @@ func FetchArticles() {
 
 	// Wait for all the fetching to return and save the data
 	wg.Wait()
-	log.Print("Done fetching and parsing URLs")
+	log.Info("Done fetching and parsing URLs")
 
 	// DB stuff
 	session := lib.DBConnect()
@@ -223,5 +222,5 @@ func FetchArticles() {
 		panic(err)
 	}
 
-	log.Print("Saved a batch of articles")
+	log.Info("Saved a batch of articles")
 }

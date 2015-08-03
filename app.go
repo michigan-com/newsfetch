@@ -1,18 +1,20 @@
 package main
 
 import (
-	"log"
+	"github.com/michigan-com/newsfetch/lib"
 	"time"
 )
+
+var log = lib.GetLogger()
 
 func run() {
 
 	for {
-		log.Print("Running loop")
+		log.Info("Running loop")
 
 		FetchArticles()
 
-		log.Print("Sleeping, don't bother me")
+		log.Info("Sleeping, don't bother me")
 		time.Sleep(10 * time.Minute) // Sleep for 10 minutes
 	}
 }
