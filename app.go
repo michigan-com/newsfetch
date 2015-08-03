@@ -1,7 +1,7 @@
 package main
 
 import (
-	"./newsFetch"
+	"github.com/michigan-com/newsFetch/newsFetch"
 	"log"
 	"time"
 )
