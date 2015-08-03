@@ -1,1 +1,5 @@
 go/
+*.swp
+config.json
+newsfetch
+
