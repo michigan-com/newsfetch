@@ -39,6 +39,7 @@ type Article struct {
 	Created_at  time.Time
 	Url         string
 	Photo       Photo
+	BodyText    string
 }
 
 type Snapshot struct {
@@ -139,6 +140,13 @@ func getFeedUrl(url string) ([]Article, error) {
 			}
 		}
 
+		body, err := lib.ExtractBodyFromURL(articleUrl)
+		if err != nil {
+			log.Error("Failed to extract body from article at %s", articleUrl)
+		} else {
+			log.Info("Extracted body contains %d characters, %d paragraphs.", len(strings.Split(body, "")), len(strings.Split(body, "\n\n")))
+		}
+
 		article := Article{
 			Id:          articleId,
 			Headline:    articleJson.Get("headline").MustString(),
@@ -150,6 +158,7 @@ func getFeedUrl(url string) ([]Article, error) {
 			Created_at:  time.Now(),
 			Url:         articleUrl,
 			Photo:       photo,
+			BodyText:    body,
 		}
 
 		articles = append(articles, article)
