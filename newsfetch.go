@@ -66,7 +66,7 @@ func getArticleId(url string) int {
 // Fetch a feed url and parse the articles that get retuned
 // Each successfully parsed article
 func getFeedUrl(url string) ([]Article, error) {
-	fmt.Println("Fetching %s", url)
+	log.Info("Fetching %s", url)
 
 	articles := make([]Article, 0, maxarticles)
 
