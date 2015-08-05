@@ -1,11 +1,12 @@
 package lib
 
 import (
-	"log"
 	"strings"
 
 	gq "github.com/PuerkitoBio/goquery"
 )
+
+var log = GetLogger()
 
 func withoutEmptyStrings(strings []string) []string {
 	result := make([]string, 0, len(strings))
@@ -35,7 +36,7 @@ func extractBodyFromDocument(doc *gq.Document) (string, error) {
 }
 
 func ExtractBodyFromURL(url string) (string, error) {
-	log.Printf("Fetching %s...\n", url)
+	log.Info("Fetching %s...\n", url)
 	doc, err := gq.NewDocument(url)
 	if err != nil {
 		return "", err

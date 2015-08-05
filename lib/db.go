@@ -4,9 +4,9 @@ import (
 	"gopkg.in/mgo.v2"
 )
 
-func DBConnect() *mgo.Session {
+func DBConnect(uri string) *mgo.Session {
 	// TODO read this from config
-	session, err := mgo.Dial("mongodb://localhost:27017/")
+	session, err := mgo.Dial(uri)
 	if err != nil {
 		panic(err)
 	}

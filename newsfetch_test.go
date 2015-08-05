@@ -36,7 +36,7 @@ func TestGetArticleId(t *testing.T) {
 	}
 
 	for _, test := range validTestStrings {
-		returnVal := getArticleId(test.url)
+		returnVal := lib.GetArticleId(test.url)
 
 		assert.Equal(t, returnVal, test.returnVal, "Return values don't match")
 	}
@@ -48,7 +48,7 @@ func TestFormatUrls(t *testing.T) {
 	urlMap := make(map[string][]string)
 	sectionMap := make(map[string]bool)
 
-	formattedUrls := formatUrls()
+	formattedUrls := FormatFeedUrls(lib.Sites, lib.Sections)
 	assert.Equal(t, len(formattedUrls), len(lib.Sites)*len(lib.Sections), "Incorrect number of sites")
 
 	// Create a map of sections for constant lookup time
@@ -91,7 +91,8 @@ func TestFormatUrls(t *testing.T) {
 
 func TestGetFeedUrl(t *testing.T) {
 	url := "http://google.com"
-	articles, err := getFeedUrl(url)
-	assert.NotEqual(t, err, nil, "Should have an error")
-	assert.Equal(t, len(articles), 0, "No articles shold have been returned")
+	_, err := GetFeedContent(url)
+	assert.NotEqual(t, err, nil)
+	//assert.NotEqual(t, err, nil, "Should have an error")
+	//assert.Equal(t, len(articles), 0, "No articles shold have been returned")
 }
