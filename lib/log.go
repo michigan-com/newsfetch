@@ -5,14 +5,15 @@ import (
 	"os"
 )
 
-var format = logging.MustStringFormatter(
+var Format = logging.MustStringFormatter(
 	"%{color}%{time:15:04:05.000} %{shortfile} ▶ %{level:.4s} %{color:reset} %{message}",
 )
 
+var Backend = logging.NewLogBackend(os.Stderr, "", 0)
+
 func GetLogger() *logging.Logger {
 	log := logging.MustGetLogger("newsfetch")
-	backend := logging.NewLogBackend(os.Stderr, "", 0)
-	backendFormatter := logging.NewBackendFormatter(backend, format)
+	backendFormatter := logging.NewBackendFormatter(Backend, Format)
 
 	logging.SetBackend(backendFormatter)
 

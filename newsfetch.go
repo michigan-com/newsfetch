@@ -2,240 +2,112 @@ package main
 
 import (
 	"fmt"
-	"net/http"
-	"regexp"
-	"strconv"
-	"strings"
-	"sync"
-	"time"
-
-	"github.com/bitly/go-simplejson"
 	"github.com/michigan-com/newsfetch/lib"
+	"github.com/op/go-logging"
+	"github.com/spf13/cobra"
+	"os"
+	"strings"
+	"text/tabwriter"
 )
 
-const maxarticles = 20 // Expected number of articles to be returned per URL
-
-var log = lib.GetLogger()
-
-type PhotoInfo struct {
-	Url    string
-	Width  int
-	Height int
-}
-
-type Photo struct {
-	Caption   string
-	Credit    string
-	Full      PhotoInfo
-	Thumbnail PhotoInfo
-}
-
-type Article struct {
-	Id          int
-	Headline    string
-	Subheadline string
-	Section     string
-	Subsection  string
-	Source      string
-	Summary     string
-	Created_at  time.Time
-	Url         string
-	Photo       *Photo
-	BodyText    string
-}
-
-type Snapshot struct {
-	Articles   []*Article
-	Created_at time.Time
-}
-
-type Feed struct {
-	Site string
-	Body *simplejson.Json
+func printArticleBrief(articles []*Article) {
+	w := new(tabwriter.Writer)
+	w.Init(os.Stdout, 0, 8, 0, '\t', 0)
+	fmt.Fprintln(w, "Source\tSection\tHeadline\tURL\tTimestamp")
+	for _, article := range articles {
+		fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n", article.Source, article.Section, article.Headline, article.Url, article.Timestamp)
+	}
+	w.Flush()
 }
 
 func main() {
-	articles := FetchAndParseArticles()
-	err := SaveArticles(articles)
-	if err != nil {
-		panic(err)
+	var (
+		mongoUri   string
+		articleUrl string
+		siteStr    string
+		sectionStr string
+		output     bool
+		body       bool
+		verbose    bool
+	)
+
+	logging.SetLevel(logging.CRITICAL, "newsfetch")
+
+	var cmdNewsfetch = &cobra.Command{
+		Use: "newsfetch",
 	}
-}
 
-func FetchAndParseArticles() []*Article {
-	log.Info("Fetching articles ...")
+	cmdNewsfetch.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")
 
-	// Fetch articles from urls
-	var wg sync.WaitGroup
-	urls := FormatFeedUrls(lib.Sites, lib.Sections)
-	articles := make([]*Article, 0, len(urls)*maxarticles)
+	var cmdBody = &cobra.Command{
+		Use:   "body",
+		Short: "Get article body content from Gannett URL",
+		Run: func(cmd *cobra.Command, args []string) {
+			if verbose {
+				logging.SetLevel(logging.DEBUG, "newsfetch")
+			}
 
-	for i := 0; i < len(urls); i++ {
-		wg.Add(1)
-		go func(url string) {
-			feedContent, err := GetFeedContent(url)
+			if len(args) > 0 && args[0] != "" {
+				articleUrl = args[0]
+			}
+
+			body, err := lib.ExtractBodyFromURL(articleUrl)
 			if err != nil {
-				log.Error("%v", err)
-				wg.Done()
-				return
+				panic(err)
 			}
 
-			log.Info("Parsing feed content ...")
-			content := feedContent.Body.Get("content")
-			contentArr, err := content.Array()
-			for i := 0; i < len(contentArr); i++ {
-				article, err := ParseArticle(feedContent.Site, content.GetIndex(i))
+			fmt.Println(body)
+		},
+	}
+
+	url := "http://detroitnews.com/story/news/local/detroit-city/2015/08/04/female-body-found-possible-hit-run-detroit/31094589/"
+	cmdBody.Flags().StringVarP(&articleUrl, "url", "u", url, "URL of Gannett article")
+
+	var cmdArticles = &cobra.Command{
+		Use:   "articles",
+		Short: "Fetches and parses Gannett news articles",
+		Run: func(cmd *cobra.Command, args []string) {
+			if verbose {
+				logging.SetLevel(logging.DEBUG, "newsfetch")
+			}
+
+			var sites []string
+			var sections []string
+
+			if siteStr == "all" {
+				sites = lib.Sites
+			} else {
+				sites = strings.Split(siteStr, ",")
+			}
+
+			if sectionStr == "all" {
+				sections = lib.Sections
+			} else {
+				sections = strings.Split(sectionStr, ",")
+			}
+
+			articles := FetchAndParseArticles(sites, sections, body)
+
+			if output {
+				printArticleBrief(articles)
+			}
+
+			if mongoUri != "" {
+				fmt.Println(mongoUri)
+				err := SaveArticles(mongoUri, articles)
 				if err != nil {
-					log.Error("%v", err)
-					wg.Done()
-					return
+					panic(err)
 				}
-				articles = append(articles, article)
 			}
-			wg.Done()
-		}(urls[i])
-	}
-
-	// Wait for all the fetching to return and save the data
-	wg.Wait()
-	log.Info("Done fetching and parsing URLs ...")
-	return articles
-}
-
-func FormatFeedUrls(sites []string, sections []string) []string {
-	urls := make([]string, 0, len(sites)*len(sections))
-
-	for i := 0; i < len(sites); i++ {
-		site := sites[i]
-		for j := 0; j < len(sections); j++ {
-			section := sections[j]
-
-			if strings.Contains(site, "detroitnews") && section == "life" {
-				section += "-home"
-			}
-			url := fmt.Sprintf("http://%s/feeds/live/%s/json", site, section)
-			urls = append(urls, url)
-		}
-	}
-	return urls
-}
-
-func GetFeedContent(url string) (*Feed, error) {
-	log.Info("Fetching %s", url)
-
-	resp, err := http.Get(url)
-	if err != nil {
-		return nil, err
-	}
-	log.Info(fmt.Sprintf("Successfully fetched %s", url))
-
-	body, err := simplejson.NewFromReader(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	replace := regexp.MustCompile("^w{3}[.](.+)[.].+$")
-	match := replace.FindStringSubmatch(resp.Request.URL.Host)
-	if len(match) < 2 {
-		return nil, fmt.Errorf("Could not parse %s for host", resp.Request.URL.Host)
-	}
-	site := match[1]
-
-	feedContent := &Feed{
-		site,
-		body,
-	}
-
-	return feedContent, nil
-}
-
-func ParseArticle(site string, articleJson *simplejson.Json) (*Article, error) {
-	ssts := articleJson.Get("ssts")
-	articleUrl := fmt.Sprintf("http://%s.com%s", site, articleJson.Get("url").MustString())
-	articleId := lib.GetArticleId(articleUrl)
-
-	// Check to make sure we could parse the ID
-	if articleId < 0 {
-		return &Article{}, fmt.Errorf("Failed to parse an article ID, likely not a news article: %s", articleUrl)
-	}
-
-	photoAttrs, err := articleJson.Get("photo").CheckGet("attrs")
-	photo := Photo{}
-	if err == false {
-		return &Article{}, fmt.Errorf("Failed to get photos for %s", articleUrl)
-	}
-
-	// Height/width stuff
-	owidth, _ := strconv.Atoi(photoAttrs.Get("oimagewidth").MustString())
-	oheight, _ := strconv.Atoi(photoAttrs.Get("oimageheight").MustString())
-	swidth, _ := strconv.Atoi(photoAttrs.Get("simageWidth").MustString())
-	sheight, _ := strconv.Atoi(photoAttrs.Get("simageheight").MustString())
-
-	// URLs
-	publishUrl := photoAttrs.Get("publishurl").MustString()
-	photoUrl := strings.Join([]string{publishUrl, photoAttrs.Get("basename").MustString()}, "")
-	thumbUrl := ""
-	if smallBaseName, ok := photoAttrs.CheckGet("smallbasename"); ok {
-		thumbUrl = strings.Join([]string{publishUrl, smallBaseName.MustString()}, "")
-	} else if thumbPath, ok := photoAttrs.CheckGet("thumbnailPath"); ok {
-		thumbUrl = strings.Join([]string{publishUrl, thumbPath.MustString()}, "")
-	}
-
-	photo = Photo{
-		photoAttrs.Get("caption").MustString(),
-		photoAttrs.Get("credit").MustString(),
-		PhotoInfo{
-			photoUrl,
-			owidth,
-			oheight,
-		},
-		PhotoInfo{
-			thumbUrl,
-			swidth,
-			sheight,
 		},
 	}
 
-	body, aerr := lib.ExtractBodyFromURL(articleUrl)
-	if aerr != nil {
-		return &Article{}, fmt.Errorf("Failed to extract body from article at %s", articleUrl)
-	}
+	cmdArticles.Flags().StringVarP(&siteStr, "sites", "i", "all", "Comma separated list of Gannett sites to fetch articles from")
+	cmdArticles.Flags().StringVarP(&sectionStr, "sections", "e", "all", "Comma separated list of article sections to fetch from")
+	cmdArticles.Flags().StringVarP(&mongoUri, "save", "s", "", "Saves articles to mongodb server specified in this option, e.g. mongodb://localhost:27017/")
+	cmdArticles.Flags().BoolVarP(&output, "output", "o", true, "Outputs summary article inforation")
+	cmdArticles.Flags().BoolVarP(&body, "body", "b", false, "Fetches the article body content")
 
-	log.Info("Extracted body contains %d characters, %d paragraphs.", len(strings.Split(body, "")), len(strings.Split(body, "\n\n")))
-
-	article := &Article{
-		Id:          articleId,
-		Headline:    articleJson.Get("headline").MustString(),
-		Subheadline: articleJson.Get("attrs").Get("brief").MustString(),
-		Section:     ssts.Get("section").MustString(),
-		Subsection:  ssts.Get("subsection").MustString(),
-		Source:      site,
-		Summary:     articleJson.Get("summary").MustString(),
-		Created_at:  time.Now(),
-		Url:         articleUrl,
-		Photo:       &photo,
-		BodyText:    body,
-	}
-
-	return article, nil
-}
-
-func SaveArticles(articles []*Article) error {
-	// DB stuff
-	session := lib.DBConnect("mongodb://localhost:27017/")
-	defer lib.DBClose(session)
-
-	// Save the snapshot
-	snapshotCollection := session.DB("mapi").C("Snapshot")
-	err := snapshotCollection.Insert(&Snapshot{
-		Articles:   articles,
-		Created_at: time.Now(),
-	})
-
-	if err != nil {
-		return err
-	}
-
-	log.Info("Saved a batch of articles ...")
-	return nil
+	cmdNewsfetch.AddCommand(cmdBody, cmdArticles)
+	cmdNewsfetch.Execute()
 }
