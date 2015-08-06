@@ -1,10 +1,13 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"github.com/michigan-com/newsfetch/lib"
 	"github.com/op/go-logging"
 	"github.com/spf13/cobra"
+	"github.com/urandom/text-summary/summarize"
+	"io/ioutil"
 	"os"
 	"strings"
 	"text/tabwriter"
@@ -22,13 +25,15 @@ func printArticleBrief(articles []*Article) {
 
 func main() {
 	var (
-		mongoUri   string
-		articleUrl string
-		siteStr    string
-		sectionStr string
-		output     bool
-		body       bool
-		verbose    bool
+		mongoUri     string
+		articleUrl   string
+		siteStr      string
+		sectionStr   string
+		title        string
+		output       bool
+		body         bool
+		verbose      bool
+		includeTitle bool
 	)
 
 	logging.SetLevel(logging.CRITICAL, "newsfetch")
@@ -51,7 +56,7 @@ func main() {
 				articleUrl = args[0]
 			}
 
-			body, err := lib.ExtractBodyFromURL(articleUrl)
+			body, err := lib.ExtractBodyFromURL(articleUrl, includeTitle)
 			if err != nil {
 				panic(err)
 			}
@@ -60,8 +65,9 @@ func main() {
 		},
 	}
 
-	url := "http://detroitnews.com/story/news/local/detroit-city/2015/08/04/female-body-found-possible-hit-run-detroit/31094589/"
+	url := "http://www.freep.com/story/news/local/michigan/2015/08/06/farid-fata-cancer-sentencing/31213475/"
 	cmdBody.Flags().StringVarP(&articleUrl, "url", "u", url, "URL of Gannett article")
+	cmdBody.Flags().BoolVarP(&includeTitle, "title", "t", false, "Place title of article on the first line of output")
 
 	var cmdArticles = &cobra.Command{
 		Use:   "articles",
@@ -108,6 +114,30 @@ func main() {
 	cmdArticles.Flags().BoolVarP(&output, "output", "o", true, "Outputs summary article inforation")
 	cmdArticles.Flags().BoolVarP(&body, "body", "b", false, "Fetches the article body content")
 
-	cmdNewsfetch.AddCommand(cmdBody, cmdArticles)
+	var cmdSummary = &cobra.Command{
+		Use:   "summary",
+		Short: "Attempts to generate a summary based on an article body",
+		Run: func(cmd *cobra.Command, args []string) {
+			var summary summarize.Summarize
+
+			if title == "" {
+				reader := bufio.NewReader(os.Stdin)
+				contents, _ := ioutil.ReadAll(reader)
+				lines := strings.Split(string(contents), "\n")
+
+				summary = summarize.NewFromString(lines[0], strings.Join(lines[1:], "\n"))
+			} else {
+				summary = summarize.New(title, os.Stdin)
+			}
+
+			for _, point := range summary.KeyPoints() {
+				fmt.Println(point)
+			}
+		},
+	}
+
+	cmdSummary.Flags().StringVarP(&title, "title", "t", "", "Title for article summarizer, if not supplied then the summarizer assumes first line is title")
+
+	cmdNewsfetch.AddCommand(cmdBody, cmdArticles, cmdSummary)
 	cmdNewsfetch.Execute()
 }

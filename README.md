@@ -19,8 +19,60 @@ Go into the directory and build it
 Run the executable
 * `./newsfetch`
 
-## Credits
-* Eric Bower
-* Mike Varano
+## Usage
+
+### Body Extractor
+
+```
+$ ./newsfetch body -u [url]
+```
+
+Add title and make it the first line in the output
+
+```
+$ ./newsfetch body -t
+```
+
+### Fetch Articles
+
+Grab all articles with body extractor
+
+```
+$ ./newsfetch articles -b
+```
+
+Specify specific site no body extractor
+```
+$ ./newsfetch articles -i freep.com
+```
+
+Specify specific site and specific section
+```
+$ ./newsfetch articles -i freep.com -e sports
+```
+
+Specify multiple sites with verbose output
+```
+$ ./newsfetch -v articles -i freep.com,detroitnews.com -e sports
+```
+
+Just grab the article URL in the output
+```
+./newsfetch articles -i freep.com -e sports | awk -F"\t+" '{print $4}'
+```
+
+### Generate Summary
+
+Creates a summary based on the title and the article body
+
+```
+$ ./newsfetch body -t | ./newsfetch summary
+```
+
+If you have the title, use the flag
+
+```
+$ ./newsfetch body | ./newsfetch summary -t "Cancer doc Farid Fata appeals 45-year prison sentence"
+```
 
 

@@ -196,7 +196,7 @@ func ParseArticle(site string, articleJson *simplejson.Json, extractBody bool) (
 	body := ""
 	var aerr error
 	if extractBody {
-		body, aerr = lib.ExtractBodyFromURL(articleUrl)
+		body, aerr = lib.ExtractBodyFromURL(articleUrl, false)
 		if aerr != nil {
 			return &Article{}, fmt.Errorf("Failed to extract body from article at %s", articleUrl)
 		}
