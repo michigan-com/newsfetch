@@ -13,7 +13,18 @@ Use go to get the github repo (make sure you're in the `$GOPATH/src`)
 ## Build
 Go into the directory and build it
 * `cd github.com/michigan-com/newsfetch`
-* `go build`
+* `make build`
+
+## Version Bumping
+Increment PATCH by 1
+```
+$ make bump
+```
+
+Specify version
+```
+$ make bump 0.1.0
+```
 
 ## Run
 Run the executable
