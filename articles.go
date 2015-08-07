@@ -75,7 +75,6 @@ func FetchAndParseArticles(sites []string, sections []string, extractBody bool) 
 				return
 			}
 
-			logger.Info("Parsing feed content ...")
 			content := feedContent.Body.Get("content")
 			contentArr, err := content.Array()
 			for i := 0; i < len(contentArr); i++ {
