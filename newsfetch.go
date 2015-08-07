@@ -3,18 +3,18 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"github.com/kardianos/osext"
 	"github.com/michigan-com/newsfetch/lib"
 	"github.com/op/go-logging"
 	"github.com/spf13/cobra"
 	"github.com/urandom/text-summary/summarize"
 	"io/ioutil"
 	"os"
-	"path"
 	"strings"
 	"text/tabwriter"
 	"time"
 )
+
+var VERSION string
 
 func printArticleBrief(articles []*Article) {
 	w := new(tabwriter.Writer)
@@ -182,17 +182,11 @@ func main() {
 		Use:   "version",
 		Short: "Gets current newsfetch version",
 		Run: func(cmd *cobra.Command, args []string) {
-			dir, err := osext.ExecutableFolder()
-			if err != nil {
-				panic(err)
+			if VERSION == "" {
+				fmt.Println("Could not find version number, package must be built with `make build`")
+			} else {
+				fmt.Println(VERSION)
 			}
-			version := path.Join(dir, "VERSION")
-
-			content, err := ioutil.ReadFile(version)
-			if err != nil {
-				panic(err)
-			}
-			fmt.Println(strings.Split(string(content), "\n")[0])
 		},
 	}
 
