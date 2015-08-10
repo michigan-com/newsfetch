@@ -18,36 +18,36 @@ var logger = lib.GetLogger()
 const maxarticles = 20 // Expected number of articles to be returned per URL
 
 type PhotoInfo struct {
-	Url    string
-	Width  int
-	Height int
+	Url    string `bson:"url"`
+	Width  int    `bson:"width"`
+	Height int    `bson:"height"`
 }
 
 type Photo struct {
-	Caption   string
-	Credit    string
-	Full      PhotoInfo
-	Thumbnail PhotoInfo
+	Caption   string    `bson:"caption"`
+	Credit    string    `bson:"credit"`
+	Full      PhotoInfo `bson:"full"`
+	Thumbnail PhotoInfo `bson:"thumbnail"`
 }
 
 type Article struct {
-	Id          int
-	Headline    string
-	Subheadline string
-	Section     string
-	Subsection  string
-	Source      string
-	Summary     string
-	Created_at  time.Time
-	Timestamp   time.Time
-	Url         string
-	Photo       *Photo
-	BodyText    string
+	ArticleId   int       `bson:"article_id"`
+	Headline    string    `bson:"headline"`
+	Subheadline string    `bson:"subheadline"`
+	Section     string    `bson:"section"`
+	Subsection  string    `bson:"subsection"`
+	Source      string    `bson:"source"`
+	Summary     string    `bson:"summary"`
+	Created_at  time.Time `bson:"created_at"`
+	Timestamp   time.Time `bson:"timestamp"`
+	Url         string    `bson:"url"`
+	Photo       *Photo    `bson:"photo"`
+	BodyText    string    `bson:"body"`
 }
 
 type Snapshot struct {
-	Articles   []*Article
-	Created_at time.Time
+	Articles   []*Article `bson:"articles"`
+	Created_at time.Time  `bson:"created_at"`
 }
 
 type Feed struct {
@@ -210,7 +210,7 @@ func ParseArticle(site string, articleJson *simplejson.Json, extractBody bool) (
 	}
 
 	article := &Article{
-		Id:          articleId,
+		ArticleId:   articleId,
 		Headline:    articleJson.Get("headline").MustString(),
 		Subheadline: articleJson.Get("attrs").Get("brief").MustString(),
 		Section:     ssts.Get("section").MustString(),
@@ -227,13 +227,25 @@ func ParseArticle(site string, articleJson *simplejson.Json, extractBody bool) (
 	return article, nil
 }
 
+func RemoveArticles(mongoUri string) error {
+	session := lib.DBConnect(mongoUri)
+	defer lib.DBClose(session)
+
+	logger.Info("Removing all articles Snapshot collection ...")
+
+	snapshot := session.DB("").C("Snapshot")
+	_, err := snapshot.RemoveAll(nil)
+
+	return err
+}
+
 func SaveArticles(mongoUri string, articles []*Article) error {
 	// DB stuff
 	session := lib.DBConnect(mongoUri)
 	defer lib.DBClose(session)
 
 	// Save the snapshot
-	snapshotCollection := session.DB("mapi").C("Snapshot")
+	snapshotCollection := session.DB("").C("Snapshot")
 	err := snapshotCollection.Insert(&Snapshot{
 		Articles:   articles,
 		Created_at: time.Now(),

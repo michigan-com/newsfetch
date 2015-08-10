@@ -49,27 +49,39 @@ $ ./newsfetch body -t
 Grab all articles with body extractor
 
 ```
-$ ./newsfetch articles -b
+$ ./newsfetch articles get -b
 ```
 
 Specify specific site no body extractor
 ```
-$ ./newsfetch articles -i freep.com
+$ ./newsfetch articles get -i freep.com
 ```
 
 Specify specific site and specific section
 ```
-$ ./newsfetch articles -i freep.com -e sports
+$ ./newsfetch articles get -i freep.com -e sports
 ```
 
 Specify multiple sites with verbose output
 ```
-$ ./newsfetch -v articles -i freep.com,detroitnews.com -e sports
+$ ./newsfetch -v articles get -i freep.com,detroitnews.com -e sports
 ```
 
 Just grab the article URL in the output
 ```
-./newsfetch articles -i freep.com -e sports | awk -F"\t+" '{print $4}'
+$ ./newsfetch articles get -i freep.com -e sports | awk -F"\t+" '{print $4}'
+```
+
+### Remove Articles
+
+Removes all documents within Snapshot collection, which is what stores all the articles
+```
+$ ./newsfetch articles rm -s mongodb://localhost:27017/mapi
+```
+
+Skip prompt
+```
+$ ./newsfetch articles rm -ns mongodb://localhost:27017/mapi
 ```
 
 ### Generate Summary

@@ -3,15 +3,16 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"github.com/michigan-com/newsfetch/lib"
-	"github.com/op/go-logging"
-	"github.com/spf13/cobra"
-	"github.com/urandom/text-summary/summarize"
 	"io/ioutil"
 	"os"
 	"strings"
 	"text/tabwriter"
 	"time"
+
+	"github.com/michigan-com/newsfetch/lib"
+	"github.com/op/go-logging"
+	"github.com/spf13/cobra"
+	"github.com/urandom/text-summary/summarize"
 )
 
 var VERSION string
@@ -21,7 +22,10 @@ func printArticleBrief(articles []*Article) {
 	w.Init(os.Stdout, 0, 8, 0, '\t', 0)
 	fmt.Fprintln(w, "Source\tSection\tHeadline\tURL\tTimestamp")
 	for _, article := range articles {
-		fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n", article.Source, article.Section, article.Headline, article.Url, article.Timestamp)
+		fmt.Fprintf(
+			w, "%s\t%s\t%s\t%s\t%s\n", article.Source, article.Section,
+			article.Headline, article.Url, article.Timestamp,
+		)
 	}
 	w.Flush()
 }
@@ -44,6 +48,7 @@ func main() {
 		body         bool
 		verbose      bool
 		includeTitle bool
+		noprompt     bool
 		startTime    time.Time
 	)
 
@@ -94,7 +99,12 @@ func main() {
 
 	var cmdArticles = &cobra.Command{
 		Use:   "articles",
-		Short: "Fetches and parses Gannett news articles",
+		Short: "Command for Gannett news articles",
+	}
+
+	var cmdGetArticles = &cobra.Command{
+		Use:   "get",
+		Short: "Fetches, parses, and saves news articles",
 		Run: func(cmd *cobra.Command, args []string) {
 			if timeit {
 				startTime = time.Now()
@@ -126,7 +136,6 @@ func main() {
 			}
 
 			if mongoUri != "" {
-				fmt.Println(mongoUri)
 				err := SaveArticles(mongoUri, articles)
 				if err != nil {
 					panic(err)
@@ -139,10 +148,46 @@ func main() {
 		},
 	}
 
-	cmdArticles.Flags().StringVarP(&siteStr, "sites", "i", "all", "Comma separated list of Gannett sites to fetch articles from")
-	cmdArticles.Flags().StringVarP(&sectionStr, "sections", "e", "all", "Comma separated list of article sections to fetch from")
-	cmdArticles.Flags().StringVarP(&mongoUri, "save", "s", "", "Saves articles to mongodb server specified in this option, e.g. mongodb://localhost:27017/")
-	cmdArticles.Flags().BoolVarP(&body, "body", "b", false, "Fetches the article body content")
+	cmdGetArticles.Flags().StringVarP(&siteStr, "sites", "i", "all", "Comma separated list of Gannett sites to fetch articles from")
+	cmdGetArticles.Flags().StringVarP(&sectionStr, "sections", "e", "all", "Comma separated list of article sections to fetch from")
+	cmdGetArticles.Flags().StringVarP(&mongoUri, "save", "s", "", "Saves articles to mongodb server specified in this option, e.g. mongodb://localhost:27017/mapi")
+	cmdGetArticles.Flags().BoolVarP(&body, "body", "b", false, "Fetches the article body content")
+
+	var cmdRemoveArticles = &cobra.Command{
+		Use:   "rm",
+		Short: "Removes news articles from mongodb",
+		Run: func(cmd *cobra.Command, args []string) {
+			if !noprompt {
+				resp := "n"
+				fmt.Printf("Are you sure you want to remove all articles from Snapshot collection? [y/N]: ")
+				fmt.Scanf("%s", &resp)
+
+				if strings.ToLower(resp) != "y" {
+					return
+				}
+			}
+
+			if timeit {
+				startTime = time.Now()
+			}
+
+			if verbose {
+				logging.SetLevel(logging.DEBUG, "newsfetch")
+			}
+
+			err := RemoveArticles(mongoUri)
+			if err != nil {
+				panic(err)
+			}
+
+			if timeit {
+				getElapsedTime(&startTime)
+			}
+		},
+	}
+
+	cmdRemoveArticles.Flags().BoolVarP(&noprompt, "noprompt", "n", false, "Skips the confirmation prompt and automatically removes articles")
+	cmdRemoveArticles.Flags().StringVarP(&mongoUri, "save", "s", "", "Saves articles to mongodb server specified in this option, e.g. mongodb://localhost:27017/mapi")
 
 	var cmdSummary = &cobra.Command{
 		Use:   "summary",
@@ -190,6 +235,8 @@ func main() {
 		},
 	}
 
+	cmdArticles.AddCommand(cmdGetArticles)
+	cmdArticles.AddCommand(cmdRemoveArticles)
 	cmdNewsfetch.AddCommand(cmdBody, cmdArticles, cmdSummary, cmdVersion)
 	cmdNewsfetch.Execute()
 }
