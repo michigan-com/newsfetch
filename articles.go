@@ -45,11 +45,6 @@ type Article struct {
 	BodyText    string    `bson:"body"`
 }
 
-type Snapshot struct {
-	Articles   []*Article `bson:"articles"`
-	Created_at time.Time  `bson:"created_at"`
-}
-
 type Feed struct {
 	Site string
 	Body *simplejson.Json
@@ -231,10 +226,10 @@ func RemoveArticles(mongoUri string) error {
 	session := lib.DBConnect(mongoUri)
 	defer lib.DBClose(session)
 
-	logger.Info("Removing all articles Snapshot collection ...")
+	logger.Info("Removing all articles from mongodb ...")
 
-	snapshot := session.DB("").C("Snapshot")
-	_, err := snapshot.RemoveAll(nil)
+	articles := session.DB("").C("Article")
+	_, err := articles.RemoveAll(nil)
 
 	return err
 }
@@ -245,11 +240,12 @@ func SaveArticles(mongoUri string, articles []*Article) error {
 	defer lib.DBClose(session)
 
 	// Save the snapshot
-	snapshotCollection := session.DB("").C("Snapshot")
-	err := snapshotCollection.Insert(&Snapshot{
-		Articles:   articles,
-		Created_at: time.Now(),
-	})
+	articleCol := session.DB("").C("Article")
+	bulk := articleCol.Bulk()
+	for _, article := range articles {
+		bulk.Insert(article)
+	}
+	_, err := bulk.Run()
 
 	if err != nil {
 		return err

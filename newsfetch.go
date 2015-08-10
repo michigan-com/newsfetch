@@ -136,7 +136,12 @@ func main() {
 			}
 
 			if mongoUri != "" {
-				err := SaveArticles(mongoUri, articles)
+				err := RemoveArticles(mongoUri)
+				if err != nil {
+					panic(err)
+				}
+
+				err = SaveArticles(mongoUri, articles)
 				if err != nil {
 					panic(err)
 				}
