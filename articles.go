@@ -73,11 +73,24 @@ func FetchAndParseArticles(sites []string, sections []string, extractBody bool) 
 			content := feedContent.Body.Get("content")
 			contentArr, err := content.Array()
 			for i := 0; i < len(contentArr); i++ {
-				article, err := ParseArticle(feedContent.Site, content.GetIndex(i), extractBody)
+				articleUrl := fmt.Sprintf("http://%s.com%s", feedContent.Site, content.GetIndex(i).Get("url").MustString())
+				articleFound := false
+				for i := 0; i < len(articles); i++ {
+					if articles[i].Url == articleUrl {
+						articleFound = true
+						logger.Info("Already found article: %s, skipping ...", articles[i].Headline)
+						break
+					}
+				}
+				if articleFound {
+					continue
+				}
+				article, err := ParseArticle(articleUrl, content.GetIndex(i), extractBody)
 				if err != nil {
 					logger.Warning("%v", err)
 					continue
 				}
+				article.Source = feedContent.Site
 				articles = append(articles, article)
 			}
 			wg.Done()
@@ -137,12 +150,11 @@ func GetFeedContent(url string) (*Feed, error) {
 	return feedContent, nil
 }
 
-func ParseArticle(site string, articleJson *simplejson.Json, extractBody bool) (*Article, error) {
+func ParseArticle(articleUrl string, articleJson *simplejson.Json, extractBody bool) (*Article, error) {
 	//logger.Debug(site)
 	//logger.Debug("%v", articleJson)
 
 	ssts := articleJson.Get("ssts")
-	articleUrl := fmt.Sprintf("http://%s.com%s", site, articleJson.Get("url").MustString())
 	articleId := lib.GetArticleId(articleUrl)
 
 	// Check to make sure we could parse the ID
@@ -210,7 +222,6 @@ func ParseArticle(site string, articleJson *simplejson.Json, extractBody bool) (
 		Subheadline: articleJson.Get("attrs").Get("brief").MustString(),
 		Section:     ssts.Get("section").MustString(),
 		Subsection:  ssts.Get("subsection").MustString(),
-		Source:      site,
 		Summary:     articleJson.Get("summary").MustString(),
 		Created_at:  time.Now(),
 		Timestamp:   timestamp,
