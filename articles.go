@@ -51,12 +51,11 @@ type Feed struct {
 	Body *simplejson.Json
 }
 
-func FetchAndParseArticles(sites []string, sections []string, extractBody bool) []*Article {
+func FetchAndParseArticles(urls []string, extractBody bool) []*Article {
 	logger.Info("Fetching articles ...")
 
 	// Fetch articles from urls
 	var wg sync.WaitGroup
-	urls := FormatFeedUrls(sites, sections)
 	logger.Debug("%v", urls)
 
 	//articles := make([]*Article, 0, len(urls)*maxarticles)

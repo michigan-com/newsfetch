@@ -129,7 +129,8 @@ func main() {
 				sections = strings.Split(sectionStr, ",")
 			}
 
-			articles := FetchAndParseArticles(sites, sections, body)
+			urls := FormatFeedUrls(sites, sections)
+			articles := FetchAndParseArticles(urls, body)
 
 			if output {
 				printArticleBrief(articles)
