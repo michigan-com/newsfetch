@@ -11,6 +11,7 @@ import (
 
 	"github.com/bitly/go-simplejson"
 	"github.com/michigan-com/newsfetch/lib"
+	//"gopkg.in/mgo.v2/bson"
 )
 
 var logger = lib.GetLogger()
@@ -58,7 +59,8 @@ func FetchAndParseArticles(sites []string, sections []string, extractBody bool) 
 	urls := FormatFeedUrls(sites, sections)
 	logger.Debug("%v", urls)
 
-	articles := make([]*Article, 0, len(urls)*maxarticles)
+	//articles := make([]*Article, 0, len(urls)*maxarticles)
+	articleMap := map[string]*Article{}
 
 	for i := 0; i < len(urls); i++ {
 		wg.Add(1)
@@ -74,24 +76,18 @@ func FetchAndParseArticles(sites []string, sections []string, extractBody bool) 
 			contentArr, err := content.Array()
 			for i := 0; i < len(contentArr); i++ {
 				articleUrl := fmt.Sprintf("http://%s.com%s", feedContent.Site, content.GetIndex(i).Get("url").MustString())
-				articleFound := false
-				for i := 0; i < len(articles); i++ {
-					if articles[i].Url == articleUrl {
-						articleFound = true
-						logger.Info("Already found article: %s, skipping ...", articles[i].Headline)
-						break
-					}
-				}
-				if articleFound {
+				if articleMap[articleUrl] != nil {
 					continue
 				}
+
 				article, err := ParseArticle(articleUrl, content.GetIndex(i), extractBody)
 				if err != nil {
 					logger.Warning("%v", err)
 					continue
 				}
+
 				article.Source = feedContent.Site
-				articles = append(articles, article)
+				articleMap[article.Url] = article
 			}
 			wg.Done()
 		}(urls[i])
@@ -100,6 +96,12 @@ func FetchAndParseArticles(sites []string, sections []string, extractBody bool) 
 	// Wait for all the fetching to return and save the data
 	wg.Wait()
 	logger.Info("Done fetching and parsing URLs ...")
+
+	articles := make([]*Article, 0, len(articleMap))
+	for _, art := range articleMap {
+		articles = append(articles, art)
+	}
+
 	return articles
 }
 
@@ -254,6 +256,10 @@ func SaveArticles(mongoUri string, articles []*Article) error {
 	articleCol := session.DB("").C("Article")
 	bulk := articleCol.Bulk()
 	for _, article := range articles {
+		//art := Article{}
+		//err := articleCol.Find(bson.M{"article_url": article.Url}).One(&art)
+		//if err != nil {
+		//}
 		bulk.Insert(article)
 	}
 	_, err := bulk.Run()
