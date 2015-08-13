@@ -17,3 +17,7 @@ go clean -i
 
 printer "Installing new binary ..."
 make install
+
+printer "Adding git release ..."
+git tag -a $(cat VERSION)
+git push --tags deploy master
