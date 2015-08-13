@@ -8,6 +8,9 @@ VER ?= $(MAJOR).$(MINOR).$(shell echo $$(($(PATCH)+1)))
 build:
 	go build -ldflags "-X main.VERSION $(CURRENT_VERSION)"
 
+install:
+	go install -ldflags "-X main.VERSION $(CURRENT_VERSION)"
+
 bump:
 	echo $(VER) > $(VERSION_FILE)
 
