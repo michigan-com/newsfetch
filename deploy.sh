@@ -4,7 +4,8 @@ printer(){
   printf '=%.0s' {1..40} && printf '\n'
 }
 
-APP_DIR="/srv/go/src/github.com/michigan-com/newsfetch"
+export GOPATH=/srv/go
+APP_DIR="$GOPATH/src/github.com/michigan-com/newsfetch"
 
 cd $APP_DIR
 
