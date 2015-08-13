@@ -19,5 +19,5 @@ printer "Installing new binary ..."
 make install
 
 printer "Adding git release ..."
-git tag -a $(cat VERSION)
+git tag -a $(cat VERSION) -m 'Production release'
 git push --tags deploy master
