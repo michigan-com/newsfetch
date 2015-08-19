@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"runtime"
 	"strings"
 	"text/tabwriter"
 	"time"
@@ -36,6 +37,7 @@ func getElapsedTime(sTime *time.Time) {
 }
 
 func main() {
+	runtime.GOMAXPROCS(runtime.NumCPU())
 
 	var (
 		mongoUri     string
