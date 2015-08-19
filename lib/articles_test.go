@@ -1,10 +1,8 @@
-package main
+package lib
 
 import (
 	"fmt"
 	"testing"
-
-	"github.com/michigan-com/newsfetch/lib"
 )
 
 func TestFormatFeedUrls(t *testing.T) {
@@ -107,7 +105,7 @@ func TestSaveArticles(*testing.T)   {}
 
 func TestFetchAndParseArticles(t *testing.T) {
 	logger.Info("Compile articles and check for duplicate URLs")
-	urls := FormatFeedUrls(lib.Sites, lib.Sections)
+	urls := FormatFeedUrls(Sites, Sections)
 	articles := FetchAndParseArticles(urls, false)
 
 	artMap := map[string]int{}

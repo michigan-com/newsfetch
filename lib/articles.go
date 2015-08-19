@@ -1,4 +1,4 @@
-package main
+package lib
 
 import (
 	"encoding/json"
@@ -9,11 +9,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/michigan-com/newsfetch/lib"
 	//"gopkg.in/mgo.v2/bson"
 )
 
-var logger = lib.GetLogger()
+var logger = GetLogger()
 
 const maxarticles = 20 // Expected number of articles to be returned per URL
 
@@ -163,7 +162,7 @@ func ParseArticle(articleUrl string, articleJson map[string]interface{}, extract
 	//logger.Debug("%v", articleJson)
 
 	ssts := articleJson["ssts"].(map[string]interface{})
-	articleId := lib.GetArticleId(articleUrl)
+	articleId := GetArticleId(articleUrl)
 
 	// Check to make sure we could parse the ID
 	if articleId < 0 {
@@ -216,7 +215,7 @@ func ParseArticle(articleUrl string, articleJson map[string]interface{}, extract
 	body := ""
 	var aerr error
 	if extractBody {
-		body, aerr = lib.ExtractBodyFromURL(articleUrl, false)
+		body, aerr = ExtractBodyFromURL(articleUrl, false)
 		if aerr != nil {
 			return &Article{}, fmt.Errorf("Failed to extract body from article at %s", articleUrl)
 		}
@@ -254,8 +253,8 @@ func ParseArticle(articleUrl string, articleJson map[string]interface{}, extract
 }
 
 func RemoveArticles(mongoUri string) error {
-	session := lib.DBConnect(mongoUri)
-	defer lib.DBClose(session)
+	session := DBConnect(mongoUri)
+	defer DBClose(session)
 
 	logger.Info("Removing all articles from mongodb ...")
 
@@ -267,8 +266,8 @@ func RemoveArticles(mongoUri string) error {
 
 func SaveArticles(mongoUri string, articles []*Article) error {
 	// DB stuff
-	session := lib.DBConnect(mongoUri)
-	defer lib.DBClose(session)
+	session := DBConnect(mongoUri)
+	defer DBClose(session)
 
 	// Save the snapshot
 	articleCol := session.DB("").C("Article")

@@ -6,8 +6,6 @@ import (
 	gq "github.com/PuerkitoBio/goquery"
 )
 
-var logger = GetLogger()
-
 func withoutEmptyStrings(strings []string) []string {
 	result := make([]string, 0, len(strings))
 	for _, el := range strings {

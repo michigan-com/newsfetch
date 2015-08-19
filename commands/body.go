@@ -1,0 +1,41 @@
+package commands
+
+import (
+	"fmt"
+	"time"
+
+	"github.com/michigan-com/newsfetch/lib"
+	"github.com/op/go-logging"
+	"github.com/spf13/cobra"
+)
+
+var cmdBody = &cobra.Command{
+	Use:   "body",
+	Short: "Get article body content from Gannett URL",
+	Run: func(cmd *cobra.Command, args []string) {
+		if timeit {
+			startTime = time.Now()
+		}
+
+		if verbose {
+			logging.SetLevel(logging.DEBUG, "newsfetch")
+		}
+
+		if len(args) > 0 && args[0] != "" {
+			articleUrl = args[0]
+		}
+
+		body, err := lib.ExtractBodyFromURL(articleUrl, includeTitle)
+		if err != nil {
+			panic(err)
+		}
+
+		if output {
+			fmt.Println(body)
+		}
+
+		if timeit {
+			getElapsedTime(&startTime)
+		}
+	},
+}
