@@ -163,7 +163,6 @@ func ParseArticle(articleUrl string, articleJson map[string]interface{}, extract
 	//logger.Debug("%v", articleJson)
 
 	ssts := articleJson["ssts"].(map[string]interface{})
-	fmt.Println(ssts)
 	articleId := lib.GetArticleId(articleUrl)
 
 	// Check to make sure we could parse the ID
@@ -214,7 +213,6 @@ func ParseArticle(articleUrl string, articleJson map[string]interface{}, extract
 		},
 	}
 
-	fmt.Println(photo)
 	body := ""
 	var aerr error
 	if extractBody {
@@ -238,7 +236,6 @@ func ParseArticle(articleUrl string, articleJson map[string]interface{}, extract
 	subsection, _ := ssts["subsection"].(string)
 	summary, _ := articleJson["summary"].(string)
 
-	fmt.Println(timestamp)
 	article := &Article{
 		ArticleId:   articleId,
 		Headline:    headline,
