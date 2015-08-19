@@ -68,15 +68,17 @@ func TestParseArticle(t *testing.T) {
 		t.Error(err)
 	}
 
-	data, ok := feed.Body.CheckGet("content")
+	data, ok := feed.Body["content"].([]interface{})
 	if !ok {
 		t.Error(`"content" property not found in response JSON`)
 	}
 
-	contentArr, err := data.Array()
-	for i := 0; i < len(contentArr); i++ {
-		articleUrl := fmt.Sprintf("http://%s.com%s", feed.Site, data.GetIndex(i).Get("url").MustString())
-		article, err := ParseArticle(articleUrl, data.GetIndex(i), false)
+	for _, jso := range data {
+		articleJson := jso.(map[string]interface{})
+		url := articleJson["url"].(string)
+		articleUrl := fmt.Sprintf("http://%s.com%s", feed.Site, url)
+		article, err := ParseArticle(articleUrl, articleJson, false)
+
 		if err != nil {
 			continue
 		}

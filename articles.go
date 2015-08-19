@@ -1,15 +1,14 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"regexp"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
 
-	"github.com/bitly/go-simplejson"
 	"github.com/michigan-com/newsfetch/lib"
 	//"gopkg.in/mgo.v2/bson"
 )
@@ -48,7 +47,7 @@ type Article struct {
 
 type Feed struct {
 	Site string
-	Body *simplejson.Json
+	Body map[string]interface{} //*simplejson.Json
 }
 
 func FetchAndParseArticles(urls []string, extractBody bool) []*Article {
@@ -71,15 +70,19 @@ func FetchAndParseArticles(urls []string, extractBody bool) []*Article {
 				return
 			}
 
-			content := feedContent.Body.Get("content")
-			contentArr, err := content.Array()
-			for i := 0; i < len(contentArr); i++ {
-				articleUrl := fmt.Sprintf("http://%s.com%s", feedContent.Site, content.GetIndex(i).Get("url").MustString())
+			content := feedContent.Body //.Get("content")
+			cslice, _ := content["content"].([]interface{})
+
+			for _, articleJson := range cslice {
+				jso := articleJson.(map[string]interface{})
+				url := jso["url"].(string)
+				articleUrl := fmt.Sprintf("http://%s.com%s", feedContent.Site, url)
+
 				if articleMap[articleUrl] != nil {
 					continue
 				}
 
-				article, err := ParseArticle(articleUrl, content.GetIndex(i), extractBody)
+				article, err := ParseArticle(articleUrl, jso, extractBody)
 				if err != nil {
 					logger.Warning("%v", err)
 					continue
@@ -87,7 +90,9 @@ func FetchAndParseArticles(urls []string, extractBody bool) []*Article {
 
 				article.Source = feedContent.Site
 				articleMap[article.Url] = article
+
 			}
+
 			wg.Done()
 		}(urls[i])
 	}
@@ -131,31 +136,34 @@ func GetFeedContent(url string) (*Feed, error) {
 	}
 	logger.Info(fmt.Sprintf("Successfully fetched %s", url))
 
-	body, err := simplejson.NewFromReader(resp.Body)
+	feed := &Feed{}
+
+	var body []byte
+	decoder := json.NewDecoder(resp.Body)
+	err = decoder.Decode(&feed.Body)
 	if err != nil {
-		return nil, err
+		return feed, err
 	}
+
+	json.Unmarshal(body, feed.Body)
 
 	replace := regexp.MustCompile("^w{3}[.](.+)[.].+$")
 	match := replace.FindStringSubmatch(resp.Request.URL.Host)
 	if len(match) < 2 {
 		return nil, fmt.Errorf("Could not parse %s for host", resp.Request.URL.Host)
 	}
-	site := match[1]
 
-	feedContent := &Feed{
-		site,
-		body,
-	}
+	feed.Site = match[1]
 
-	return feedContent, nil
+	return feed, nil
 }
 
-func ParseArticle(articleUrl string, articleJson *simplejson.Json, extractBody bool) (*Article, error) {
+func ParseArticle(articleUrl string, articleJson map[string]interface{}, extractBody bool) (*Article, error) {
 	//logger.Debug(site)
 	//logger.Debug("%v", articleJson)
 
-	ssts := articleJson.Get("ssts")
+	ssts := articleJson["ssts"].(map[string]interface{})
+	fmt.Println(ssts)
 	articleId := lib.GetArticleId(articleUrl)
 
 	// Check to make sure we could parse the ID
@@ -163,31 +171,37 @@ func ParseArticle(articleUrl string, articleJson *simplejson.Json, extractBody b
 		return &Article{}, fmt.Errorf("Failed to parse an article ID, likely not a news article: %s", articleUrl)
 	}
 
-	photoAttrs, err := articleJson.Get("photo").CheckGet("attrs")
-	photo := Photo{}
-	if err == false {
-		return &Article{}, fmt.Errorf("Failed to get photos for %s", articleUrl)
+	photoJson, _ := articleJson["photo"].(map[string]interface{})
+	attrs, _ := photoJson["attrs"].(map[string]interface{})
+	if attrs == nil {
+		return nil, fmt.Errorf("Failed to get photos for %s", articleUrl)
 	}
+	photo := Photo{}
 
 	// Height/width stuff
-	owidth, _ := strconv.Atoi(photoAttrs.Get("oimagewidth").MustString())
-	oheight, _ := strconv.Atoi(photoAttrs.Get("oimageheight").MustString())
-	swidth, _ := strconv.Atoi(photoAttrs.Get("simageWidth").MustString())
-	sheight, _ := strconv.Atoi(photoAttrs.Get("simageheight").MustString())
+	owidth, _ := attrs["oimagewidth"].(int)
+	oheight, _ := attrs["oimageheight"].(int)
+	swidth, _ := attrs["simageWidth"].(int)
+	sheight, _ := attrs["simageheight"].(int)
 
 	// URLs
-	publishUrl := photoAttrs.Get("publishurl").MustString()
-	photoUrl := strings.Join([]string{publishUrl, photoAttrs.Get("basename").MustString()}, "")
+	publishUrl, _ := attrs["publishurl"].(string)
+	basename, _ := attrs["basename"].(string)
+
+	photoUrl := strings.Join([]string{publishUrl, basename}, "")
 	thumbUrl := ""
-	if smallBaseName, ok := photoAttrs.CheckGet("smallbasename"); ok {
-		thumbUrl = strings.Join([]string{publishUrl, smallBaseName.MustString()}, "")
-	} else if thumbPath, ok := photoAttrs.CheckGet("thumbnailPath"); ok {
-		thumbUrl = strings.Join([]string{publishUrl, thumbPath.MustString()}, "")
+	if smallBaseName, ok := attrs["smallbasename"].(string); ok {
+		thumbUrl = strings.Join([]string{publishUrl, smallBaseName}, "")
+	} else if thumbPath, ok := attrs["thumbnailPath"].(string); ok {
+		thumbUrl = strings.Join([]string{publishUrl, thumbPath}, "")
 	}
 
+	caption, _ := attrs["caption"].(string)
+	credit, _ := attrs["credit"].(string)
+
 	photo = Photo{
-		photoAttrs.Get("caption").MustString(),
-		photoAttrs.Get("credit").MustString(),
+		caption,
+		credit,
 		PhotoInfo{
 			photoUrl,
 			owidth,
@@ -200,6 +214,7 @@ func ParseArticle(articleUrl string, articleJson *simplejson.Json, extractBody b
 		},
 	}
 
+	fmt.Println(photo)
 	body := ""
 	var aerr error
 	if extractBody {
@@ -211,19 +226,26 @@ func ParseArticle(articleUrl string, articleJson *simplejson.Json, extractBody b
 		logger.Info("Extracted body contains %d characters, %d paragraphs.", len(strings.Split(body, "")), len(strings.Split(body, "\n\n")))
 	}
 
-	timestamp, aerr := time.Parse("2006-1-2T15:04:05.0000000", articleJson.Get("timestamp").MustString())
+	timestamp, aerr := time.Parse("2006-1-2T15:04:05.0000000", articleJson["timestamp"].(string))
 	if aerr != nil {
 		timestamp = time.Now()
 		logger.Warning("%v", aerr)
 	}
 
+	headline, _ := articleJson["headline"].(string)
+	subheadline, _ := attrs["brief"].(string)
+	section, _ := ssts["section"].(string)
+	subsection, _ := ssts["subsection"].(string)
+	summary, _ := articleJson["summary"].(string)
+
+	fmt.Println(timestamp)
 	article := &Article{
 		ArticleId:   articleId,
-		Headline:    articleJson.Get("headline").MustString(),
-		Subheadline: articleJson.Get("attrs").Get("brief").MustString(),
-		Section:     ssts.Get("section").MustString(),
-		Subsection:  ssts.Get("subsection").MustString(),
-		Summary:     articleJson.Get("summary").MustString(),
+		Headline:    headline,
+		Subheadline: subheadline,
+		Section:     section,
+		Subsection:  subsection,
+		Summary:     summary,
 		Created_at:  time.Now(),
 		Timestamp:   timestamp,
 		Url:         articleUrl,
