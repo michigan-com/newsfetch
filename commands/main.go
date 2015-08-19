@@ -32,7 +32,8 @@ var NewsfetchCmd = &cobra.Command{
 
 var url = "http://www.freep.com/story/news/local/michigan/2015/08/06/farid-fata-cancer-sentencing/31213475/"
 
-func Execute() {
+func Execute(ver string) {
+	VERSION = ver
 	AddCommands()
 	AddFlags()
 

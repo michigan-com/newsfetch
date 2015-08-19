@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/michigan-com/newsfetch/lib"
@@ -31,7 +32,8 @@ var cmdBody = &cobra.Command{
 		}
 
 		if output {
-			fmt.Println(body)
+			bodyFmt := strings.Join(strings.Split(body, "\n"), "\n\n")
+			fmt.Println(bodyFmt)
 		}
 
 		if timeit {
