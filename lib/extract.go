@@ -1,10 +1,13 @@
 package lib
 
 import (
+	"regexp"
 	"strings"
 
 	gq "github.com/PuerkitoBio/goquery"
 )
+
+var TWITTER_RE = regexp.MustCompile("^twitter.com/[a-zA-Z0-9_]*$")
 
 var logger = GetLogger()
 
@@ -19,13 +22,40 @@ func withoutEmptyStrings(strings []string) []string {
 }
 
 func extractBodyFromDocument(doc *gq.Document, includeTitle bool) (string, error) {
-	paragraphs := doc.Find("div[itemprop=articleBody] p")
+	paragraphs := doc.Find("div[itemprop=articleBody] > p")
 
 	// remove contact info at the end of the article
 	paragraphs.Find("span.-newsgate-paragraph-cci-endnote-contact-").Remove()
+	paragraphs.Find("span.-newsgate-paragraph-cci-endnote-contrib-").Remove()
 
+	ignoreRemaining := false
 	paragraphStrings := paragraphs.Map(func(i int, paragraph *gq.Selection) string {
-		return strings.TrimSpace(paragraph.Text())
+		if ignoreRemaining {
+			return ""
+		}
+		for _, selector := range [...]string{"span.-newsgate-character-cci-tagline-name-", "span.-newsgate-paragraph-cci-infobox-head-"} {
+			if el := paragraph.Find(selector); el.Length() > 0 {
+				ignoreRemaining = true
+				return ""
+			}
+		}
+
+		text := strings.TrimSpace(paragraph.Text())
+
+		if TWITTER_RE.MatchString(text) {
+			return ""
+		}
+
+		marker := ""
+
+		for _, selector := range [...]string{"span.-newsgate-paragraph-cci-subhead-lead-", "span.-newsgate-paragraph-cci-subhead-"} {
+			if el := paragraph.Find(selector); el.Length() > 0 {
+				marker = "### "
+				break
+			}
+		}
+
+		return marker + text
 	})
 
 	content := make([]string, 0, len(paragraphStrings)+1)

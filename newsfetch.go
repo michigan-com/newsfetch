@@ -86,7 +86,8 @@ func main() {
 			}
 
 			if output {
-				fmt.Println(body)
+				bodyFmt := strings.Join(strings.Split(body, "\n"), "\n\n")
+				fmt.Println(bodyFmt)
 			}
 
 			if timeit {
