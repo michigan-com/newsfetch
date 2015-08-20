@@ -128,13 +128,13 @@ func FormatFeedUrls(sites []string, sections []string) []string {
 }
 
 func GetFeedContent(url string) (*Feed, error) {
-	logger.Info("Fetching %s", url)
+	logger.Debug("Fetching %s", url)
 
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err
 	}
-	logger.Info(fmt.Sprintf("Successfully fetched %s", url))
+	logger.Debug(fmt.Sprintf("Successfully fetched %s", url))
 
 	feed := &Feed{}
 
@@ -227,7 +227,7 @@ func ParseArticle(articleUrl string, articleJson map[string]interface{}, extract
 			return &Article{}, fmt.Errorf("Failed to extract body from article at %s", articleUrl)
 		}
 
-		logger.Info("Extracted body contains %d characters, %d paragraphs.", len(strings.Split(body, "")), len(strings.Split(body, "\n\n")))
+		logger.Debug("Extracted body contains %d characters, %d paragraphs.", len(strings.Split(body, "")), len(strings.Split(body, "\n\n")))
 	}
 
 	timestamp, aerr := time.Parse("2006-1-2T15:04:05.0000000", articleJson["timestamp"].(string))
@@ -279,18 +279,24 @@ func SaveArticles(mongoUri string, articles []*Article) error {
 	// Save the snapshot
 	articleCol := session.DB("").C("Article")
 	//bulk := articleCol.Bulk()
+	totalUpdates := 0
+	totalInserts := 0
 	for _, article := range articles {
 		art := Article{}
 		err := articleCol.Find(bson.M{"url": article.Url}).One(&art)
 		if err == nil {
 			logger.Debug("Article updated!")
+			totalUpdates++
 			articleCol.Update(bson.M{"id_": art.Id}, article)
 		} else {
 			//bulk.Insert(article)
 			logger.Debug("Article inserted!")
+			totalInserts++
 			articleCol.Insert(article)
 		}
 	}
+	logger.Info("%d articles updated", totalUpdates)
+	logger.Info("%d articles added", totalInserts)
 	//_, err := bulk.Run()
 
 	/*if err != nil {

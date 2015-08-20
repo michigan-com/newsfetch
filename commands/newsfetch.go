@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/michigan-com/newsfetch/lib"
+	"github.com/op/go-logging"
 	"github.com/spf13/cobra"
 )
 
@@ -38,6 +39,10 @@ func Execute(ver string) {
 	AddFlags()
 
 	NewsfetchCmd.Execute()
+}
+
+func Verbose() {
+	logging.SetLevel(logging.INFO, "newsfetch")
 }
 
 func AddFlags() {

@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/michigan-com/newsfetch/lib"
-	"github.com/op/go-logging"
 	"github.com/spf13/cobra"
 )
 
@@ -19,7 +18,7 @@ var cmdBody = &cobra.Command{
 		}
 
 		if verbose {
-			logging.SetLevel(logging.DEBUG, "newsfetch")
+			Verbose()
 		}
 
 		if len(args) > 0 && args[0] != "" {

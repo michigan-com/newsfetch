@@ -39,7 +39,7 @@ var cmdGetArticles = &cobra.Command{
 		}
 
 		if verbose {
-			logging.SetLevel(logging.DEBUG, "newsfetch")
+			Verbose()
 		}
 
 		var sites []string

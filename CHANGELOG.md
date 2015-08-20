@@ -7,6 +7,7 @@ v0.0.10 08-19-2015
 * Updated production servers to go 1.5
 * Modified Makefile to use new linker variable format
 * Updated format of timing output
+* Updated verbosity output to > INFO, moved a lot of output to DEBUG
 
 v0.0.9 08-19-2015
 -----------------
