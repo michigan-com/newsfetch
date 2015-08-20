@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	//"gopkg.in/mgo.v2/bson"
+	"gopkg.in/mgo.v2/bson"
 )
 
 var logger = GetLogger()
@@ -30,6 +30,7 @@ type Photo struct {
 }
 
 type Article struct {
+	Id          int       `bson:"id_"`
 	ArticleId   int       `bson:"article_id"`
 	Headline    string    `bson:"headline"`
 	Subheadline string    `bson:"subheadline"`
@@ -271,19 +272,25 @@ func SaveArticles(mongoUri string, articles []*Article) error {
 
 	// Save the snapshot
 	articleCol := session.DB("").C("Article")
-	bulk := articleCol.Bulk()
+	//bulk := articleCol.Bulk()
 	for _, article := range articles {
-		//art := Article{}
-		//err := articleCol.Find(bson.M{"article_url": article.Url}).One(&art)
-		//if err != nil {
-		//}
-		bulk.Insert(article)
+		art := Article{}
+		err := articleCol.Find(bson.M{"url": article.Url}).One(&art)
+		if err == nil {
+			logger.Info("Article updated!")
+			articleCol.Update(bson.M{"id_": art.Id}, article)
+		} else {
+			//bulk.Insert(article)
+			logger.Warning("%v", err)
+			logger.Info("Article inserted!")
+			articleCol.Insert(article)
+		}
 	}
-	_, err := bulk.Run()
+	//_, err := bulk.Run()
 
-	if err != nil {
+	/*if err != nil {
 		return err
-	}
+	}*/
 
 	logger.Info("Saved a batch of articles ...")
 	return nil

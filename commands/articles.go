@@ -65,12 +65,12 @@ var cmdGetArticles = &cobra.Command{
 		}
 
 		if mongoUri != "" {
-			err := lib.RemoveArticles(mongoUri)
+			/*err := lib.RemoveArticles(mongoUri)
 			if err != nil {
 				panic(err)
-			}
+			}*/
 
-			err = lib.SaveArticles(mongoUri, articles)
+			err := lib.SaveArticles(mongoUri, articles)
 			if err != nil {
 				panic(err)
 			}
