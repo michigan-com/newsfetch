@@ -75,7 +75,7 @@ func ExtractTitleFromDocument(doc *gq.Document) string {
 }
 
 func ExtractBodyFromURL(url string, includeTitle bool) (string, error) {
-	logger.Info("Fetching %s ...\n", url)
+	logger.Debug("Fetching %s ...\n", url)
 	doc, err := gq.NewDocument(url)
 	if err != nil {
 		return "", err
