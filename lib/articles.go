@@ -184,8 +184,14 @@ func ParseArticle(articleUrl string, articleJson map[string]interface{}, extract
 	sheight, _ := attrs["simageheight"].(int)
 
 	// URLs
-	publishUrl, _ := attrs["publishurl"].(string)
-	basename, _ := attrs["basename"].(string)
+	publishUrl, ok := attrs["publishurl"].(string)
+	if !ok {
+		return nil, fmt.Errorf("Failed to get photo url for %s", articleUrl)
+	}
+	basename, ok := attrs["basename"].(string)
+	if !ok {
+		return nil, fmt.Errorf("Failed to get photo filename for %s", articleUrl)
+	}
 
 	photoUrl := strings.Join([]string{publishUrl, basename}, "")
 	thumbUrl := ""
