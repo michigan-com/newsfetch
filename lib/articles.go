@@ -283,12 +283,11 @@ func SaveArticles(mongoUri string, articles []*Article) error {
 		art := Article{}
 		err := articleCol.Find(bson.M{"url": article.Url}).One(&art)
 		if err == nil {
-			logger.Info("Article updated!")
+			logger.Debug("Article updated!")
 			articleCol.Update(bson.M{"id_": art.Id}, article)
 		} else {
 			//bulk.Insert(article)
-			logger.Warning("%v", err)
-			logger.Info("Article inserted!")
+			logger.Debug("Article inserted!")
 			articleCol.Insert(article)
 		}
 	}
