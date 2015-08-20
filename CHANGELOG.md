@@ -1,6 +1,15 @@
 CHANGELOG
 =========
 
+v0.0.11 08-19-2015
+------------------
+
+* ExtractBodyFromUrl now requires a channel because it is being used as a goroutine
+for concurrency
+* Added LOGLEVEL environment variable for verbosity in cli output, it will override
+and log level set in verbose mode
+* Added extract test to ensure I didn't break the extractor
+
 v0.0.10 08-19-2015
 ------------------
 
