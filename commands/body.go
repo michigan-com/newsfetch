@@ -18,17 +18,17 @@ var cmdBody = &cobra.Command{
 		}
 
 		if verbose {
-			Verbose()
+			Verbose("")
 		}
 
 		if len(args) > 0 && args[0] != "" {
 			articleUrl = args[0]
 		}
 
-		body, err := lib.ExtractBodyFromURL(articleUrl, includeTitle)
-		if err != nil {
-			panic(err)
-		}
+		var body string
+		ch := make(chan string)
+		go lib.ExtractBodyFromURL(ch, articleUrl, includeTitle)
+		body = <-ch
 
 		if output {
 			bodyFmt := strings.Join(strings.Split(body, "\n"), "\n\n")

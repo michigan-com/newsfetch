@@ -39,7 +39,7 @@ var cmdGetArticles = &cobra.Command{
 		}
 
 		if verbose {
-			Verbose()
+			Verbose("")
 		}
 
 		var sites []string

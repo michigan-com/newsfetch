@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/michigan-com/newsfetch/lib"
@@ -41,8 +42,27 @@ func Execute(ver string) {
 	NewsfetchCmd.Execute()
 }
 
-func Verbose() {
-	logging.SetLevel(logging.INFO, "newsfetch")
+func Verbose(logLevel string) {
+	level := logging.INFO
+	var err error
+
+	if logLevel != "" {
+		level, err = logging.LogLevel(logLevel)
+		if err != nil {
+			logger.Error("Log level %s not found", logLevel)
+		}
+	}
+
+	//env var trumps everything
+	levelEnv := os.Getenv("LOGLEVEL")
+	if levelEnv != "" {
+		level, err = logging.LogLevel(levelEnv)
+		if err != nil {
+			logger.Error("Log level %s not found", logLevel)
+		}
+	}
+
+	logging.SetLevel(level, "newsfetch")
 }
 
 func AddFlags() {

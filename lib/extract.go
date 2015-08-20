@@ -19,7 +19,7 @@ func withoutEmptyStrings(strings []string) []string {
 	return result
 }
 
-func extractBodyFromDocument(doc *gq.Document, includeTitle bool) (string, error) {
+func extractBodyFromDocument(doc *gq.Document, includeTitle bool) string {
 	paragraphs := doc.Find("div[itemprop=articleBody] > p")
 
 	// remove contact info at the end of the article
@@ -66,7 +66,7 @@ func extractBodyFromDocument(doc *gq.Document, includeTitle bool) (string, error
 
 	body := strings.Join(content, "\n")
 
-	return body, nil
+	return body
 }
 
 func ExtractTitleFromDocument(doc *gq.Document) string {
@@ -74,12 +74,12 @@ func ExtractTitleFromDocument(doc *gq.Document) string {
 	return strings.TrimSpace(title.Text())
 }
 
-func ExtractBodyFromURL(url string, includeTitle bool) (string, error) {
+func ExtractBodyFromURL(ch chan string, url string, includeTitle bool) {
 	logger.Debug("Fetching %s ...\n", url)
-	doc, err := gq.NewDocument(url)
-	if err != nil {
+	doc, _ := gq.NewDocument(url)
+	/*if err != nil {
 		return "", err
-	}
+	}*/
 
-	return extractBodyFromDocument(doc, includeTitle)
+	ch <- extractBodyFromDocument(doc, includeTitle)
 }

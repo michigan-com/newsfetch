@@ -50,6 +50,21 @@ type Feed struct {
 	Body map[string]interface{} //*simplejson.Json
 }
 
+func isBlacklisted(url string) bool {
+	blacklist := []string{
+		"/videos/",
+		"/police-blotter/",
+	}
+
+	for _, item := range blacklist {
+		if strings.Contains(url, item) {
+			return true
+		}
+	}
+
+	return false
+}
+
 func FetchAndParseArticles(urls []string, extractBody bool) []*Article {
 	logger.Info("Fetching articles ...")
 
@@ -78,7 +93,7 @@ func FetchAndParseArticles(urls []string, extractBody bool) []*Article {
 				url := jso["url"].(string)
 				articleUrl := fmt.Sprintf("http://%s.com%s", feedContent.Site, url)
 
-				if articleMap[articleUrl] != nil {
+				if articleMap[articleUrl] != nil || isBlacklisted(articleUrl) {
 					continue
 				}
 
@@ -222,10 +237,12 @@ func ParseArticle(articleUrl string, articleJson map[string]interface{}, extract
 	body := ""
 	var aerr error
 	if extractBody {
-		body, aerr = ExtractBodyFromURL(articleUrl, false)
-		if aerr != nil {
+		ch := make(chan string)
+		go ExtractBodyFromURL(ch, articleUrl, false)
+		body = <-ch
+		/*if aerr != nil {
 			return &Article{}, fmt.Errorf("Failed to extract body from article at %s", articleUrl)
-		}
+		}*/
 
 		logger.Debug("Extracted body contains %d characters, %d paragraphs.", len(strings.Split(body, "")), len(strings.Split(body, "\n\n")))
 	}
