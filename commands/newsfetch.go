@@ -68,5 +68,5 @@ func AddCommands() {
 
 func getElapsedTime(sTime *time.Time) {
 	endTime := time.Now()
-	fmt.Println("Total time to run: %v", endTime.Sub(*sTime))
+	fmt.Println("Total time to run: ", endTime.Sub(*sTime))
 }
