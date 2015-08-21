@@ -1,6 +1,11 @@
 CHANGELOG
 =========
 
+v0.0.13 08-21-2015
+------------------
+
+* Articles now being properly updated
+
 v0.0.12 08-21-2015
 ------------------
 
