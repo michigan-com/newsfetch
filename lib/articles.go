@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"regexp"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -17,40 +18,71 @@ var logger = GetLogger()
 const maxarticles = 20 // Expected number of articles to be returned per URL
 
 type PhotoInfo struct {
-	Url    string `bson:"url"`
-	Width  int    `bson:"width"`
-	Height int    `bson:"height"`
+	Url    string `json:"url"`
+	Width  int    `json:"width"`
+	Height int    `json:"height"`
 }
 
 type Photo struct {
-	Caption   string    `bson:"caption"`
-	Credit    string    `bson:"credit"`
-	Full      PhotoInfo `bson:"full"`
-	Thumbnail PhotoInfo `bson:"thumbnail"`
+	Caption   string    `json:"caption"`
+	Credit    string    `json:"credit"`
+	Full      PhotoInfo `json:"full"`
+	Thumbnail PhotoInfo `json:"thumbnail"`
 }
 
 type ArticleId struct {
-	Id int `bson:"_id"`
+	Id int `json:"_id"`
 }
 
 type Article struct {
-	ArticleId   int       `bson:"article_id"`
-	Headline    string    `bson:"headline"`
-	Subheadline string    `bson:"subheadline"`
-	Section     string    `bson:"section"`
-	Subsection  string    `bson:"subsection"`
-	Source      string    `bson:"source"`
-	Summary     string    `bson:"summary"`
-	Created_at  time.Time `bson:"created_at"`
-	Timestamp   time.Time `bson:"timestamp"`
-	Url         string    `bson:"url"`
-	Photo       *Photo    `bson:"photo"`
-	BodyText    string    `bson:"body"`
+	ArticleId   int       `json:"article_id"`
+	Headline    string    `json:"headline"`
+	Subheadline string    `json:"subheadline"`
+	Section     string    `json:"section"`
+	Subsection  string    `json:"subsection"`
+	Source      string    `json:"source"`
+	Summary     string    `json:"summary"`
+	Created_at  time.Time `json:"created_at"`
+	Timestamp   time.Time `json:"timestamp"`
+	Url         string    `json:"url"`
+	Photo       *Photo    `json:"photo"`
+	BodyText    string    `json:"body"`
 }
 
 type Feed struct {
 	Site string
-	Body map[string]interface{} //*simplejson.Json
+	Body *struct {
+		Content []*Content `json:"content"`
+	}
+}
+
+type Content struct {
+	Url       string `json:"url"`
+	Headline  string `json:"headline"`
+	Summary   string `json:"summary"`
+	Timestamp string `json:"timestamp"`
+	Ssts      *struct {
+		Section    string `json:"section"`
+		Subsection string `json:"subsection"`
+	} `json:"ssts"`
+	Photo *struct {
+		*Attrs `json:"attrs"`
+	} `json:"photo"`
+}
+
+type Attrs struct {
+	Owidth        string `json:"oimagewidth"`
+	OWidth        string `json:"oimageWidth"`
+	Oheight       string `json:"oimageheight"`
+	Swidth        string `json:"simagewidth"`
+	Sheight       string `json:"simageheight"`
+	Basename      string `json:"basename"`
+	PublishUrl    string `json:"publishurl"`
+	SmallBasename string `json:"smallbasename"`
+	ThumbnailPath string `json:"thumbnailPath"`
+	Caption       string `json:"caption"`
+	Credit        string `json:"credit"`
+	Brief         string `json:"brief"`
 }
 
 func isBlacklisted(url string) bool {
@@ -75,7 +107,6 @@ func FetchAndParseArticles(urls []string, extractBody bool) []*Article {
 	var wg sync.WaitGroup
 	logger.Debug("%v", urls)
 
-	//articles := make([]*Article, 0, len(urls)*maxarticles)
 	articleMap := map[string]*Article{}
 
 	for i := 0; i < len(urls); i++ {
@@ -88,19 +119,15 @@ func FetchAndParseArticles(urls []string, extractBody bool) []*Article {
 				return
 			}
 
-			content := feedContent.Body //.Get("content")
-			cslice, _ := content["content"].([]interface{})
-
-			for _, articleJson := range cslice {
-				jso := articleJson.(map[string]interface{})
-				url := jso["url"].(string)
+			for _, articleJson := range feedContent.Body.Content {
+				url := articleJson.Url
 				articleUrl := fmt.Sprintf("http://%s.com%s", feedContent.Site, url)
 
 				if articleMap[articleUrl] != nil || isBlacklisted(articleUrl) {
 					continue
 				}
 
-				article, err := ParseArticle(articleUrl, jso, extractBody)
+				article, err := ParseArticle(articleUrl, articleJson, extractBody)
 				if err != nil {
 					logger.Warning("%v", err)
 					continue
@@ -108,7 +135,6 @@ func FetchAndParseArticles(urls []string, extractBody bool) []*Article {
 
 				article.Source = feedContent.Site
 				articleMap[article.Url] = article
-
 			}
 
 			wg.Done()
@@ -176,55 +202,44 @@ func GetFeedContent(url string) (*Feed, error) {
 	return feed, nil
 }
 
-func ParseArticle(articleUrl string, articleJson map[string]interface{}, extractBody bool) (*Article, error) {
-	//logger.Debug(site)
-	//logger.Debug("%v", articleJson)
-
-	ssts := articleJson["ssts"].(map[string]interface{})
+func ParseArticle(articleUrl string, articleJson *Content, extractBody bool) (*Article, error) {
+	ssts := articleJson.Ssts
 	articleId := GetArticleId(articleUrl)
 
 	// Check to make sure we could parse the ID
 	if articleId < 0 {
-		return &Article{}, fmt.Errorf("Failed to parse an article ID, likely not a news article: %s", articleUrl)
+		return nil, fmt.Errorf("Failed to parse an article ID, likely not a news article: %s", articleUrl)
 	}
 
-	photoJson, _ := articleJson["photo"].(map[string]interface{})
-	attrs, _ := photoJson["attrs"].(map[string]interface{})
-	if attrs == nil {
-		return nil, fmt.Errorf("Failed to get photos for %s", articleUrl)
-	}
-	photo := Photo{}
-
-	// Height/width stuff
-	owidth, _ := attrs["oimagewidth"].(int)
-	oheight, _ := attrs["oimageheight"].(int)
-	swidth, _ := attrs["simageWidth"].(int)
-	sheight, _ := attrs["simageheight"].(int)
-
-	// URLs
-	publishUrl, ok := attrs["publishurl"].(string)
-	if !ok {
-		return nil, fmt.Errorf("Failed to get photo url for %s", articleUrl)
-	}
-	basename, ok := attrs["basename"].(string)
-	if !ok {
-		return nil, fmt.Errorf("Failed to get photo filename for %s", articleUrl)
+	if articleJson.Photo == nil {
+		return nil, fmt.Errorf("Failed to find photo object for %s", articleUrl)
 	}
 
-	photoUrl := strings.Join([]string{publishUrl, basename}, "")
+	if articleJson.Photo.Attrs == nil {
+		return nil, fmt.Errorf("Failed to find photo.attrs object for %s", articleUrl)
+	}
+
+	attrs := articleJson.Photo.Attrs
+
+	photoUrl := strings.Join([]string{attrs.PublishUrl, attrs.Basename}, "")
 	thumbUrl := ""
-	if smallBaseName, ok := attrs["smallbasename"].(string); ok {
-		thumbUrl = strings.Join([]string{publishUrl, smallBaseName}, "")
-	} else if thumbPath, ok := attrs["thumbnailPath"].(string); ok {
-		thumbUrl = strings.Join([]string{publishUrl, thumbPath}, "")
+	if attrs.SmallBasename != "" {
+		thumbUrl = strings.Join([]string{attrs.PublishUrl, attrs.SmallBasename}, "")
+	} else if attrs.ThumbnailPath != "" {
+		thumbUrl = strings.Join([]string{attrs.PublishUrl, attrs.ThumbnailPath}, "")
 	}
 
-	caption, _ := attrs["caption"].(string)
-	credit, _ := attrs["credit"].(string)
+	owidth, _ := strconv.Atoi(attrs.Owidth)
+	if owidth == 0 {
+		owidth, _ = strconv.Atoi(attrs.OWidth)
+	}
+	oheight, _ := strconv.Atoi(attrs.Oheight)
+	swidth, _ := strconv.Atoi(attrs.Swidth)
+	sheight, _ := strconv.Atoi(attrs.Sheight)
 
-	photo = Photo{
-		caption,
-		credit,
+	photo := Photo{
+		attrs.Caption,
+		attrs.Credit,
 		PhotoInfo{
 			photoUrl,
 			owidth,
@@ -243,32 +258,23 @@ func ParseArticle(articleUrl string, articleJson map[string]interface{}, extract
 		ch := make(chan string)
 		go ExtractBodyFromURL(ch, articleUrl, false)
 		body = <-ch
-		/*if aerr != nil {
-			return &Article{}, fmt.Errorf("Failed to extract body from article at %s", articleUrl)
-		}*/
 
 		logger.Debug("Extracted body contains %d characters, %d paragraphs.", len(strings.Split(body, "")), len(strings.Split(body, "\n\n")))
 	}
 
-	timestamp, aerr := time.Parse("2006-1-2T15:04:05.0000000", articleJson["timestamp"].(string))
+	timestamp, aerr := time.Parse("2006-1-2T15:04:05.0000000", articleJson.Timestamp)
 	if aerr != nil {
 		timestamp = time.Now()
 		logger.Warning("%v", aerr)
 	}
 
-	headline, _ := articleJson["headline"].(string)
-	subheadline, _ := attrs["brief"].(string)
-	section, _ := ssts["section"].(string)
-	subsection, _ := ssts["subsection"].(string)
-	summary, _ := articleJson["summary"].(string)
-
 	article := &Article{
 		ArticleId:   articleId,
-		Headline:    headline,
-		Subheadline: subheadline,
-		Section:     section,
-		Subsection:  subsection,
-		Summary:     summary,
+		Headline:    articleJson.Headline,
+		Subheadline: attrs.Brief,
+		Section:     ssts.Section,
+		Subsection:  ssts.Subsection,
+		Summary:     articleJson.Summary,
 		Created_at:  time.Now(),
 		Timestamp:   timestamp,
 		Url:         articleUrl,

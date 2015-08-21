@@ -68,14 +68,14 @@ func TestParseArticle(t *testing.T) {
 		t.Error(err)
 	}
 
-	data, ok := feed.Body["content"].([]interface{})
-	if !ok {
+	if feed.Body.Content == nil {
 		t.Error(`"content" property not found in response JSON`)
 	}
 
-	for _, jso := range data {
-		articleJson := jso.(map[string]interface{})
-		url := articleJson["url"].(string)
+	foundFullPhotoDim := false
+	foundThumbPhotoDim := false
+	for _, articleJson := range feed.Body.Content {
+		url := articleJson.Url
 		articleUrl := fmt.Sprintf("http://%s.com%s", feed.Site, url)
 		article, err := ParseArticle(articleUrl, articleJson, false)
 
@@ -95,11 +95,26 @@ func TestParseArticle(t *testing.T) {
 			t.Error("Url should not be empty")
 		}
 
-		if *article.Photo == (Photo{}) {
+		if article.Photo == nil {
 			t.Error("Photo should not be empty")
+		}
+
+		if article.Photo.Full.Width != 0 || article.Photo.Full.Height != 0 {
+			foundFullPhotoDim = true
+		}
+
+		if article.Photo.Thumbnail.Width != 0 || article.Photo.Thumbnail.Height != 0 {
+			foundThumbPhotoDim = true
 		}
 	}
 
+	if !foundThumbPhotoDim {
+		t.Error("Could not find a single thumbnail image width or height dimension")
+	}
+
+	if !foundFullPhotoDim {
+		t.Error("Could not find a single full image width or height dimension")
+	}
 }
 
 func TestRemoveArticles(t *testing.T) {}
