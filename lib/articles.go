@@ -68,6 +68,9 @@ type Content struct {
 	Photo *struct {
 		*Attrs `json:"attrs"`
 	} `json:"photo"`
+	Attrs *struct {
+		Brief string `json:"brief"`
+	} `json:"attrs"`
 }
 
 type Attrs struct {
@@ -271,7 +274,7 @@ func ParseArticle(articleUrl string, articleJson *Content, extractBody bool) (*A
 	article := &Article{
 		ArticleId:   articleId,
 		Headline:    articleJson.Headline,
-		Subheadline: attrs.Brief,
+		Subheadline: articleJson.Attrs.Brief,
 		Section:     ssts.Section,
 		Subsection:  ssts.Subsection,
 		Summary:     articleJson.Summary,
