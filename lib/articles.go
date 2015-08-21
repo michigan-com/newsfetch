@@ -17,6 +17,9 @@ var logger = GetLogger()
 
 const maxarticles = 20 // Expected number of articles to be returned per URL
 
+/*
+ * DATA GOING OUT
+ */
 type PhotoInfo struct {
 	Url    string `bson:"url"`
 	Width  int    `bson:"width"`
@@ -30,25 +33,25 @@ type Photo struct {
 	Thumbnail PhotoInfo `bson:"thumbnail"`
 }
 
-type ArticleId struct {
-	Id int `bson:"_id"`
-}
-
 type Article struct {
-	ArticleId   int       `bson:"article_id"`
-	Headline    string    `bson:"headline"`
-	Subheadline string    `bson:"subheadline"`
-	Section     string    `bson:"section"`
-	Subsection  string    `bson:"subsection"`
-	Source      string    `bson:"source"`
-	Summary     string    `bson:"summary"`
-	Created_at  time.Time `bson:"created_at"`
-	Timestamp   time.Time `bson:"timestamp"`
-	Url         string    `bson:"url"`
-	Photo       *Photo    `bson:"photo"`
-	BodyText    string    `bson:"body"`
+	Id          bson.ObjectId `bson:"_id,omitempty"`
+	ArticleId   int           `bson:"article_id"`
+	Headline    string        `bson:"headline"`
+	Subheadline string        `bson:"subheadline"`
+	Section     string        `bson:"section"`
+	Subsection  string        `bson:"subsection"`
+	Source      string        `bson:"source"`
+	Summary     string        `bson:"summary"`
+	Created_at  time.Time     `bson:"created_at"`
+	Timestamp   time.Time     `bson:"timestamp"`
+	Url         string        `bson:"url"`
+	Photo       *Photo        `bson:"photo"`
+	BodyText    string        `bson:"body"`
 }
 
+/*
+ * DATA COMING IN
+ */
 type Feed struct {
 	Site string
 	Body *struct {
@@ -314,8 +317,8 @@ func SaveArticles(mongoUri string, articles []*Article) error {
 	totalUpdates := 0
 	totalInserts := 0
 	for _, article := range articles {
-		art := ArticleId{}
-		err := articleCol.Find(bson.M{"url": article.Url}).One(&art)
+		art := Article{}
+		err := articleCol.Find(bson.M{"url": article.Url}).Select(bson.M{"_id": 1}).One(&art)
 		if err == nil {
 			logger.Debug("Article updated: %s", article.Url)
 			totalUpdates++

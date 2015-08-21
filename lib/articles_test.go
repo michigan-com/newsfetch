@@ -118,16 +118,12 @@ func TestParseArticle(t *testing.T) {
 }
 
 func TestRemoveArticles(t *testing.T) {}
-func TestNoDuplcateArticlesMongo(t *testing.T) {
+func TestArticlesMongo(t *testing.T) {
 	logger.Info("Ensure no duplicate articles are in the database")
 
 	uri := "mongodb://localhost:27017/mapi_test"
-	session := DBConnect(uri)
-	defer DBClose(session)
 
 	RemoveArticles(uri)
-
-	articleCol := session.DB("").C("Article")
 
 	urls := FormatFeedUrls([]string{"freep.com"}, []string{"news"})
 	getBody := false
@@ -136,8 +132,19 @@ func TestNoDuplcateArticlesMongo(t *testing.T) {
 			getBody = true
 		}*/
 		articles := FetchAndParseArticles(urls, getBody)
+
+		if i == 0 {
+			for _, art := range articles {
+				art.Headline = ""
+			}
+		}
+
 		SaveArticles(uri, articles)
 	}
+
+	session := DBConnect(uri)
+	defer DBClose(session)
+	articleCol := session.DB("").C("Article")
 
 	var arts []Article
 	err := articleCol.Find(bson.M{}).All(&arts)
@@ -151,6 +158,12 @@ func TestNoDuplcateArticlesMongo(t *testing.T) {
 			t.Errorf("Article %s already exists in database, should never happen", art.Url)
 		}
 		artMap[art.Url] = 1
+
+		logger.Info("Determine if headline gets updated")
+		if art.Headline == "" {
+			t.Errorf("The article's headline did not get properly updated")
+			panic("YA")
+		}
 
 		/*if art.BodyText == "" {
 			t.Errorf("Body text was overwritten on article update")
