@@ -130,8 +130,12 @@ func TestNoDuplcateArticlesMongo(t *testing.T) {
 	articleCol := session.DB("").C("Article")
 
 	urls := FormatFeedUrls([]string{"freep.com"}, []string{"news"})
+	getBody := false
 	for i := 0; i < 2; i++ {
-		articles := FetchAndParseArticles(urls, false)
+		if i == 0 {
+			getBody = true
+		}
+		articles := FetchAndParseArticles(urls, getBody)
 		SaveArticles(uri, articles)
 	}
 
@@ -147,6 +151,10 @@ func TestNoDuplcateArticlesMongo(t *testing.T) {
 			t.Errorf("Article %s already exists in database, should never happen", art.Url)
 		}
 		artMap[art.Url] = 1
+
+		if art.BodyText == "" {
+			t.Errorf("Body text was overwritten on article update")
+		}
 	}
 }
 

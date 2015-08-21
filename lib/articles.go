@@ -282,7 +282,10 @@ func ParseArticle(articleUrl string, articleJson *Content, extractBody bool) (*A
 		Timestamp:   timestamp,
 		Url:         articleUrl,
 		Photo:       &photo,
-		BodyText:    body,
+	}
+
+	if body != "" {
+		article.BodyText = body
 	}
 
 	return article, nil
