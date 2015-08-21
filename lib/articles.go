@@ -18,35 +18,35 @@ var logger = GetLogger()
 const maxarticles = 20 // Expected number of articles to be returned per URL
 
 type PhotoInfo struct {
-	Url    string `json:"url"`
-	Width  int    `json:"width"`
-	Height int    `json:"height"`
+	Url    string `bson:"url"`
+	Width  int    `bson:"width"`
+	Height int    `bson:"height"`
 }
 
 type Photo struct {
-	Caption   string    `json:"caption"`
-	Credit    string    `json:"credit"`
-	Full      PhotoInfo `json:"full"`
-	Thumbnail PhotoInfo `json:"thumbnail"`
+	Caption   string    `bson:"caption"`
+	Credit    string    `bson:"credit"`
+	Full      PhotoInfo `bson:"full"`
+	Thumbnail PhotoInfo `bson:"thumbnail"`
 }
 
 type ArticleId struct {
-	Id int `json:"_id"`
+	Id int `bson:"_id"`
 }
 
 type Article struct {
-	ArticleId   int       `json:"article_id"`
-	Headline    string    `json:"headline"`
-	Subheadline string    `json:"subheadline"`
-	Section     string    `json:"section"`
-	Subsection  string    `json:"subsection"`
-	Source      string    `json:"source"`
-	Summary     string    `json:"summary"`
-	Created_at  time.Time `json:"created_at"`
-	Timestamp   time.Time `json:"timestamp"`
-	Url         string    `json:"url"`
-	Photo       *Photo    `json:"photo"`
-	BodyText    string    `json:"body"`
+	ArticleId   int       `bson:"article_id"`
+	Headline    string    `bson:"headline"`
+	Subheadline string    `bson:"subheadline"`
+	Section     string    `bson:"section"`
+	Subsection  string    `bson:"subsection"`
+	Source      string    `bson:"source"`
+	Summary     string    `bson:"summary"`
+	Created_at  time.Time `bson:"created_at"`
+	Timestamp   time.Time `bson:"timestamp"`
+	Url         string    `bson:"url"`
+	Photo       *Photo    `bson:"photo"`
+	BodyText    string    `bson:"body"`
 }
 
 type Feed struct {
