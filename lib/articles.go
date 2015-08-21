@@ -29,8 +29,11 @@ type Photo struct {
 	Thumbnail PhotoInfo `bson:"thumbnail"`
 }
 
+type ArticleId struct {
+	Id int `bson:"_id"`
+}
+
 type Article struct {
-	Id          int       `bson:"id_"`
 	ArticleId   int       `bson:"article_id"`
 	Headline    string    `bson:"headline"`
 	Subheadline string    `bson:"subheadline"`
@@ -299,15 +302,15 @@ func SaveArticles(mongoUri string, articles []*Article) error {
 	totalUpdates := 0
 	totalInserts := 0
 	for _, article := range articles {
-		art := Article{}
+		art := ArticleId{}
 		err := articleCol.Find(bson.M{"url": article.Url}).One(&art)
 		if err == nil {
-			logger.Debug("Article updated!")
+			logger.Debug("Article updated: %s", article.Url)
 			totalUpdates++
-			articleCol.Update(bson.M{"id_": art.Id}, article)
+			articleCol.Update(bson.M{"_id": art.Id}, article)
 		} else {
 			//bulk.Insert(article)
-			logger.Debug("Article inserted!")
+			logger.Debug("Article added: %s", article.Url)
 			totalInserts++
 			articleCol.Insert(article)
 		}

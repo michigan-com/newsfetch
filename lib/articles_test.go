@@ -3,6 +3,8 @@ package lib
 import (
 	"fmt"
 	"testing"
+
+	"gopkg.in/mgo.v2/bson"
 )
 
 func TestFormatFeedUrls(t *testing.T) {
@@ -100,8 +102,38 @@ func TestParseArticle(t *testing.T) {
 
 }
 
-func TestRemoveArticles(*testing.T) {}
-func TestSaveArticles(*testing.T)   {}
+func TestRemoveArticles(t *testing.T) {}
+func TestNoDuplcateArticlesMongo(t *testing.T) {
+	logger.Info("Ensure no duplicate articles are in the database")
+
+	uri := "mongodb://localhost:27017/mapi_test"
+	session := DBConnect(uri)
+	defer DBClose(session)
+
+	RemoveArticles(uri)
+
+	articleCol := session.DB("").C("Article")
+
+	urls := FormatFeedUrls([]string{"freep.com"}, []string{"news"})
+	for i := 0; i < 2; i++ {
+		articles := FetchAndParseArticles(urls, false)
+		SaveArticles(uri, articles)
+	}
+
+	var arts []Article
+	err := articleCol.Find(bson.M{}).All(&arts)
+	if err != nil {
+		t.Error("No articles found in database, should not happen after adding them")
+	}
+
+	artMap := map[string]int{}
+	for _, art := range arts {
+		if artMap[art.Url] != 0 {
+			t.Errorf("Article %s already exists in database, should never happen", art.Url)
+		}
+		artMap[art.Url] = 1
+	}
+}
 
 func TestFetchAndParseArticles(t *testing.T) {
 	logger.Info("Compile articles and check for duplicate URLs")
