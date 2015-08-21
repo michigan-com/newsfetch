@@ -1,6 +1,13 @@
 CHANGELOG
 =========
 
+v0.0.12 08-21-2015
+------------------
+
+* Revamped JSON unmarshalling for articles
+* Fixed photo dimensions from not being saved properly
+* Fixed duplicate article issue where id key was not being checked
+
 v0.0.11 08-19-2015
 ------------------
 
