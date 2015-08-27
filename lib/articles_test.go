@@ -155,14 +155,13 @@ func TestArticlesMongo(t *testing.T) {
 	artMap := map[string]int{}
 	for _, art := range arts {
 		if artMap[art.Url] != 0 {
-			t.Errorf("Article %s already exists in database, should never happen", art.Url)
+			t.Fatalf("Article %s already exists in database, should never happen", art.Url)
 		}
 		artMap[art.Url] = 1
 
 		logger.Info("Determine if headline gets updated")
 		if art.Headline == "" {
-			t.Errorf("The article's headline did not get properly updated")
-			panic("YA")
+			t.Fatalf("The article's headline did not get properly updated")
 		}
 
 		/*if art.BodyText == "" {
@@ -179,7 +178,7 @@ func TestFetchAndParseArticles(t *testing.T) {
 	artMap := map[string]int{}
 	for _, art := range articles {
 		if artMap[art.Url] != 0 {
-			t.Error("%s duplicate found, this should never happen")
+			t.Fatal("%s duplicate found, this should never happen")
 		}
 		artMap[art.Url] = 1
 	}
