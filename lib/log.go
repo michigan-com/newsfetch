@@ -17,5 +17,18 @@ func GetLogger() *logging.Logger {
 
 	logging.SetBackend(backendFormatter)
 
+	//env var trumps everything
+	level := logging.DEBUG
+	levelEnv := os.Getenv("LOGLEVEL")
+	var err error
+	if levelEnv != "" {
+		level, err = logging.LogLevel(levelEnv)
+		if err != nil {
+			level = logging.DEBUG
+		}
+	}
+
+	logging.SetLevel(level, "newsfetch")
+
 	return log
 }

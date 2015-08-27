@@ -43,6 +43,7 @@ type Article struct {
 	Source      string        `bson:"source"`
 	Summary     string        `bson:"summary"`
 	Created_at  time.Time     `bson:"created_at"`
+	Updated_at  time.Time     `bson:"updated_at"`
 	Timestamp   time.Time     `bson:"timestamp"`
 	Url         string        `bson:"url"`
 	Photo       *Photo        `bson:"photo"`
@@ -282,6 +283,7 @@ func ParseArticle(articleUrl string, articleJson *Content, extractBody bool) (*A
 		Subsection:  ssts.Subsection,
 		Summary:     articleJson.Summary,
 		Created_at:  time.Now(),
+		Updated_at:  time.Now(),
 		Timestamp:   timestamp,
 		Url:         articleUrl,
 		Photo:       &photo,
@@ -318,16 +320,20 @@ func SaveArticles(mongoUri string, articles []*Article) error {
 	totalInserts := 0
 	for _, article := range articles {
 		art := Article{}
-		err := articleCol.Find(bson.M{"url": article.Url}).Select(bson.M{"_id": 1}).One(&art)
+		err := articleCol.
+			Find(bson.M{"url": article.Url}).
+			Select(bson.M{"_id": 1, "created_at": 1}).
+			One(&art)
 		if err == nil {
+			article.Created_at = art.Created_at
+			articleCol.Update(bson.M{"_id": art.Id}, article)
 			logger.Debug("Article updated: %s", article.Url)
 			totalUpdates++
-			articleCol.Update(bson.M{"_id": art.Id}, article)
 		} else {
 			//bulk.Insert(article)
+			articleCol.Insert(article)
 			logger.Debug("Article added: %s", article.Url)
 			totalInserts++
-			articleCol.Insert(article)
 		}
 	}
 	logger.Info("%d articles updated", totalUpdates)
