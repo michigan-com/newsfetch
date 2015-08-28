@@ -1,6 +1,11 @@
 CHANGELOG
 =========
 
+v0.0.15 08-28-2015
+------------------
+
+* Added new summarizer based on github.com/neurosnap/sentences sentence tokenizer
+
 v0.0.14 08-27-2015
 ------------------
 
