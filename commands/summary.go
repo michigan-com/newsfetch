@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/michigan-com/newsfetch/lib"
 	"github.com/spf13/cobra"
 	"github.com/urandom/text-summary/summarize"
 )
@@ -27,9 +28,10 @@ var cmdSummary = &cobra.Command{
 			contents, _ := ioutil.ReadAll(reader)
 			lines := strings.Split(string(contents), "\n")
 
-			summary = summarize.NewFromString(lines[0], strings.Join(lines[1:], "\n"))
+			summary = lib.NewPunktSummarizer(lines[0], strings.Join(lines[1:], "\n"))
 		} else {
-			summary = summarize.New(title, os.Stdin)
+			text, _ := ioutil.ReadAll(os.Stdin)
+			summary = lib.NewPunktSummarizer(title, string(text))
 		}
 
 		if output {
