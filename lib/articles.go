@@ -114,7 +114,7 @@ func FetchAndParseArticles(urls []string, extractBody bool) []*Article {
 	var wg sync.WaitGroup
 	logger.Debug("%v", urls)
 
-	articleMap := map[string]*Article{}
+	articleMap := map[int]*Article{}
 
 	for i := 0; i < len(urls); i++ {
 		wg.Add(1)
@@ -129,8 +129,9 @@ func FetchAndParseArticles(urls []string, extractBody bool) []*Article {
 			for _, articleJson := range feedContent.Body.Content {
 				url := articleJson.Url
 				articleUrl := fmt.Sprintf("http://%s.com%s", feedContent.Site, url)
+				articleId := GetArticleId(articleUrl)
 
-				if articleMap[articleUrl] != nil || isBlacklisted(articleUrl) {
+				if articleMap[articleId] != nil || isBlacklisted(articleUrl) {
 					continue
 				}
 
@@ -141,7 +142,7 @@ func FetchAndParseArticles(urls []string, extractBody bool) []*Article {
 				}
 
 				article.Source = feedContent.Site
-				articleMap[article.Url] = article
+				articleMap[article.ArticleId] = article
 			}
 
 			wg.Done()
@@ -321,7 +322,7 @@ func SaveArticles(mongoUri string, articles []*Article) error {
 	for _, article := range articles {
 		art := Article{}
 		err := articleCol.
-			Find(bson.M{"url": article.Url}).
+			Find(bson.M{"article_id": article.ArticleId}).
 			Select(bson.M{"_id": 1, "created_at": 1}).
 			One(&art)
 		if err == nil {

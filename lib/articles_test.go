@@ -154,12 +154,18 @@ func TestArticlesMongo(t *testing.T) {
 		t.Fatal("No articles found in database, should not happen after adding them")
 	}
 
-	artMap := map[string]int{}
+	artUrlMap := map[string]int{}
+	artIdMap := map[int]int{}
 	for _, art := range arts {
-		if artMap[art.Url] != 0 {
+		if artUrlMap[art.Url] != 0 {
 			t.Fatalf("Article %s already exists in database, should never happen", art.Url)
 		}
-		artMap[art.Url] = 1
+		artUrlMap[art.Url] = 1
+
+		if artIdMap[art.ArticleId] != 0 {
+			t.Fatalf("Article %s already exists in database, should never happen", art.Id)
+		}
+		artIdMap[art.ArticleId] = 1
 
 		t.Log("Determine if headline gets updated")
 		if art.Headline == "" {
