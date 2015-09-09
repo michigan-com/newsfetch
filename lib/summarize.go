@@ -1,7 +1,7 @@
 package lib
 
 import (
-	"fmt"
+	//"fmt"
 	"github.com/neurosnap/sentences/data"
 	"github.com/neurosnap/sentences/punkt"
 	"github.com/urandom/text-summary/summarize"
@@ -12,13 +12,13 @@ type PunktTextSplitter struct {
 }
 
 type SentenceTokenizer struct {
-	punkt.SentenceTokenizer
+	*punkt.DefaultSentenceTokenizer
 }
 
-func (s *SentenceTokenizer) AnnotateTokens(tokens []*punkt.Token) []*punkt.Token {
+func (s *SentenceTokenizer) AnnotateTokens(tokens []*punkt.DefaultToken) []*punkt.DefaultToken {
 	tokens = s.AnnotateFirstPass(tokens)
 	tokens = s.AnnotateSecondPass(tokens)
-	fmt.Println("HI I ACTUALLY GOT HIT\n------------")
+	//fmt.Println("HI I ACTUALLY GOT HIT\n------------")
 	return tokens
 }
 
@@ -27,21 +27,20 @@ func (p PunktTextSplitter) Sentences(text string) []string {
 	if err != nil {
 		panic(err)
 	}
+
 	training, err := punkt.LoadTraining(b)
 
-	//tokenizer := punkt.NewSentenceTokenizer(training)
-
-	tokenizer := SentenceTokenizer{
-		punkt.SentenceTokenizer{
+	tokenizer := &SentenceTokenizer{
+		&punkt.DefaultSentenceTokenizer{
 			Base:        punkt.NewBase(),
 			Punctuation: punkt.Punctuation,
 		},
 	}
 
 	tokenizer.Storage = training
-	tokenizer.STokenizer = &tokenizer
+	tokenizer.SentenceTokenizer = tokenizer
 
-	return tokenizer.Tokenize(text)
+	return punkt.Tokenize(text, tokenizer)
 }
 
 func NewPunktSummarizer(title, text string) summarize.Summarize {
