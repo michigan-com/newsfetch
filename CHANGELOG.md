@@ -1,6 +1,11 @@
 CHANGELOG
 =========
 
+v0.0.16 09-09-2015
+------------------
+
+* Determining a duplicate article is now based on article id and not article url.
+
 v0.0.15 08-28-2015
 ------------------
 
