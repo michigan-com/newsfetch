@@ -15,6 +15,9 @@ git pull deploy master
 printer "Removing old binary ..."
 go clean -i
 
+printer "Download any required third part libraries ..."
+go get -u
+
 printer "Installing new binary ..."
 make install
 
