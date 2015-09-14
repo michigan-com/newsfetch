@@ -28,7 +28,7 @@ func (p PunktTextSplitter) Sentences(text string) []string {
 		panic(err)
 	}
 
-	training, err := punkt.LoadTraining(b)
+	training, _ := punkt.LoadTraining(b)
 
 	tokenizer := &SentenceTokenizer{
 		&punkt.DefaultSentenceTokenizer{

@@ -41,7 +41,7 @@ type Article struct {
 	Section     string        `bson:"section"`
 	Subsection  string        `bson:"subsection"`
 	Source      string        `bson:"source"`
-	Summary     string        `bson:"summary"`
+	Summary     []string      `bson:"summary"`
 	Created_at  time.Time     `bson:"created_at"`
 	Updated_at  time.Time     `bson:"updated_at"`
 	Timestamp   time.Time     `bson:"timestamp"`
@@ -261,13 +261,16 @@ func ParseArticle(articleUrl string, articleJson *Content, extractBody bool) (*A
 	}
 
 	body := ""
-	var aerr error
+	var summary []string
 	if extractBody {
 		ch := make(chan string)
 		go ExtractBodyFromURL(ch, articleUrl, false)
 		body = <-ch
 
 		logger.Debug("Extracted body contains %d characters, %d paragraphs.", len(strings.Split(body, "")), len(strings.Split(body, "\n\n")))
+		summarizer := NewPunktSummarizer(articleJson.Headline, body)
+		summary = summarizer.KeyPoints()
+		logger.Debug("Generated summary ...")
 	}
 
 	timestamp, aerr := time.Parse("2006-1-2T15:04:05.0000000", articleJson.Timestamp)
@@ -282,7 +285,7 @@ func ParseArticle(articleUrl string, articleJson *Content, extractBody bool) (*A
 		Subheadline: articleJson.Attrs.Brief,
 		Section:     ssts.Section,
 		Subsection:  ssts.Subsection,
-		Summary:     articleJson.Summary,
+		Summary:     summary,
 		Created_at:  time.Now(),
 		Updated_at:  time.Now(),
 		Timestamp:   timestamp,

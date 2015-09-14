@@ -9,7 +9,7 @@ import (
 )
 
 func TestFormatFeedUrls(t *testing.T) {
-	t.Log("Compile feed urls from sites and sections")
+	t.Log("Compile feed urls from sites and sections.")
 
 	expected := []string{
 		"http://freep.com/feeds/live/sports/json",
@@ -38,7 +38,7 @@ func TestFormatFeedUrls(t *testing.T) {
 }
 
 func TestGetFeedContent(t *testing.T) {
-	t.Log("Download feed and store its content in a Feed struct")
+	t.Log("Download feed and store its content in a Feed struct.")
 
 	url := "http://detroitnews.com/feeds/live/news/json"
 	feed, err := GetFeedContent(url)
@@ -56,7 +56,7 @@ func TestGetFeedContent(t *testing.T) {
 	url = "http://fuckyoubitch.com"
 	_, err = GetFeedContent(url)
 	if err == nil {
-		t.Fatalf("%s should fail because it's not a Gannett site", url)
+		t.Fatalf("%s should fail because it's not a Gannett site.", url)
 	}
 }
 
@@ -70,7 +70,7 @@ func TestParseArticle(t *testing.T) {
 	}
 
 	if feed.Body.Content == nil {
-		t.Fatal(`"content" property not found in response JSON`)
+		t.Fatal(`"content" property not found in response JSON.`)
 	}
 
 	foundFullPhotoDim := false
@@ -85,19 +85,19 @@ func TestParseArticle(t *testing.T) {
 		}
 
 		if article.ArticleId == 0 {
-			t.Fatal("ArticleId should not be empty")
+			t.Fatal("ArticleId should not be empty.")
 		}
 
 		if article.Headline == "" {
-			t.Fatal("Headline should not be empty")
+			t.Fatal("Headline should not be empty.")
 		}
 
 		if article.Url == "" {
-			t.Fatal("Url should not be empty")
+			t.Fatal("Url should not be empty.")
 		}
 
 		if article.Photo == nil {
-			t.Fatal("Photo should not be empty")
+			t.Fatal("Photo should not be empty.")
 		}
 
 		if article.Photo.Full.Width != 0 || article.Photo.Full.Height != 0 {
@@ -110,16 +110,16 @@ func TestParseArticle(t *testing.T) {
 	}
 
 	if !foundThumbPhotoDim {
-		t.Fatal("Could not find a single thumbnail image width or height dimension")
+		t.Fatal("Could not find a single thumbnail image width or height dimension.")
 	}
 
 	if !foundFullPhotoDim {
-		t.Fatal("Could not find a single full image width or height dimension")
+		t.Fatal("Could not find a single full image width or height dimension.")
 	}
 }
 
 func TestArticlesMongo(t *testing.T) {
-	t.Log("Ensure no duplicate articles are in the database")
+	t.Log("Ensure no duplicate articles are in the database.")
 
 	uri := "mongodb://localhost:27017/mapi_test"
 
@@ -129,9 +129,9 @@ func TestArticlesMongo(t *testing.T) {
 	getBody := false
 	created_at := time.Now()
 	for i := 0; i < 2; i++ {
-		/*if i == 0 {
+		if i == 0 {
 			getBody = true
-		}*/
+		}
 		articles := FetchAndParseArticles(urls, getBody)
 		if i == 0 {
 			for _, art := range articles {
@@ -151,49 +151,58 @@ func TestArticlesMongo(t *testing.T) {
 	var arts []Article
 	err := articleCol.Find(bson.M{}).All(&arts)
 	if err != nil {
-		t.Fatal("No articles found in database, should not happen after adding them")
+		t.Fatal("No articles found in database.")
 	}
 
 	artUrlMap := map[string]int{}
 	artIdMap := map[int]int{}
+	foundBody := false
 	for _, art := range arts {
 		if artUrlMap[art.Url] != 0 {
-			t.Fatalf("Article %s already exists in database, should never happen", art.Url)
+			t.Fatalf("Article %s already exists in database.", art.Url)
 		}
 		artUrlMap[art.Url] = 1
 
 		if artIdMap[art.ArticleId] != 0 {
-			t.Fatalf("Article %s already exists in database, should never happen", art.Id)
+			t.Fatalf("Article %s already exists in database.", art.Id)
 		}
 		artIdMap[art.ArticleId] = 1
 
-		t.Log("Determine if headline gets updated")
+		t.Log("Determine if headline gets updated.")
 		if art.Headline == "" {
-			t.Fatalf("The article's headline did not get properly updated")
+			t.Fatalf("The article's headline did not get properly updated.")
 		}
 
 		t.Log("Created_at should never be updated")
 		if art.Created_at.Sub(created_at) > time.Second {
-			t.Logf("expected: %s, actual: %s", created_at.String(), art.Created_at.String())
+			t.Logf("Expected: %s, Actual: %s", created_at.String(), art.Created_at.String())
 			t.Log(art.Headline)
-			t.Fatalf("Created_at was updated, which should not happen")
+			t.Fatalf("Created_at was updated.")
 		}
 
-		/*if art.BodyText == "" {
-			t.Fatalf("Body text was overwritten on article update")
-		}*/
+		if art.BodyText != "" {
+			t.Log("Found one body with content.")
+			foundBody = true
+			if len(art.Summary) == 0 {
+				t.Fatal("Found a non-empty body with an empty summary.")
+			}
+		}
+	}
+
+	if !foundBody {
+		t.Fatal("Every article body came back empty.")
 	}
 }
 
 func TestFetchAndParseArticles(t *testing.T) {
-	t.Log("Compile articles and check for duplicate URLs")
+	t.Log("Compile articles and check for duplicate URLs.")
 	urls := FormatFeedUrls(Sites, Sections)
 	articles := FetchAndParseArticles(urls, false)
 
 	artMap := map[string]int{}
 	for _, art := range articles {
 		if artMap[art.Url] != 0 {
-			t.Fatal("%s duplicate found, this should never happen")
+			t.Fatal("%s duplicate found, this should never happen.")
 		}
 		artMap[art.Url] = 1
 	}
