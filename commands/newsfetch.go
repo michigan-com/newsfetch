@@ -88,7 +88,9 @@ func AddCommands() {
 	cmdArticles.AddCommand(cmdGetArticles)
 	cmdArticles.AddCommand(cmdRemoveArticles)
 
-	NewsfetchCmd.AddCommand(cmdBody, cmdArticles, cmdSummary, cmdVersion)
+	cmdChartbeat.AddCommand(cmdTopPages)
+
+	NewsfetchCmd.AddCommand(cmdBody, cmdArticles, cmdSummary, cmdVersion, cmdChartbeat)
 }
 
 func getElapsedTime(sTime *time.Time) {
