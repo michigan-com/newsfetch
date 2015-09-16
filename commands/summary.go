@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/michigan-com/newsfetch/lib"
+	"github.com/neurosnap/text-summary/summarize"
 	"github.com/spf13/cobra"
-	"github.com/urandom/text-summary/summarize"
 )
 
 var cmdSummary = &cobra.Command{
