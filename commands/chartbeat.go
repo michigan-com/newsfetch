@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"net/http"
 	"time"
 
 	"github.com/michigan-com/newsfetch/lib"
@@ -35,6 +36,14 @@ var cmdTopPages = &cobra.Command{
 			if err != nil {
 				panic(err)
 			}
+
+			// Update mapi to let it know that a new snapshot has been saved
+			resp, err := http.Get("https://api.michigan.com/popular/")
+			if err != nil {
+				logger.Error("%v", err)
+			}
+
+			logger.Info("%v", resp.Body)
 
 		} else {
 			logger.Warning("Variable 'mongoUri' not specified, no data will be saved")
