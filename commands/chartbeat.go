@@ -26,7 +26,11 @@ var cmdTopPages = &cobra.Command{
 		}
 
 		logger.Info("Fetching toppages")
-		urls := lib.FormatChartbeatUrls("live/toppages/v3", lib.Sites)
+		urls, err := lib.FormatChartbeatUrls("live/toppages/v3", lib.Sites, apiKey)
+		if err != nil {
+			panic(err)
+		}
+
 		snapshot := lib.FetchTopPages(urls)
 
 		if mongoUri != "" {
@@ -38,13 +42,12 @@ var cmdTopPages = &cobra.Command{
 			}
 
 			// Update mapi to let it know that a new snapshot has been saved
-			resp, err := http.Get("https://api.michigan.com/popular/")
+			_, err = http.Get("https://api.michigan.com/popular/")
 			if err != nil {
 				logger.Error("%v", err)
+			} else {
+				logger.Info("Updated snapshot at Mapi at %v", time.Now())
 			}
-
-			logger.Info("%v", resp.Body)
-
 		} else {
 			logger.Warning("Variable 'mongoUri' not specified, no data will be saved")
 		}

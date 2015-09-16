@@ -2,15 +2,17 @@ package lib
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
-	"os"
 	"sort"
 	"sync"
 	"time"
 
 	"gopkg.in/mgo.v2/bson"
 )
+
+const chartbeatApiUrlFormat = "http://api.chartbeat.com/%s/?apikey=%s&host=%s&limit=100"
 
 /** Sorting stuff */
 type ByVisits []*TopArticle
@@ -99,15 +101,7 @@ func FetchTopPages(urls []string) []*TopArticle {
 	wg.Wait()
 	logger.Info("Done fetching and parsing URLs...")
 
-	topArticles = SortTopArticles(topArticles)
-
-	for i := 0; i < len(topArticles); i++ {
-		article := topArticles[i]
-
-		logger.Info("[%d] %s", article.Visits, article.Url)
-	}
-
-	return topArticles
+	return SortTopArticles(topArticles)
 }
 
 /*
@@ -117,23 +111,22 @@ func FetchTopPages(urls []string) []*TopArticle {
 
 	Example endPoint (NOTE no starting or ending slashes): live/toppages/v3
 */
-func FormatChartbeatUrls(endPoint string, sites []string) []string {
+func FormatChartbeatUrls(endPoint string, sites []string, apiKey string) ([]string, error) {
 	urls := make([]string, 0, len(sites))
-	apiKey := os.Getenv("CHARTBEAT_API")
 
 	if apiKey == "" {
-		panic("No CHARTBEAT_API environment variable set. Cannot get chartbeat URLs")
+		return urls, errors.New(fmt.Sprintf("No API key specified. Use the -k flag to specify (Run ./newsfetch chartbeat --help for more info)"))
 	}
 
 	for i := 0; i < len(sites); i++ {
 		site := sites[i]
 
-		url := fmt.Sprintf("http://api.chartbeat.com/%s/?apikey=%s&host=%s&limit=100", endPoint, apiKey, site)
+		url := fmt.Sprintf(chartbeatApiUrlFormat, endPoint, apiKey, site)
 
 		urls = append(urls, url)
 	}
 
-	return urls
+	return urls, nil
 }
 
 /*
@@ -152,15 +145,10 @@ func GetTopPages(url string) (*TopPages, error) {
 
 	topPages := &TopPages{}
 
-	//var body []byte
 	decoder := json.NewDecoder(resp.Body)
 	err = decoder.Decode(&topPages)
 
-	if err != nil {
-		return topPages, err
-	}
-
-	return topPages, nil
+	return topPages, err
 }
 
 /*

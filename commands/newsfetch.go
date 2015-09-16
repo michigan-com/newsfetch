@@ -16,6 +16,7 @@ var (
 	siteStr      string
 	sectionStr   string
 	title        string
+	apiKey       string
 	output       bool
 	timeit       bool
 	body         bool
@@ -83,6 +84,7 @@ func AddFlags() {
 
 	cmdSummary.Flags().StringVarP(&title, "title", "t", "", "Title for article summarizer, if not supplied then the summarizer assumes first line is title")
 
+	cmdTopPages.Flags().StringVarP(&apiKey, "apikey", "k", "", "Chartbeat API Key. Required for fetching chartbeat data")
 	cmdTopPages.Flags().StringVarP(&mongoUri, "save", "s", "", "Saves articles to mongodb server specified in this option, e.g. mongodb://localhost:27017/mapi")
 }
 

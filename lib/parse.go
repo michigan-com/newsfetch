@@ -1,6 +1,8 @@
 package lib
 
 import (
+	"errors"
+	"fmt"
 	"net/url"
 	"regexp"
 	"strconv"
@@ -22,12 +24,27 @@ func GetArticleId(url string) int {
 	}
 }
 
+/*
+	Get the url host from the url string (inputUrl)
+
+	Ex:
+		result, err := GetHost("http://google.com")
+		// result == "google"
+
+	Using the url.Parse method, so urls must start with "http://"
+
+*/
 func GetHost(inputUrl string) (string, error) {
 	u, err := url.Parse(inputUrl)
 	if err != nil {
 		return "", err
 	}
 
-	replace := regexp.MustCompile("[.].+$")
-	return replace.ReplaceAllString(u.Host, ""), nil
+	hostRegex := regexp.MustCompile("([a-zA-Z0-9][a-zA-Z0-9-_]{0,61}[a-zA-Z0-9]{0,1}).[a-zA-Z]{2,}$")
+	match := hostRegex.FindStringSubmatch(u.Host)
+	if match == nil {
+		return "", errors.New(fmt.Sprintf("Could not get host from %s", u.Host))
+	}
+
+	return match[1], nil
 }
