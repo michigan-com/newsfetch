@@ -29,9 +29,7 @@ func ChartbeatToppages(cmd *cobra.Command, args []string) {
 		apiKey = os.Getenv("CHARTBEAT_API_KEY")
 	}
 
-	if timeit {
-		startTime = time.Now()
-	}
+	startTime := time.Now()
 
 	if verbose {
 		Verbose("")
@@ -58,9 +56,21 @@ func ChartbeatToppages(cmd *cobra.Command, args []string) {
 		if err != nil {
 			logger.Error("%v", err)
 		} else {
-			logger.Info("Updated snapshot at Mapi at %v", time.Now())
+			now := time.Now()
+			logger.Info("Updated snapshot at Mapi at %v", now)
 		}
 	} else {
 		logger.Warning("Variable 'mongoUri' not specified, no data will be saved")
+	}
+
+	if timeit {
+		getElapsedTime(&startTime)
+	}
+
+	if loop != -1 {
+		logger.Info("Looping! Sleeping for %d seconds...", loop)
+		time.Sleep(time.Duration(loop) * time.Second)
+		logger.Info("...and now I'm awake!")
+		ChartbeatToppages(cmd, args)
 	}
 }

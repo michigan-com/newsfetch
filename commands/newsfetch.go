@@ -25,6 +25,7 @@ var (
 	noprompt     bool
 	startTime    time.Time
 	VERSION      string
+	loop         int
 )
 
 var logger = lib.GetLogger()
@@ -86,6 +87,7 @@ func AddFlags() {
 
 	cmdTopPages.Flags().StringVarP(&apiKey, "apikey", "k", "", "Chartbeat API Key. Required for fetching chartbeat data")
 	cmdTopPages.Flags().StringVarP(&mongoUri, "save", "s", "", "Saves articles to mongodb server specified in this option, e.g. mongodb://localhost:27017/mapi")
+	cmdTopPages.Flags().IntVarP(&loop, "loop", "l", -1, "Specify the internval in seconds to loop the fetching of the toppages api")
 }
 
 func AddCommands() {
