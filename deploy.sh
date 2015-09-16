@@ -21,6 +21,9 @@ go get -u
 printer "Installing new binary ..."
 make install
 
+printer "Restarting newsfetch-toppages ..."
+supervisorctl restart newsfetch-toppages
+
 printer "Adding git release ..."
 git tag -a $(cat VERSION) -m 'Production release'
 git push --tags deploy master
