@@ -1,18 +1,23 @@
 CHANGELOG
 =========
 
-v.0.1.3 09-16-2015
+v.0.1.4 09-16-2015
 ------------------
 
 * Added -l flag, to loop the command every n seconds. E.g (loop every 5 seconds): ./newsfetch chartbeat toppages -l 5
 * Added supervisor conf
 
-v.0.1.2 09-16-2015
+v0.1.3 09-16-2015
+-----------------
+
+* Forked text-summary to fix issues we are having with consistent summaries
+
+v0.1.2 09-16-2015
 ------------------
 
 * Added chartbeat argument. E.g. `./newsfetch chartbeat toppages`
 
-v.0.1.1 09-15-2015
+v0.1.1 09-15-2015
 ------------------
 
 * [FIX] Body extractor was throwing an unhandled exception when receiving an invalid url
