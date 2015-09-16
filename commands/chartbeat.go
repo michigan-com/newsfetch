@@ -26,6 +26,18 @@ var cmdTopPages = &cobra.Command{
 
 		logger.Info("Fetching toppages")
 		urls := lib.FormatChartbeatUrls("live/toppages/v3", lib.Sites)
-		lib.FetchTopPages(urls)
+		snapshot := lib.FetchTopPages(urls)
+
+		if mongoUri != "" {
+			logger.Info("Saving toppages snapshot")
+			err := lib.SaveTopPagesSnapshot(mongoUri, snapshot)
+
+			if err != nil {
+				panic(err)
+			}
+
+		} else {
+			logger.Warning("Variable 'mongoUri' not specified, no data will be saved")
+		}
 	},
 }

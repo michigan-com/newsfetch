@@ -7,6 +7,7 @@ import (
 	"os"
 	"sort"
 	"sync"
+	"time"
 
 	"gopkg.in/mgo.v2/bson"
 )
@@ -18,6 +19,11 @@ func (a ByVisits) Len() int           { return len(a) }
 func (a ByVisits) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a ByVisits) Less(i, j int) bool { return a[i].Visits > a[j].Visits }
 
+type Snapshot struct {
+	Id         bson.ObjectId `bson:"_id,omitempty"`
+	Created_at time.Time     `bson:"created_at"`
+	Articles   []*TopArticle `bson:"articles"`
+}
 type TopArticle struct {
 	Id        bson.ObjectId `bson:"_id,omitempty"`
 	ArticleId int           `bson:"article_id"`
@@ -43,10 +49,13 @@ type ArticleStats struct {
 	Visits int `json:"visits"`
 }
 
+/*
+	Fetch the top pages data for each url in the urls parameter. Url expected
+	to be http://api.chartbeat.com/live/toppages/v3
+*/
 func FetchTopPages(urls []string) []*TopArticle {
 	logger.Debug("Fetching chartbeat top pages")
 	topArticles := make([]*TopArticle, 0, 100*len(urls))
-	//articleMap := map[int]*TopArticle{}
 
 	var wg sync.WaitGroup
 
@@ -127,6 +136,10 @@ func FormatChartbeatUrls(endPoint string, sites []string) []string {
 	return urls
 }
 
+/*
+	Given a URL for the api.chartbeat.com/live/toppages/v3 API, get the data and
+	read the response
+*/
 func GetTopPages(url string) (*TopPages, error) {
 	logger.Debug("Fetching %s", url)
 
@@ -147,9 +160,28 @@ func GetTopPages(url string) (*TopPages, error) {
 		return topPages, err
 	}
 
-	//json.Unmarshal(body, )
-
 	return topPages, nil
+}
+
+/*
+	Save the toppages snapshot
+
+	mongoUri - connection string to Mongodb
+	toppages - Sorted array of top articles
+*/
+
+func SaveTopPagesSnapshot(mongoUri string, toppages []*TopArticle) error {
+	session := DBConnect(mongoUri)
+	defer DBClose(session)
+
+	// Save the current snapshot
+	snapshotCollection := session.DB("").C("Toppages")
+	snapshot := Snapshot{}
+	snapshot.Articles = toppages
+	snapshot.Created_at = time.Now()
+	snapshotCollection.Insert(snapshot)
+
+	return nil
 }
 
 func SortTopArticles(articles []*TopArticle) []*TopArticle {
