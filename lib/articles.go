@@ -131,7 +131,7 @@ func FetchAndParseArticles(urls []string, extractBody bool) []*Article {
 				articleUrl := fmt.Sprintf("http://%s.com%s", feedContent.Site, url)
 				articleId := GetArticleId(articleUrl)
 
-				if articleMap[articleId] != nil || isBlacklisted(articleUrl) {
+				if articleId == -1 || articleMap[articleId] != nil || isBlacklisted(articleUrl) {
 					continue
 				}
 
