@@ -1,6 +1,12 @@
 CHANGELOG
 =========
 
+v.0.1.3 09-16-2015
+------------------
+
+* Added -l flag, to loop the command every n seconds. E.g (loop every 5 seconds): ./newsfetch chartbeat toppages -l 5
+* Added supervisor conf
+
 v.0.1.2 09-16-2015
 ------------------
 
