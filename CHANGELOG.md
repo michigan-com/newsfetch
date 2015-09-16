@@ -1,12 +1,17 @@
 CHANGELOG
 =========
 
-v.0.1.2 09-16-2015
+v0.1.3 09-16-2015
+-----------------
+
+* Forked text-summary to fix issues we are having with consistent summaries
+
+v0.1.2 09-16-2015
 ------------------
 
 * Added chartbeat argument. E.g. `./newsfetch chartbeat toppages`
 
-v.0.1.1 09-15-2015
+v0.1.1 09-15-2015
 ------------------
 
 * [FIX] Body extractor was throwing an unhandled exception when receiving an invalid url

@@ -4,7 +4,7 @@ import (
 	//"fmt"
 	"github.com/neurosnap/sentences/data"
 	"github.com/neurosnap/sentences/punkt"
-	"github.com/urandom/text-summary/summarize"
+	"github.com/neurosnap/text-summary/summarize"
 )
 
 func LoadTokenizer() *SentenceTokenizer {
