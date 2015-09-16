@@ -22,7 +22,7 @@ printer "Installing new binary ..."
 make install
 
 printer "Restarting newsfetch-toppages ..."
-supervisorctl restart newsfetch-toppages
+supervisorctl restart newsfetch-chartbeat
 
 printer "Adding git release ..."
 git tag -a $(cat VERSION) -m 'Production release'
