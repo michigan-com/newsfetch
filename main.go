@@ -3,6 +3,7 @@ package main
 import (
 	"runtime"
 
+	//"github.com/davecheney/profile"
 	"github.com/michigan-com/newsfetch/commands"
 	"github.com/op/go-logging"
 )
@@ -10,6 +11,7 @@ import (
 var VERSION string
 
 func main() {
+	//defer profile.Start(profile.CPUProfile).Stop()
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
 	logging.SetLevel(logging.CRITICAL, "newsfetch")

@@ -1,6 +1,11 @@
 CHANGELOG
 =========
 
+v.0.1.1 09-15-2015
+------------------
+
+* [FIX] Body extractor was throwing an unhandled exception when receiving an invalid url
+
 v0.1.0 09-14-2015
 -----------------
 
