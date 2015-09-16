@@ -267,10 +267,12 @@ func ParseArticle(articleUrl string, articleJson *Content, extractBody bool) (*A
 		go ExtractBodyFromURL(ch, articleUrl, false)
 		body = <-ch
 
-		logger.Debug("Extracted body contains %d characters, %d paragraphs.", len(strings.Split(body, "")), len(strings.Split(body, "\n\n")))
-		summarizer := NewPunktSummarizer(articleJson.Headline, body)
-		summary = summarizer.KeyPoints()
-		logger.Debug("Generated summary ...")
+		if body != "" {
+			logger.Debug("Extracted body contains %d characters, %d paragraphs.", len(strings.Split(body, "")), len(strings.Split(body, "\n\n")))
+			summarizer := NewPunktSummarizer(articleJson.Headline, body)
+			summary = summarizer.KeyPoints()
+			logger.Debug("Generated summary ...")
+		}
 	}
 
 	timestamp, aerr := time.Parse("2006-1-2T15:04:05.0000000", articleJson.Timestamp)

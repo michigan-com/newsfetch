@@ -76,10 +76,11 @@ func ExtractTitleFromDocument(doc *gq.Document) string {
 
 func ExtractBodyFromURL(ch chan string, url string, includeTitle bool) {
 	logger.Debug("Fetching %s ...\n", url)
-	doc, _ := gq.NewDocument(url)
-	/*if err != nil {
-		return "", err
-	}*/
+	doc, err := gq.NewDocument(url)
+	if err != nil {
+		ch <- ""
+		return
+	}
 
 	ch <- extractBodyFromDocument(doc, includeTitle)
 }
