@@ -18,6 +18,7 @@ var cmdSummary = &cobra.Command{
 	Short: "Attempts to generate a summary based on an article body",
 	Run: func(cmd *cobra.Command, args []string) {
 		var summary summarize.Summarize
+		tokenizer := lib.LoadTokenizer()
 
 		if timeit {
 			startTime = time.Now()
@@ -28,10 +29,10 @@ var cmdSummary = &cobra.Command{
 			contents, _ := ioutil.ReadAll(reader)
 			lines := strings.Split(string(contents), "\n")
 
-			summary = lib.NewPunktSummarizer(lines[0], strings.Join(lines[1:], "\n"))
+			summary = lib.NewPunktSummarizer(lines[0], strings.Join(lines[1:], "\n"), tokenizer)
 		} else {
 			text, _ := ioutil.ReadAll(os.Stdin)
-			summary = lib.NewPunktSummarizer(title, string(text))
+			summary = lib.NewPunktSummarizer(title, string(text), tokenizer)
 		}
 
 		if output {

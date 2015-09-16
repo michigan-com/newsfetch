@@ -31,7 +31,7 @@ func TestSummarizer(t *testing.T) {
 		"George Karadsheh, Fata's former practice business manager, has also filed a whistle-blower federal suit against the former doctor.",
 	}
 
-	summarizer := NewPunktSummarizer(title, text)
+	summarizer := NewPunktSummarizer(title, text, LoadTokenizer())
 	actual := summarizer.KeyPoints()
 
 	if len(actual) != len(expected) {

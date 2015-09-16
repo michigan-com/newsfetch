@@ -14,6 +14,7 @@ import (
 )
 
 var logger = GetLogger()
+var tokenizer = LoadTokenizer()
 
 const maxarticles = 20 // Expected number of articles to be returned per URL
 
@@ -269,7 +270,7 @@ func ParseArticle(articleUrl string, articleJson *Content, extractBody bool) (*A
 
 		if body != "" {
 			logger.Debug("Extracted body contains %d characters, %d paragraphs.", len(strings.Split(body, "")), len(strings.Split(body, "\n\n")))
-			summarizer := NewPunktSummarizer(articleJson.Headline, body)
+			summarizer := NewPunktSummarizer(articleJson.Headline, body, tokenizer)
 			summary = summarizer.KeyPoints()
 			logger.Debug("Generated summary ...")
 		}
