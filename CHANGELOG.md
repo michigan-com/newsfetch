@@ -1,6 +1,11 @@
 CHANGELOG
 =========
 
+v.0.1.2 09-16-2015
+------------------
+
+* Added chartbeat argument. E.g. `./newsfetch chartbeat toppages`
+
 v.0.1.1 09-15-2015
 ------------------
 
