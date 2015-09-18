@@ -17,10 +17,10 @@ var cmdChartbeat = &cobra.Command{
 var cmdTopPages = &cobra.Command{
 	Use:   "toppages",
 	Short: "Fetch toppages snapshot for Chartbeat",
-	Run:   ChartbeatToppages,
+	Run:   ChartbeatToppagesCommand,
 }
 
-func ChartbeatToppages(cmd *cobra.Command, args []string) {
+func ChartbeatToppagesCommand(cmd *cobra.Command, args []string) {
 	// Set up environment
 	if mongoUri == "" {
 		mongoUri = os.Getenv("MONGO_URI")
@@ -35,10 +35,27 @@ func ChartbeatToppages(cmd *cobra.Command, args []string) {
 		Verbose("")
 	}
 
+	// Run the actual meat of the program
+	ChartbeatToppages()
+
+	if timeit {
+		getElapsedTime(&startTime)
+	}
+
+	if loop != -1 {
+		logger.Info("Looping! Sleeping for %d seconds...", loop)
+		time.Sleep(time.Duration(loop) * time.Second)
+		logger.Info("...and now I'm awake!")
+		ChartbeatToppagesCommand(cmd, args)
+	}
+}
+
+func ChartbeatToppages() {
 	logger.Info("Fetching toppages")
 	urls, err := lib.FormatChartbeatUrls("live/toppages/v3", lib.Sites, apiKey)
 	if err != nil {
-		panic(err)
+		logger.Error("%v", err)
+		return
 	}
 
 	snapshot := lib.FetchTopPages(urls)
@@ -48,7 +65,8 @@ func ChartbeatToppages(cmd *cobra.Command, args []string) {
 		err := lib.SaveTopPagesSnapshot(mongoUri, snapshot)
 
 		if err != nil {
-			panic(err)
+			logger.Error("%v", err)
+			return
 		}
 
 		// Update mapi to let it know that a new snapshot has been saved
@@ -61,16 +79,5 @@ func ChartbeatToppages(cmd *cobra.Command, args []string) {
 		}
 	} else {
 		logger.Warning("Variable 'mongoUri' not specified, no data will be saved")
-	}
-
-	if timeit {
-		getElapsedTime(&startTime)
-	}
-
-	if loop != -1 {
-		logger.Info("Looping! Sleeping for %d seconds...", loop)
-		time.Sleep(time.Duration(loop) * time.Second)
-		logger.Info("...and now I'm awake!")
-		ChartbeatToppages(cmd, args)
 	}
 }

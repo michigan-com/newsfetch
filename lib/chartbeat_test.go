@@ -1,7 +1,6 @@
 package lib
 
 import (
-	"fmt"
 	"strings"
 	"testing"
 )
@@ -16,12 +15,12 @@ func TestFormatChartbeatUrls(t *testing.T) {
 	formattedUrls, err := FormatChartbeatUrls(endPoint, Sites, apiKey)
 
 	if err != nil {
-		panic(err)
+		t.Fatalf("%v", err)
 	}
 
 	// Check to make sure we have the right numnber of urls
 	if len(formattedUrls) != len(Sites) {
-		panic(fmt.Sprintf("Expected %d urls, got %d", len(Sites), len(formattedUrls)))
+		t.Fatalf("Expected %d urls, got %d", len(Sites), len(formattedUrls))
 	}
 
 	// Test to make sure the URLs formatted correctly
@@ -29,11 +28,11 @@ func TestFormatChartbeatUrls(t *testing.T) {
 		url := formattedUrls[i]
 		site := Sites[i]
 		if !strings.Contains(url, endPoint) {
-			panic(fmt.Sprintf("Url %s does not contain endPoint %s", url, endPoint))
+			t.Fatalf("Url %s does not contain endPoint %s", url, endPoint)
 		} else if !strings.Contains(url, apiKey) {
-			panic(fmt.Sprintf("Url %s does not contain the apiKey %s", url, apiKey))
+			t.Fatalf("Url %s does not contain the apiKey %s", url, apiKey)
 		} else if !strings.Contains(url, site) {
-			panic(fmt.Sprintf("Url %s should have site %s as a parameter", url, site))
+			t.Fatalf("Url %s should have site %s as a parameter", url, site)
 		}
 	}
 
@@ -41,13 +40,13 @@ func TestFormatChartbeatUrls(t *testing.T) {
 	endPoint = "blah"
 	formattedUrls, err = FormatChartbeatUrls(endPoint, []string{}, apiKey)
 	if len(formattedUrls) != 0 {
-		panic(fmt.Sprintf("%d urls created, should have been 0", len(formattedUrls)))
+		t.Fatalf("%d urls created, should have been 0", len(formattedUrls))
 	}
 
 	// Test and make sure that no api key returns an error
 	_, err = FormatChartbeatUrls(endPoint, Sites, "")
 	if err == nil {
-		panic("Should have thrown an error when no API key was set")
+		t.Fatalf("Should have thrown an error when no API key was set")
 	}
 
 }
@@ -58,10 +57,10 @@ func TestGetTopPages(t *testing.T) {
 	topPages, err := GetTopPages(testUrl)
 
 	if err != nil {
-		panic(err)
+		t.Fatalf("%v", err)
 	}
 	if len(topPages.Pages) == 0 {
-		panic("No pages got returned in the test API call")
+		t.Fatalf("No pages got returned in the test API call")
 	}
 
 	// This is a url that should return an error
@@ -69,7 +68,7 @@ func TestGetTopPages(t *testing.T) {
 	_, err = GetTopPages(badUrl)
 
 	if err == nil {
-		panic(fmt.Sprintf("Url '%s' should have thrown an error", badUrl))
+		t.Fatalf("Url '%s' should have thrown an error", badUrl)
 	}
 }
 
@@ -107,7 +106,7 @@ func TestSortTopArticles(t *testing.T) {
 
 		// Fail if we have a value that is larger than the preceding value
 		if thisVal > lastVal {
-			panic(fmt.Sprintf("sorted[%d] == %d, sorted[%d] == %d. Should be sorted in descending order", i-1, lastVal, i, thisVal))
+			t.Fatalf("sorted[%d] == %d, sorted[%d] == %d. Should be sorted in descending order", i-1, lastVal, i, thisVal)
 		}
 		lastVal = thisVal
 	}

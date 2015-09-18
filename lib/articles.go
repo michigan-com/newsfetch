@@ -35,20 +35,26 @@ type Photo struct {
 }
 
 type Article struct {
-	Id          bson.ObjectId `bson:"_id,omitempty"`
-	ArticleId   int           `bson:"article_id"`
-	Headline    string        `bson:"headline"`
-	Subheadline string        `bson:"subheadline"`
-	Section     string        `bson:"section"`
-	Subsection  string        `bson:"subsection"`
-	Source      string        `bson:"source"`
-	Summary     []string      `bson:"summary"`
-	Created_at  time.Time     `bson:"created_at"`
-	Updated_at  time.Time     `bson:"updated_at"`
-	Timestamp   time.Time     `bson:"timestamp"`
-	Url         string        `bson:"url"`
-	Photo       *Photo        `bson:"photo"`
-	BodyText    string        `bson:"body"`
+	Id          bson.ObjectId  `bson:"_id,omitempty"`
+	ArticleId   int            `bson:"article_id"`
+	Headline    string         `bson:"headline"`
+	Subheadline string         `bson:"subheadline"`
+	Section     string         `bson:"section"`
+	Subsection  string         `bson:"subsection"`
+	Source      string         `bson:"source"`
+	Summary     []string       `bson:"summary"`
+	Created_at  time.Time      `bson:"created_at"`
+	Updated_at  time.Time      `bson:"updated_at"`
+	Timestamp   time.Time      `bson:"timestamp"`
+	Url         string         `bson:"url"`
+	Photo       *Photo         `bson:"photo"`
+	BodyText    string         `bson:"body"`
+	Visits      []TimeInterval `body:"visits"`
+}
+
+type TimeInterval struct {
+	Max       int       `bson:"max"`
+	Timestamp time.Time `bson:"timestamp"`
 }
 
 /*
