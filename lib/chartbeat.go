@@ -59,6 +59,7 @@ type ArticleStats struct {
 func FetchTopPages(urls []string) []*TopArticle {
 	Debugger.Println("Fetching chartbeat top pages")
 	topArticles := make([]*TopArticle, 0, 100*len(urls))
+	articleQueue := make(chan *TopArticle, 100*len(urls))
 
 	var wg sync.WaitGroup
 
@@ -91,8 +92,8 @@ func FetchTopPages(urls []string) []*TopArticle {
 				article.Url = page.Path
 				article.Sections = page.Sections
 				article.Visits = page.Stats.Visits
-				//articleMap[articleId] = article
-				topArticles = append(topArticles, article)
+
+				articleQueue <- article
 			}
 
 			wg.Done()
@@ -100,6 +101,16 @@ func FetchTopPages(urls []string) []*TopArticle {
 	}
 
 	wg.Wait()
+	Debugger.Println("Done")
+	close(articleQueue)
+
+	Debugger.Println("about to range")
+	for article := range articleQueue {
+		topArticles = append(topArticles, article)
+	}
+
+	Debugger.Printf("Num article: %d", len(topArticles))
+
 	Debugger.Println("Done fetching and parsing URLs...")
 
 	return SortTopArticles(topArticles)

@@ -62,9 +62,9 @@ Specify specific site and specific section
 $ ./newsfetch articles get -i freep.com -e sports
 ```
 
-Specify multiple sites with verbose output
+Specify multiple sites
 ```
-$ ./newsfetch -v articles get -i freep.com,detroitnews.com -e sports
+$ ./newsfetch articles get -i freep.com,detroitnews.com -e sports
 ```
 
 Just grab the article URL in the output
@@ -98,4 +98,21 @@ If you have the title, use the flag
 $ ./newsfetch body | ./newsfetch summary -t "Cancer doc Farid Fata appeals 45-year prison sentence"
 ```
 
+### Logging Output
 
+All logging is determined by the `DEBUG` environment variable.
+
+This will output all logging statements
+```
+DEBUG=* ./newsfetch articles get
+```
+
+This will output only the logger output
+```
+DEBUG=logger ./newsfetch articles get
+```
+
+This will output logger and chartbeat ouput
+```
+DEBUG=logger,chartbeat ./newsfetch chartbeat toppages -k APIKEY
+```
