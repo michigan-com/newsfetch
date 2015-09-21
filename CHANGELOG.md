@@ -1,6 +1,12 @@
 CHANGELOG
 =========
 
+v.0.1.4 09-21-2015
+------------------
+
+* Removing old snapshots so that the most recent is the only one kept
+* Added MONGOURI env variable to the tests for DB testing
+
 v.0.1.4 09-16-2015
 ------------------
 

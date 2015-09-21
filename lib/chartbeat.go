@@ -169,6 +169,22 @@ func SaveTopPagesSnapshot(mongoUri string, toppages []*TopArticle) error {
 	snapshot.Created_at = time.Now()
 	snapshotCollection.Insert(snapshot)
 
+	// remove all the other snapshots
+	snapshotCollection.Find(bson.M{}).
+		Select(bson.M{"_id": 1}).
+		Sort("-_id").
+		One(&snapshot)
+
+	_, err := snapshotCollection.RemoveAll(bson.M{
+		"_id": bson.M{
+			"$ne": snapshot.Id,
+		},
+	})
+
+	if err != nil {
+		logger.Error("%v", err)
+	}
+
 	return nil
 }
 

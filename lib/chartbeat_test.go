@@ -2,8 +2,11 @@ package lib
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"testing"
+
+	"gopkg.in/mgo.v2/bson"
 )
 
 func TestFormatChartbeatUrls(t *testing.T) {
@@ -16,12 +19,12 @@ func TestFormatChartbeatUrls(t *testing.T) {
 	formattedUrls, err := FormatChartbeatUrls(endPoint, Sites, apiKey)
 
 	if err != nil {
-		panic(err)
+		t.Fatalf("%v", err)
 	}
 
 	// Check to make sure we have the right numnber of urls
 	if len(formattedUrls) != len(Sites) {
-		panic(fmt.Sprintf("Expected %d urls, got %d", len(Sites), len(formattedUrls)))
+		t.Fatalf(fmt.Sprintf("Expected %d urls, got %d", len(Sites), len(formattedUrls)))
 	}
 
 	// Test to make sure the URLs formatted correctly
@@ -29,11 +32,11 @@ func TestFormatChartbeatUrls(t *testing.T) {
 		url := formattedUrls[i]
 		site := Sites[i]
 		if !strings.Contains(url, endPoint) {
-			panic(fmt.Sprintf("Url %s does not contain endPoint %s", url, endPoint))
+			t.Fatalf(fmt.Sprintf("Url %s does not contain endPoint %s", url, endPoint))
 		} else if !strings.Contains(url, apiKey) {
-			panic(fmt.Sprintf("Url %s does not contain the apiKey %s", url, apiKey))
+			t.Fatalf(fmt.Sprintf("Url %s does not contain the apiKey %s", url, apiKey))
 		} else if !strings.Contains(url, site) {
-			panic(fmt.Sprintf("Url %s should have site %s as a parameter", url, site))
+			t.Fatalf(fmt.Sprintf("Url %s should have site %s as a parameter", url, site))
 		}
 	}
 
@@ -41,13 +44,13 @@ func TestFormatChartbeatUrls(t *testing.T) {
 	endPoint = "blah"
 	formattedUrls, err = FormatChartbeatUrls(endPoint, []string{}, apiKey)
 	if len(formattedUrls) != 0 {
-		panic(fmt.Sprintf("%d urls created, should have been 0", len(formattedUrls)))
+		t.Fatalf(fmt.Sprintf("%d urls created, should have been 0", len(formattedUrls)))
 	}
 
 	// Test and make sure that no api key returns an error
 	_, err = FormatChartbeatUrls(endPoint, Sites, "")
 	if err == nil {
-		panic("Should have thrown an error when no API key was set")
+		t.Fatalf("Should have thrown an error when no API key was set")
 	}
 
 }
@@ -58,10 +61,10 @@ func TestGetTopPages(t *testing.T) {
 	topPages, err := GetTopPages(testUrl)
 
 	if err != nil {
-		panic(err)
+		t.Fatalf("%v", err)
 	}
 	if len(topPages.Pages) == 0 {
-		panic("No pages got returned in the test API call")
+		t.Fatalf("No pages got returned in the test API call")
 	}
 
 	// This is a url that should return an error
@@ -69,13 +72,54 @@ func TestGetTopPages(t *testing.T) {
 	_, err = GetTopPages(badUrl)
 
 	if err == nil {
-		panic(fmt.Sprintf("Url '%s' should have thrown an error", badUrl))
+		t.Fatalf(fmt.Sprintf("Url '%s' should have thrown an error", badUrl))
 	}
 }
 
 func TestSaveSnapshot(t *testing.T) {
-	//TODO figure out a test DB situation and how to read that mongoUri into the
-	// test cases
+	mongoUri := os.Getenv("MONGOURI")
+	if mongoUri == "" {
+		t.Fatalf("%v", "No mongo URI specified, failing test")
+	}
+
+	// Make an article snapshot and save it
+	numArticles := 20
+	toppages := make([]*TopArticle, 0, numArticles)
+	for i := 0; i < numArticles; i++ {
+		article := &TopArticle{}
+		article.ArticleId = i
+		article.Headline = fmt.Sprintf("Article %d", i)
+		article.Visits = 100
+
+		toppages = append(toppages, article)
+	}
+
+	// Add the collection 4 times
+	SaveTopPagesSnapshot(mongoUri, toppages)
+	SaveTopPagesSnapshot(mongoUri, toppages)
+	SaveTopPagesSnapshot(mongoUri, toppages)
+	SaveTopPagesSnapshot(mongoUri, toppages)
+
+	// Now verify
+	session := DBConnect(mongoUri)
+	defer DBClose(session)
+
+	col := session.DB("").C("Toppages")
+	numSnapshots, err := col.Count()
+
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+	if numSnapshots != 1 {
+		t.Fatalf("Should only be one collection")
+	}
+
+	snapshot := &Snapshot{}
+	err = col.Find(bson.M{}).One(&snapshot)
+
+	if len(snapshot.Articles) != numArticles {
+		t.Fatalf("Should be %d values in the snapshot, but there are %d", numArticles, len(snapshot.Articles))
+	}
 }
 
 func TestSortTopArticles(t *testing.T) {
@@ -107,7 +151,7 @@ func TestSortTopArticles(t *testing.T) {
 
 		// Fail if we have a value that is larger than the preceding value
 		if thisVal > lastVal {
-			panic(fmt.Sprintf("sorted[%d] == %d, sorted[%d] == %d. Should be sorted in descending order", i-1, lastVal, i, thisVal))
+			t.Fatalf(fmt.Sprintf("sorted[%d] == %d, sorted[%d] == %d. Should be sorted in descending order", i-1, lastVal, i, thisVal))
 		}
 		lastVal = thisVal
 	}
