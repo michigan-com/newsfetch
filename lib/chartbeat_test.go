@@ -1,7 +1,6 @@
 package lib
 
 import (
-	//"time"
 	"fmt"
 	"os"
 	"strings"
@@ -59,6 +58,68 @@ func TestSaveTimeInterval(t *testing.T) {
 	mongoUri := os.Getenv("MONGOURI")
 	if mongoUri == "" {
 		t.Fatalf("No MONGOURI env variable set")
+	}
+
+	// Save a bunch of articles
+	numArticles := 20
+	articles := make([]*Article, 0, numArticles)
+	for i := 0; i < numArticles; i++ {
+		article := &Article{}
+		article.ArticleId = i + 1
+		articles = append(articles, article)
+	}
+	err := SaveArticles(mongoUri, articles)
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+
+	// Calculate a bunch of the time intervals
+	topPages := make([]*TopArticle, 0, numArticles)
+	visits := map[int]int{}
+	for i := 0; i < numArticles; i++ {
+		article := &TopArticle{}
+		articleId := i + 1
+		numVisits := RandomInt(500)
+
+		article.ArticleId = articleId
+		article.Visits = numVisits
+
+		visits[articleId] = numVisits
+		topPages = append(topPages, article)
+	}
+	CalculateTimeInterval(topPages, mongoUri)
+
+	// Now check the articles saved and make sure they updated the visits
+	session := DBConnect(mongoUri)
+	articleCol := session.DB("").C("Article")
+
+	savedArticles := make([]*Article, 0, numArticles)
+	articleCol.Find(bson.M{
+		"article_id": bson.M{
+			"$gte": 1,
+			"$lte": 20,
+		},
+	}).All(&savedArticles)
+
+	if len(savedArticles) != numArticles {
+		t.Fatalf("Failed to get the right number of articles from the DB")
+	}
+
+	// Verify the visits match up
+	for _, article := range savedArticles {
+		articleId := article.ArticleId
+		if len(article.Visits) != 1 {
+			t.Fatalf("Should be exactly one visit in the array, there are %d", len(article.Visits))
+		}
+
+		numVisits, ok := visits[articleId]
+		if !ok {
+			t.Fatalf("Failed to find visits in map for articleId=%d", articleId)
+		}
+
+		if numVisits != article.Visits[0].Max {
+			t.Fatalf("Article %d: Expected: %d visits. Actual: %d visits", articleId, numVisits, article.Visits[0].Max)
+		}
 	}
 }
 
