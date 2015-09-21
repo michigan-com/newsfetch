@@ -57,7 +57,7 @@ type ArticleStats struct {
 	to be http://api.chartbeat.com/live/toppages/v3
 */
 func FetchTopPages(urls []string) []*TopArticle {
-	logger.Debug("Fetching chartbeat top pages")
+	Debugger.Println("Fetching chartbeat top pages")
 	topArticles := make([]*TopArticle, 0, 100*len(urls))
 
 	var wg sync.WaitGroup
@@ -69,7 +69,7 @@ func FetchTopPages(urls []string) []*TopArticle {
 			pages, err := GetTopPages(url)
 
 			if err != nil {
-				logger.Warning("%v", err)
+				Debugger.Println("%v", err)
 				wg.Done()
 				return
 			}
@@ -100,18 +100,18 @@ func FetchTopPages(urls []string) []*TopArticle {
 	}
 
 	wg.Wait()
-	logger.Info("Done fetching and parsing URLs...")
+	Debugger.Println("Done fetching and parsing URLs...")
 
 	return SortTopArticles(topArticles)
 }
 
 func CalculateTimeInterval(articles []*TopArticle, mongoUri string) {
 	if mongoUri == "" {
-		logger.Error("No MonguoUri")
+		Debugger.Printf("No MonguoUri")
 		return
 	}
 
-	logger.Info("Updating numbers for articles for this given time interval")
+	Debugger.Printf("Updating numbers for articles for this given time interval")
 	articleIds := make([]int, len(articles), len(articles))
 	articleVisits := map[int]int{}
 	savedArticles := make([]*Article, len(articles), len(articles))
@@ -138,7 +138,7 @@ func CalculateTimeInterval(articles []*TopArticle, mongoUri string) {
 		All(&savedArticles)
 
 	if err != nil {
-		logger.Error("%v", err)
+		Debugger.Printf("ERROR: %v", err)
 		return
 	}
 
@@ -167,7 +167,7 @@ func saveTimeInterval(articles []*Article, session *mgo.Session) {
 	for _, article := range articles {
 		err := articleCol.Update(bson.M{"_id": article.Id}, article)
 		if err != nil {
-			logger.Error("%v", err)
+			Debugger.Printf("ERROR: %v", err)
 		}
 	}
 }
@@ -202,14 +202,14 @@ func FormatChartbeatUrls(endPoint string, sites []string, apiKey string) ([]stri
 	read the response
 */
 func GetTopPages(url string) (*TopPages, error) {
-	logger.Debug("Fetching %s", url)
+	Debugger.Println("Fetching %s", url)
 
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err
 	}
 
-	logger.Debug("Successfully fetched %s", url)
+	Debugger.Println("Successfully fetched %s", url)
 
 	topPages := &TopPages{}
 
@@ -226,6 +226,7 @@ func GetTopPages(url string) (*TopPages, error) {
 	toppages - Sorted array of top articles
 */
 func SaveTopPagesSnapshot(mongoUri string, toppages []*TopArticle) error {
+	Debugger.Println("Saving snapshot ...")
 	session := DBConnect(mongoUri)
 	defer DBClose(session)
 
@@ -249,13 +250,14 @@ func SaveTopPagesSnapshot(mongoUri string, toppages []*TopArticle) error {
 	})
 
 	if err != nil {
-		logger.Error("%v", err)
+		Debugger.Println("Error when removing older snapshots: %v", err)
 	}
 
 	return nil
 }
 
 func SortTopArticles(articles []*TopArticle) []*TopArticle {
+	Debugger.Println("Sorting articles ...")
 	sort.Sort(ByVisits(articles))
 	return articles
 }
