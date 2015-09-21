@@ -55,26 +55,38 @@ func TestFormatChartbeatUrls(t *testing.T) {
 	}
 }
 
+func TestSaveTimeInterval(t *testing.T) {
+	mongoUri := os.Getenv("MONGOURI")
+	if mongoUri == "" {
+		t.Fatalf("No MONGOURI env variable set")
+	}
+}
+
 func TestCalculateTimeInterval(t *testing.T) {
-	articles := []*Article{&Article{}}
+	articles := []*Article{&Article{}, &Article{}, &Article{}, &Article{}}
 	articles[0].ArticleId = 1
-	//articles[0].Visits = []TimeInterval{
-	//TimeInterval{
-	//10,
-	//time.Now(),
-	//},
-	//}
+	articles[1].ArticleId = 2
+	articles[2].ArticleId = 3
+	articles[3].ArticleId = 4
 
 	articleVisits := map[int]int{
 		1: 100,
+		2: 600,
+		3: 12,
+		4: 566,
 	}
 
 	calculateTimeInterval(articles, articleVisits)
 
-	if articles[0].Visits[0].Max != 100 {
-		t.Fatalf("Should be 100, actual %d", articles[0].Visits[0].Max)
+	for _, article := range articles {
+		id := article.ArticleId
+		visits := article.Visits[0].Max
+		expectedVisits := articleVisits[id]
+
+		if visits != expectedVisits {
+			t.Fatalf("Expected %d visits, got %d", expectedVisits, visits)
+		}
 	}
-	logger.Info("%v", articles[0].Visits)
 }
 
 func TestGetTopPages(t *testing.T) {

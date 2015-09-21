@@ -225,7 +225,6 @@ func GetTopPages(url string) (*TopPages, error) {
 	mongoUri - connection string to Mongodb
 	toppages - Sorted array of top articles
 */
-
 func SaveTopPagesSnapshot(mongoUri string, toppages []*TopArticle) error {
 	session := DBConnect(mongoUri)
 	defer DBClose(session)
