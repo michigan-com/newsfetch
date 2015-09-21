@@ -56,7 +56,7 @@ func ChartbeatToppages(cmd *cobra.Command, args []string) {
 			logger.Println("%v", err)
 		} else {
 			now := time.Now()
-			logger.Println("Updated snapshot at Mapi at %v", now)
+			debugger.Println("Updated snapshot at Mapi at %v", now)
 		}
 	} else {
 		logger.Println("Variable 'mongoUri' not specified, no data will be saved")
