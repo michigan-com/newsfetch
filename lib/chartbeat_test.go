@@ -1,9 +1,13 @@
 package lib
 
 import (
+	//"time"
+	"fmt"
+	"os"
 	"strings"
 	"testing"
-	//"time"
+
+	"gopkg.in/mgo.v2/bson"
 )
 
 func TestFormatChartbeatUrls(t *testing.T) {
@@ -29,11 +33,11 @@ func TestFormatChartbeatUrls(t *testing.T) {
 		url := formattedUrls[i]
 		site := Sites[i]
 		if !strings.Contains(url, endPoint) {
-			t.Fatalf("Url %s does not contain endPoint %s", url, endPoint)
+			t.Fatalf(fmt.Sprintf("Url %s does not contain endPoint %s", url, endPoint))
 		} else if !strings.Contains(url, apiKey) {
-			t.Fatalf("Url %s does not contain the apiKey %s", url, apiKey)
+			t.Fatalf(fmt.Sprintf("Url %s does not contain the apiKey %s", url, apiKey))
 		} else if !strings.Contains(url, site) {
-			t.Fatalf("Url %s should have site %s as a parameter", url, site)
+			t.Fatalf(fmt.Sprintf("Url %s should have site %s as a parameter", url, site))
 		}
 	}
 
@@ -41,7 +45,7 @@ func TestFormatChartbeatUrls(t *testing.T) {
 	endPoint = "blah"
 	formattedUrls, err = FormatChartbeatUrls(endPoint, []string{}, apiKey)
 	if len(formattedUrls) != 0 {
-		t.Fatalf("%d urls created, should have been 0", len(formattedUrls))
+		t.Fatalf(fmt.Sprintf("%d urls created, should have been 0", len(formattedUrls)))
 	}
 
 	// Test and make sure that no api key returns an error
@@ -90,13 +94,54 @@ func TestGetTopPages(t *testing.T) {
 	_, err = GetTopPages(badUrl)
 
 	if err == nil {
-		t.Fatalf("Url '%s' should have thrown an error", badUrl)
+		t.Fatalf(fmt.Sprintf("Url '%s' should have thrown an error", badUrl))
 	}
 }
 
 func TestSaveSnapshot(t *testing.T) {
-	//TODO figure out a test DB situation and how to read that mongoUri into the
-	// test cases
+	mongoUri := os.Getenv("MONGOURI")
+	if mongoUri == "" {
+		t.Fatalf("%v", "No mongo URI specified, failing test")
+	}
+
+	// Make an article snapshot and save it
+	numArticles := 20
+	toppages := make([]*TopArticle, 0, numArticles)
+	for i := 0; i < numArticles; i++ {
+		article := &TopArticle{}
+		article.ArticleId = i
+		article.Headline = fmt.Sprintf("Article %d", i)
+		article.Visits = 100
+
+		toppages = append(toppages, article)
+	}
+
+	// Add the collection 4 times
+	SaveTopPagesSnapshot(mongoUri, toppages)
+	SaveTopPagesSnapshot(mongoUri, toppages)
+	SaveTopPagesSnapshot(mongoUri, toppages)
+	SaveTopPagesSnapshot(mongoUri, toppages)
+
+	// Now verify
+	session := DBConnect(mongoUri)
+	defer DBClose(session)
+
+	col := session.DB("").C("Toppages")
+	numSnapshots, err := col.Count()
+
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+	if numSnapshots != 1 {
+		t.Fatalf("Should only be one collection")
+	}
+
+	snapshot := &Snapshot{}
+	err = col.Find(bson.M{}).One(&snapshot)
+
+	if len(snapshot.Articles) != numArticles {
+		t.Fatalf("Should be %d values in the snapshot, but there are %d", numArticles, len(snapshot.Articles))
+	}
 }
 
 func TestSortTopArticles(t *testing.T) {
@@ -128,7 +173,7 @@ func TestSortTopArticles(t *testing.T) {
 
 		// Fail if we have a value that is larger than the preceding value
 		if thisVal > lastVal {
-			t.Fatalf("sorted[%d] == %d, sorted[%d] == %d. Should be sorted in descending order", i-1, lastVal, i, thisVal)
+			t.Fatalf(fmt.Sprintf("sorted[%d] == %d, sorted[%d] == %d. Should be sorted in descending order", i-1, lastVal, i, thisVal))
 		}
 		lastVal = thisVal
 	}
