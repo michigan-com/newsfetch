@@ -13,7 +13,6 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
-var logger = GetLogger()
 var tokenizer = LoadTokenizer()
 
 const maxarticles = 20 // Expected number of articles to be returned per URL
@@ -109,11 +108,10 @@ func isBlacklisted(url string) bool {
 }
 
 func FetchAndParseArticles(urls []string, extractBody bool) []*Article {
-	logger.Info("Fetching articles ...")
+	Debugger.Println("Fetching articles ...")
 
 	// Fetch articles from urls
 	var wg sync.WaitGroup
-	logger.Debug("%v", urls)
 
 	articleMap := map[int]*Article{}
 
@@ -122,7 +120,7 @@ func FetchAndParseArticles(urls []string, extractBody bool) []*Article {
 		go func(url string) {
 			feedContent, err := GetFeedContent(url)
 			if err != nil {
-				logger.Warning("%v", err)
+				Debugger.Println("%v", err)
 				wg.Done()
 				return
 			}
@@ -138,7 +136,7 @@ func FetchAndParseArticles(urls []string, extractBody bool) []*Article {
 
 				article, err := ParseArticle(articleUrl, articleJson, extractBody)
 				if err != nil {
-					logger.Warning("%v", err)
+					Debugger.Printf("%v", err)
 					continue
 				}
 
@@ -152,7 +150,7 @@ func FetchAndParseArticles(urls []string, extractBody bool) []*Article {
 
 	// Wait for all the fetching to return and save the data
 	wg.Wait()
-	logger.Info("Done fetching and parsing URLs ...")
+	Logger.Println("Done fetching and parsing URLs ...")
 
 	articles := make([]*Article, 0, len(articleMap))
 	for _, art := range articleMap {
@@ -181,13 +179,14 @@ func FormatFeedUrls(sites []string, sections []string) []string {
 }
 
 func GetFeedContent(url string) (*Feed, error) {
-	logger.Debug("Fetching %s", url)
+	Debugger.Println("Fetching ", url)
 
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err
 	}
-	logger.Debug(fmt.Sprintf("Successfully fetched %s", url))
+
+	Debugger.Println(fmt.Sprintf("Successfully fetched %s", url))
 
 	feed := &Feed{}
 
@@ -269,17 +268,17 @@ func ParseArticle(articleUrl string, articleJson *Content, extractBody bool) (*A
 		body = <-ch
 
 		if body != "" {
-			logger.Debug("Extracted body contains %d characters, %d paragraphs.", len(strings.Split(body, "")), len(strings.Split(body, "\n\n")))
+			Debugger.Println("Extracted body contains %d characters, %d paragraphs.", len(strings.Split(body, "")), len(strings.Split(body, "\n\n")))
 			summarizer := NewPunktSummarizer(articleJson.Headline, body, tokenizer)
 			summary = summarizer.KeyPoints()
-			logger.Debug("Generated summary ...")
+			Debugger.Println("Generated summary ...")
 		}
 	}
 
 	timestamp, aerr := time.Parse("2006-1-2T15:04:05.0000000", articleJson.Timestamp)
 	if aerr != nil {
 		timestamp = time.Now()
-		logger.Warning("%v", aerr)
+		Debugger.Println("%v", aerr)
 	}
 
 	article := &Article{
@@ -307,7 +306,7 @@ func RemoveArticles(mongoUri string) error {
 	session := DBConnect(mongoUri)
 	defer DBClose(session)
 
-	logger.Info("Removing all articles from mongodb ...")
+	Debugger.Println("Removing all articles from mongodb ...")
 
 	articles := session.DB("").C("Article")
 	_, err := articles.RemoveAll(nil)
@@ -334,23 +333,23 @@ func SaveArticles(mongoUri string, articles []*Article) error {
 		if err == nil {
 			article.Created_at = art.Created_at
 			articleCol.Update(bson.M{"_id": art.Id}, article)
-			logger.Debug("Article updated: %s", article.Url)
+			Debugger.Println("Article updated: ", article.Url)
 			totalUpdates++
 		} else {
 			//bulk.Insert(article)
 			articleCol.Insert(article)
-			logger.Debug("Article added: %s", article.Url)
+			Debugger.Println("Article added: ", article.Url)
 			totalInserts++
 		}
 	}
-	logger.Info("%d articles updated", totalUpdates)
-	logger.Info("%d articles added", totalInserts)
+	Logger.Printf("%d articles updated", totalUpdates)
+	Logger.Printf("%d articles added", totalInserts)
 	//_, err := bulk.Run()
 
 	/*if err != nil {
 		return err
 	}*/
 
-	logger.Info("Saved a batch of articles ...")
+	Debugger.Println("Saved a batch of articles ...")
 	return nil
 }

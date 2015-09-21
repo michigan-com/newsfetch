@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/michigan-com/newsfetch/lib"
-	"github.com/op/go-logging"
 	"github.com/spf13/cobra"
 )
 
@@ -36,10 +35,6 @@ var cmdGetArticles = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		if timeit {
 			startTime = time.Now()
-		}
-
-		if verbose {
-			Verbose("")
 		}
 
 		var sites []string
@@ -98,10 +93,6 @@ var cmdRemoveArticles = &cobra.Command{
 
 		if timeit {
 			startTime = time.Now()
-		}
-
-		if verbose {
-			logging.SetLevel(logging.DEBUG, "newsfetch")
 		}
 
 		err := lib.RemoveArticles(mongoUri)

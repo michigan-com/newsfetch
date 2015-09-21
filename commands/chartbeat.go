@@ -9,6 +9,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var debugger = lib.NewCondLogger("chartbeat")
+var logger = lib.Logger
+
 var cmdChartbeat = &cobra.Command{
 	Use:   "chartbeat",
 	Short: "Hit the Chartbeat API",
@@ -31,11 +34,7 @@ func ChartbeatToppages(cmd *cobra.Command, args []string) {
 
 	startTime := time.Now()
 
-	if verbose {
-		Verbose("")
-	}
-
-	logger.Info("Fetching toppages")
+	debugger.Println("Fetching toppages")
 	urls, err := lib.FormatChartbeatUrls("live/toppages/v3", lib.Sites, apiKey)
 	if err != nil {
 		panic(err)
@@ -44,7 +43,7 @@ func ChartbeatToppages(cmd *cobra.Command, args []string) {
 	snapshot := lib.FetchTopPages(urls)
 
 	if mongoUri != "" {
-		logger.Info("Saving toppages snapshot")
+		debugger.Println("Saving toppages snapshot")
 		err := lib.SaveTopPagesSnapshot(mongoUri, snapshot)
 
 		if err != nil {
@@ -54,13 +53,13 @@ func ChartbeatToppages(cmd *cobra.Command, args []string) {
 		// Update mapi to let it know that a new snapshot has been saved
 		_, err = http.Get("https://api.michigan.com/popular/")
 		if err != nil {
-			logger.Error("%v", err)
+			logger.Println("%v", err)
 		} else {
 			now := time.Now()
-			logger.Info("Updated snapshot at Mapi at %v", now)
+			logger.Println("Updated snapshot at Mapi at %v", now)
 		}
 	} else {
-		logger.Warning("Variable 'mongoUri' not specified, no data will be saved")
+		logger.Println("Variable 'mongoUri' not specified, no data will be saved")
 	}
 
 	if timeit {
@@ -68,9 +67,9 @@ func ChartbeatToppages(cmd *cobra.Command, args []string) {
 	}
 
 	if loop != -1 {
-		logger.Info("Looping! Sleeping for %d seconds...", loop)
+		debugger.Println("Looping! Sleeping for %d seconds...", loop)
 		time.Sleep(time.Duration(loop) * time.Second)
-		logger.Info("...and now I'm awake!")
+		debugger.Println("...and now I'm awake!")
 		ChartbeatToppages(cmd, args)
 	}
 }
