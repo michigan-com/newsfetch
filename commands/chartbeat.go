@@ -61,6 +61,9 @@ func ChartbeatToppages() {
 	snapshot := lib.FetchTopPages(urls)
 
 	if mongoUri != "" {
+		logger.Info("Saving article visits for this time interval")
+		lib.CalculateTimeInterval(snapshot, mongoUri)
+
 		logger.Info("Saving toppages snapshot")
 		err := lib.SaveTopPagesSnapshot(mongoUri, snapshot)
 

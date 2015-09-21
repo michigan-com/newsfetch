@@ -3,6 +3,7 @@ package lib
 import (
 	"strings"
 	"testing"
+	//"time"
 )
 
 func TestFormatChartbeatUrls(t *testing.T) {
@@ -48,7 +49,28 @@ func TestFormatChartbeatUrls(t *testing.T) {
 	if err == nil {
 		t.Fatalf("Should have thrown an error when no API key was set")
 	}
+}
 
+func TestCalculateTimeInterval(t *testing.T) {
+	articles := []*Article{&Article{}}
+	articles[0].ArticleId = 1
+	//articles[0].Visits = []TimeInterval{
+	//TimeInterval{
+	//10,
+	//time.Now(),
+	//},
+	//}
+
+	articleVisits := map[int]int{
+		1: 100,
+	}
+
+	calculateTimeInterval(articles, articleVisits)
+
+	if articles[0].Visits[0].Max != 100 {
+		t.Fatalf("Should be 100, actual %d", articles[0].Visits[0].Max)
+	}
+	logger.Info("%v", articles[0].Visits)
 }
 
 func TestGetTopPages(t *testing.T) {

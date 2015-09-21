@@ -9,6 +9,7 @@ import (
 	"sync"
 	"time"
 
+	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -102,6 +103,73 @@ func FetchTopPages(urls []string) []*TopArticle {
 	logger.Info("Done fetching and parsing URLs...")
 
 	return SortTopArticles(topArticles)
+}
+
+func CalculateTimeInterval(articles []*TopArticle, mongoUri string) {
+	if mongoUri == "" {
+		logger.Error("No MonguoUri")
+		return
+	}
+
+	logger.Info("Updating numbers for articles for this given time interval")
+	articleIds := make([]int, len(articles), len(articles))
+	articleVisits := map[int]int{}
+	savedArticles := make([]*Article, len(articles), len(articles))
+
+	for _, article := range articles {
+		articleIds = append(articleIds, article.ArticleId)
+		articleVisits[article.ArticleId] = article.Visits
+	}
+
+	session := DBConnect(mongoUri)
+	db := session.DB("")
+	articleCol := db.C("Article")
+
+	err := articleCol.
+		Find(bson.M{
+		"article_id": bson.M{
+			"$in": articleIds,
+		},
+	}).
+		Select(bson.M{
+		"article_id": 1,
+		"visits":     1,
+	}).
+		All(&savedArticles)
+
+	if err != nil {
+		logger.Error("%v", err)
+		return
+	}
+
+	calculateTimeInterval(savedArticles, articleVisits)
+
+	saveTimeInterval(savedArticles, session)
+}
+
+// In-memory adjusting of time intervals. Easier for testing since it doesnt
+// hit mongo
+func calculateTimeInterval(savedArticles []*Article, articleVisits map[int]int) {
+	now := time.Now()
+
+	for _, article := range savedArticles {
+		visits, ok := articleVisits[article.ArticleId]
+		if !ok {
+			continue
+		}
+
+		CheckHourlyMax(article, now, visits)
+	}
+}
+
+func saveTimeInterval(articles []*Article, session *mgo.Session) {
+	articleCol := session.DB("").C("Article")
+	for _, article := range articles {
+		err := articleCol.Update(bson.M{"_id": article.Id}, article)
+		if err != nil {
+			logger.Error("%v", err)
+		}
+	}
 }
 
 /*
