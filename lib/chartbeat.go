@@ -183,7 +183,7 @@ func SaveTopPagesSnapshot(mongoUri string, toppages []*TopArticle) error {
 	})
 
 	if err != nil {
-		logger.Error("%v", err)
+		Debugger.Println("Error when removing older snapshots: %v", err)
 	}
 
 	return nil
