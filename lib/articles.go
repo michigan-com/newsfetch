@@ -113,15 +113,16 @@ func FetchAndParseArticles(urls []string, extractBody bool) []*Article {
 	// Fetch articles from urls
 	var wg sync.WaitGroup
 
+	mapMutex := &sync.Mutex{}
 	articleMap := map[int]*Article{}
 
 	for i := 0; i < len(urls); i++ {
 		wg.Add(1)
 		go func(url string) {
+			defer wg.Done()
 			feedContent, err := GetFeedContent(url)
 			if err != nil {
 				Debugger.Println("%v", err)
-				wg.Done()
 				return
 			}
 
@@ -129,8 +130,9 @@ func FetchAndParseArticles(urls []string, extractBody bool) []*Article {
 				url := articleJson.Url
 				articleUrl := fmt.Sprintf("http://%s.com%s", feedContent.Site, url)
 				articleId := GetArticleId(articleUrl)
+				_, repeatArticle := articleMap[articleId]
 
-				if articleId == -1 || articleMap[articleId] != nil || isBlacklisted(articleUrl) {
+				if articleId == -1 || repeatArticle || isBlacklisted(articleUrl) {
 					continue
 				}
 
@@ -141,10 +143,12 @@ func FetchAndParseArticles(urls []string, extractBody bool) []*Article {
 				}
 
 				article.Source = feedContent.Site
+
+				mapMutex.Lock()
 				articleMap[article.ArticleId] = article
+				mapMutex.Unlock()
 			}
 
-			wg.Done()
 		}(urls[i])
 	}
 
