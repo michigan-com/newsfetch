@@ -1,11 +1,13 @@
 CHANGELOG
 =========
 
-v.0.1.4 09-21-2015
+v.0.1.5 09-21-2015
 ------------------
 
 * Removing old snapshots so that the most recent is the only one kept
 * Added MONGOURI env variable to the tests for DB testing
+* Created new custom conditional logger, pivoted based on DEBUG environment variable
+* Removed the -v flag for all commands, please us DEBUG env variable to add logging statements
 
 v.0.1.4 09-16-2015
 ------------------
