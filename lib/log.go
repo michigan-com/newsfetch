@@ -1,34 +1,43 @@
 package lib
 
 import (
-	"github.com/op/go-logging"
+	"fmt"
+	"io/ioutil"
+	"log"
 	"os"
+	"strings"
 )
 
-var Format = logging.MustStringFormatter(
-	"%{color}%{time:15:04:05.000} %{shortfile} ▶ %{level:.4s} %{color:reset} %{message}",
-)
+var Debug string = strings.ToLower(os.Getenv("DEBUG"))
 
-var Backend = logging.NewLogBackend(os.Stderr, "", 0)
+type CondLogger struct {
+	name string
+	*log.Logger
+}
 
-func GetLogger() *logging.Logger {
-	log := logging.MustGetLogger("newsfetch")
-	backendFormatter := logging.NewBackendFormatter(Backend, Format)
+func (c *CondLogger) Enable() {
+	c.SetOutput(os.Stdout)
+}
 
-	logging.SetBackend(backendFormatter)
+func (c *CondLogger) Disable() {
+	c.SetOutput(ioutil.Discard)
+}
 
-	//env var trumps everything
-	level := logging.DEBUG
-	levelEnv := os.Getenv("LOGLEVEL")
-	var err error
-	if levelEnv != "" {
-		level, err = logging.LogLevel(levelEnv)
-		if err != nil {
-			level = logging.DEBUG
-		}
+func NewCondLogger(name string) *CondLogger {
+	out := ioutil.Discard
+	name = strings.ToLower(name)
+
+	if Debug == "*" || Debug == name {
+		out = os.Stdout
 	}
 
-	logging.SetLevel(level, "newsfetch")
-
-	return log
+	prefix := fmt.Sprintf("(newsfetch:%s) ", name)
+	return &CondLogger{name, log.New(out, prefix, log.Lshortfile)}
 }
+
+// This logger should be used for essential information that will be viewable by
+// our centralized logging service. Use this for production only.
+var Logger = NewCondLogger("logger")
+
+// This logger should be use for general purpose debugging.  Use this for development only.
+var Debugger = NewCondLogger("debugger")

@@ -56,7 +56,7 @@ type ArticleStats struct {
 	to be http://api.chartbeat.com/live/toppages/v3
 */
 func FetchTopPages(urls []string) []*TopArticle {
-	logger.Debug("Fetching chartbeat top pages")
+	Debugger.Println("Fetching chartbeat top pages")
 	topArticles := make([]*TopArticle, 0, 100*len(urls))
 
 	var wg sync.WaitGroup
@@ -68,7 +68,7 @@ func FetchTopPages(urls []string) []*TopArticle {
 			pages, err := GetTopPages(url)
 
 			if err != nil {
-				logger.Warning("%v", err)
+				Debugger.Println("%v", err)
 				wg.Done()
 				return
 			}
@@ -99,7 +99,7 @@ func FetchTopPages(urls []string) []*TopArticle {
 	}
 
 	wg.Wait()
-	logger.Info("Done fetching and parsing URLs...")
+	Debugger.Println("Done fetching and parsing URLs...")
 
 	return SortTopArticles(topArticles)
 }
@@ -134,14 +134,14 @@ func FormatChartbeatUrls(endPoint string, sites []string, apiKey string) ([]stri
 	read the response
 */
 func GetTopPages(url string) (*TopPages, error) {
-	logger.Debug("Fetching %s", url)
+	Debugger.Println("Fetching %s", url)
 
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err
 	}
 
-	logger.Debug("Successfully fetched %s", url)
+	Debugger.Println("Successfully fetched %s", url)
 
 	topPages := &TopPages{}
 
@@ -159,6 +159,7 @@ func GetTopPages(url string) (*TopPages, error) {
 */
 
 func SaveTopPagesSnapshot(mongoUri string, toppages []*TopArticle) error {
+	Debugger.Println("Saving snapshot ...")
 	session := DBConnect(mongoUri)
 	defer DBClose(session)
 
@@ -173,6 +174,7 @@ func SaveTopPagesSnapshot(mongoUri string, toppages []*TopArticle) error {
 }
 
 func SortTopArticles(articles []*TopArticle) []*TopArticle {
+	Debugger.Println("Sorting articles ...")
 	sort.Sort(ByVisits(articles))
 	return articles
 }

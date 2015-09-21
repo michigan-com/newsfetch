@@ -17,10 +17,6 @@ var cmdBody = &cobra.Command{
 			startTime = time.Now()
 		}
 
-		if verbose {
-			Verbose("")
-		}
-
 		if len(args) > 0 && args[0] != "" {
 			articleUrl = args[0]
 		}
