@@ -9,6 +9,7 @@ import (
 )
 
 var Debug string = strings.ToLower(os.Getenv("DEBUG"))
+var debuggers = strings.Split(Debug, ",")
 
 type CondLogger struct {
 	name string
@@ -27,8 +28,11 @@ func NewCondLogger(name string) *CondLogger {
 	out := ioutil.Discard
 	name = strings.ToLower(name)
 
-	if Debug == "*" || Debug == name {
-		out = os.Stdout
+	for _, bugger := range debuggers {
+		if bugger == "*" || bugger == name {
+			out = os.Stdout
+			break
+		}
 	}
 
 	prefix := fmt.Sprintf("(newsfetch:%s) ", name)
