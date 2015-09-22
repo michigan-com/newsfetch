@@ -168,7 +168,6 @@ func calculateTimeInterval(savedArticles []*Article, articleVisits map[int]int) 
 		if !ok {
 			continue
 		}
-
 		CheckHourlyMax(article, now, visits)
 	}
 }
@@ -176,7 +175,12 @@ func calculateTimeInterval(savedArticles []*Article, articleVisits map[int]int) 
 func saveTimeInterval(articles []*Article, session *mgo.Session) {
 	articleCol := session.DB("").C("Article")
 	for _, article := range articles {
-		err := articleCol.Update(bson.M{"_id": article.Id}, article)
+		Debugger.Printf("%v", article.Url)
+		err := articleCol.Update(bson.M{"_id": article.Id}, bson.M{
+			"$set": bson.M{
+				"visits": article.Visits,
+			},
+		})
 		if err != nil {
 			Debugger.Printf("ERROR: %v", err)
 		}

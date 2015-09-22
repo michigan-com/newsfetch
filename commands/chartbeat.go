@@ -31,20 +31,24 @@ func ChartbeatToppagesCommand(cmd *cobra.Command, args []string) {
 		apiKey = os.Getenv("CHARTBEAT_API_KEY")
 	}
 
-	startTime := time.Now()
+	for true {
+		startTime := time.Now()
 
-	// Run the actual meat of the program
-	ChartbeatToppages()
+		// Run the actual meat of the program
+		ChartbeatToppages()
 
-	if timeit {
-		getElapsedTime(&startTime)
-	}
+		if timeit {
+			getElapsedTime(&startTime)
+		}
 
-	if loop != -1 {
-		debugger.Printf("Looping! Sleeping for %d seconds...", loop)
-		time.Sleep(time.Duration(loop) * time.Second)
-		debugger.Printf("...and now I'm awake!")
-		ChartbeatToppagesCommand(cmd, args)
+		if loop != -1 {
+			debugger.Printf("Looping! Sleeping for %d seconds...", loop)
+			time.Sleep(time.Duration(loop) * time.Second)
+			debugger.Printf("...and now I'm awake!")
+			ChartbeatToppagesCommand(cmd, args)
+		} else {
+			break
+		}
 	}
 }
 
@@ -61,11 +65,12 @@ func ChartbeatToppages() {
 	if mongoUri != "" {
 		debugger.Println("Saving toppages snapshot")
 		err := lib.SaveTopPagesSnapshot(mongoUri, snapshot)
-
 		if err != nil {
 			debugger.Printf("ERROR: %v", err)
 			return
 		}
+
+		lib.CalculateTimeInterval(snapshot, mongoUri)
 
 		// Update mapi to let it know that a new snapshot has been saved
 		_, err = http.Get("https://api.michigan.com/popular/")
