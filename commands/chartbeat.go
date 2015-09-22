@@ -25,17 +25,20 @@ var cmdTopPages = &cobra.Command{
 
 func ChartbeatToppagesCommand(cmd *cobra.Command, args []string) {
 	// Set up environment
-	var session *mgo.Session
+	var session *mgo.Session = nil
 	if mongoUri == "" {
 		mongoUri = os.Getenv("MONGO_URI")
-		session = lib.DBConnect(mongoUri)
-		defer lib.DBClose(session)
 	}
 	if apiKey == "" {
 		apiKey = os.Getenv("CHARTBEAT_API_KEY")
 	}
 
-	for true {
+	if mongoUri != "" {
+		session = lib.DBConnect(mongoUri)
+		defer lib.DBClose(session)
+	}
+
+	for {
 		startTime := time.Now()
 
 		// Run the actual meat of the program
@@ -49,7 +52,6 @@ func ChartbeatToppagesCommand(cmd *cobra.Command, args []string) {
 			debugger.Printf("Looping! Sleeping for %d seconds...", loop)
 			time.Sleep(time.Duration(loop) * time.Second)
 			debugger.Printf("...and now I'm awake!")
-			ChartbeatToppagesCommand(cmd, args)
 		} else {
 			break
 		}
