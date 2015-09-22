@@ -12,11 +12,11 @@ cd $APP_DIR
 printer "Updating newsfetch golang src ..."
 git pull deploy master
 
+printer "Download any required third part libraries ..."
+go get
+
 printer "Removing old binary ..."
 go clean -i
-
-printer "Download any required third part libraries ..."
-go get -u
 
 printer "Installing new binary ..."
 make install
