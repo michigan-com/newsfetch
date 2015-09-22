@@ -13,7 +13,7 @@ func TestAddHourInterval(t *testing.T) {
 	numToAdd := 20
 
 	for i := 0; i < numToAdd; i++ {
-		addHourInterval(article, timeVal, i)
+		addHourInterval(article, RoundHourDown(timeVal), i)
 		if len(article.Visits) != i+1 {
 			t.Fatalf(fmt.Sprintf("Should have %d value in article.Visits, have %d", i+1, len(article.Visits)))
 		}
@@ -21,6 +21,16 @@ func TestAddHourInterval(t *testing.T) {
 		interval := article.Visits[i]
 		if interval.Timestamp.Hour() != timeVal.Hour() {
 			t.Fatalf(fmt.Sprintf("Hours should match. %d!=%d", interval.Timestamp.Hour(), timeVal.Hour()))
+		}
+		t.Logf("MInute: %d, second: %d, nanosecond: %d", interval.Timestamp.Minute(), interval.Timestamp.Second(), interval.Timestamp.Nanosecond())
+		if interval.Timestamp.Minute() != 0 {
+			t.Fatalf("Mintues should be rounded to zero")
+		}
+		if interval.Timestamp.Second() != 0 {
+			t.Fatalf("Seconds shuold be rounded to zero")
+		}
+		if interval.Timestamp.Nanosecond() != 0 {
+			t.Fatalf("Milliseconds should be rounded to zero")
 		}
 		if interval.Max != i {
 			t.Fatalf(fmt.Sprintf("Max should match. %d != %d", interval.Max, i))
@@ -45,7 +55,7 @@ func TestHourlyMaxAdd(t *testing.T) {
 	if interval.Max != visits {
 		t.Fatalf(fmt.Sprintf("interval.Max == %d, should be %d", interval.Max, visits))
 	}
-	if !timeVal.Equal(interval.Timestamp) {
+	if !RoundHourDown(timeVal).Equal(interval.Timestamp) {
 		t.Fatalf(fmt.Sprintf("Timestamp is %v, should be %v", interval.Timestamp, timeVal))
 	}
 }

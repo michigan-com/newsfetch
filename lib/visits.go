@@ -17,14 +17,13 @@ import (
 //		ignore
 func CheckHourlyMax(article *Article, currentTime time.Time, currentVisits int) {
 	length := len(article.Visits)
+	roundedTime := RoundHourDown(currentTime)
 	if length == 0 {
-		addHourInterval(article, currentTime, currentVisits)
+		addHourInterval(article, roundedTime, currentVisits)
 		return
 	}
 
 	lastInterval := &article.Visits[length-1]
-
-	roundedTime := RoundHourDown(currentTime)
 
 	// We only care about two cases: when currentTime is on the same day, and
 	// when currentTime is on the next day
@@ -38,20 +37,21 @@ func CheckHourlyMax(article *Article, currentTime time.Time, currentVisits int) 
 			// ...compare the maxes and replace as necessary
 			if currentVisits > lastInterval.Max {
 				lastInterval.Max = currentVisits
-				lastInterval.Timestamp = currentTime
+				lastInterval.Timestamp = roundedTime
 			}
 			// ...else, if it's an hour after, then add an hour interval
 		} else if roundedTime.Hour() > lastInterval.Timestamp.Hour() {
-			addHourInterval(article, currentTime, currentVisits)
+			addHourInterval(article, roundedTime, currentVisits)
 		}
 		// ...else if currentTime time.Time is after lastInterval...
 	} else if currentTime.After(lastInterval.Timestamp) {
-		addHourInterval(article, currentTime, currentVisits)
+		addHourInterval(article, roundedTime, currentVisits)
 	}
 }
 
 // Append a new interval onto the end of article.Visits
 func addHourInterval(article *Article, currentTime time.Time, currentVisits int) {
+	// Round down
 	newInterval := &TimeInterval{
 		currentVisits,
 		currentTime,
@@ -70,7 +70,7 @@ func addHourInterval(article *Article, currentTime time.Time, currentVisits int)
 }
 
 func RoundHourDown(t time.Time) time.Time {
-	return t.Truncate(time.Hour)
+	return t.Truncate(time.Hour).Truncate(time.Minute).Truncate(time.Second).Truncate(time.Nanosecond)
 }
 
 // Are t1 and t2 on the same day?

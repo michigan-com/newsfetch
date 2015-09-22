@@ -39,7 +39,6 @@ type SentenceTokenizer struct {
 func (s *SentenceTokenizer) AnnotateTokens(tokens []*punkt.DefaultToken) []*punkt.DefaultToken {
 	tokens = s.AnnotateFirstPass(tokens)
 	tokens = s.AnnotateSecondPass(tokens)
-	Debugger.Println("CUSTOM ANNOTATION")
 	return tokens
 }
 
