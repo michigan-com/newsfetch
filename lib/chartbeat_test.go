@@ -60,6 +60,9 @@ func TestSaveTimeInterval(t *testing.T) {
 		t.Fatalf("No MONGOURI env variable set")
 	}
 
+	session := DBConnect(mongoUri)
+	defer DBClose(session)
+
 	// Save a bunch of articles
 	numArticles := 20
 	articles := make([]*Article, 0, numArticles)
@@ -87,13 +90,11 @@ func TestSaveTimeInterval(t *testing.T) {
 		visits[articleId] = numVisits
 		topPages = append(topPages, article)
 	}
-	CalculateTimeInterval(topPages, mongoUri)
+	CalculateTimeInterval(topPages, session)
 
 	// Now check the articles saved and make sure they updated the visits
-	session := DBConnect(mongoUri)
-	articleCol := session.DB("").C("Article")
-
 	savedArticles := make([]*Article, 0, numArticles)
+	articleCol := session.DB("").C("Article")
 	articleCol.Find(bson.M{
 		"article_id": bson.M{
 			"$gte": 1,
@@ -177,6 +178,9 @@ func TestSaveSnapshot(t *testing.T) {
 		t.Fatalf("%v", "No mongo URI specified, failing test")
 	}
 
+	session := DBConnect(mongoUri)
+	defer DBClose(session)
+
 	// Make an article snapshot and save it
 	numArticles := 20
 	toppages := make([]*TopArticle, 0, numArticles)
@@ -190,15 +194,12 @@ func TestSaveSnapshot(t *testing.T) {
 	}
 
 	// Add the collection 4 times
-	SaveTopPagesSnapshot(mongoUri, toppages)
-	SaveTopPagesSnapshot(mongoUri, toppages)
-	SaveTopPagesSnapshot(mongoUri, toppages)
-	SaveTopPagesSnapshot(mongoUri, toppages)
+	SaveTopPagesSnapshot(toppages, session)
+	SaveTopPagesSnapshot(toppages, session)
+	SaveTopPagesSnapshot(toppages, session)
+	SaveTopPagesSnapshot(toppages, session)
 
 	// Now verify
-	session := DBConnect(mongoUri)
-	defer DBClose(session)
-
 	col := session.DB("").C("Toppages")
 	numSnapshots, err := col.Count()
 
