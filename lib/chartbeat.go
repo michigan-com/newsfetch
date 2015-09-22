@@ -104,7 +104,6 @@ func FetchTopPages(urls []string) []*TopArticle {
 	Debugger.Println("Done")
 	close(articleQueue)
 
-	Debugger.Println("about to range")
 	for article := range articleQueue {
 		topArticles = append(topArticles, article)
 	}
@@ -174,7 +173,6 @@ func calculateTimeInterval(savedArticles []*Article, articleVisits map[int]int) 
 func saveTimeInterval(articles []*Article, session *mgo.Session) {
 	articleCol := session.DB("").C("Article")
 	for _, article := range articles {
-		Debugger.Printf("%v", article.Url)
 		err := articleCol.Update(bson.M{"_id": article.Id}, bson.M{
 			"$set": bson.M{
 				"visits": article.Visits,
