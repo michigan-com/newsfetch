@@ -1,6 +1,11 @@
 CHANGELOG
 =========
 
+v.0.1.6 09-21-2015
+------------------
+
+* Chartbeat toppages command saves hourly max visits for documents in Article collection
+
 v.0.1.5 09-21-2015
 ------------------
 
