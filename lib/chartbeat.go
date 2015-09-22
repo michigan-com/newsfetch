@@ -115,9 +115,9 @@ func FetchTopPages(urls []string) []*TopArticle {
 	return SortTopArticles(topArticles)
 }
 
-func CalculateTimeInterval(articles []*TopArticle, session *mgo.Session) {
-	if session == nil {
-		Debugger.Printf("No DB session, cannot calculate time intervals")
+func CalculateTimeInterval(articles []*TopArticle, mongoUri string) {
+	if mongoUri == "" {
+		Debugger.Printf("No mongoUri, cannot calculate time intervals")
 		return
 	}
 
@@ -131,6 +131,8 @@ func CalculateTimeInterval(articles []*TopArticle, session *mgo.Session) {
 		articleVisits[article.ArticleId] = article.Visits
 	}
 
+	session := DBConnect(mongoUri)
+	defer DBClose(session)
 	db := session.DB("")
 	articleCol := db.C("Article")
 
@@ -237,10 +239,12 @@ func GetTopPages(url string) (*TopPages, error) {
 	mongoUri - connection string to Mongodb
 	toppages - Sorted array of top articles
 */
-func SaveTopPagesSnapshot(toppages []*TopArticle, session *mgo.Session) error {
+func SaveTopPagesSnapshot(toppages []*TopArticle, mongoUri string) error {
 	Debugger.Println("Saving snapshot ...")
 
 	// Save the current snapshot
+	session := DBConnect(mongoUri)
+	defer DBClose(session)
 	snapshotCollection := session.DB("").C("Toppages")
 	snapshot := Snapshot{}
 	snapshot.Articles = toppages

@@ -10,6 +10,11 @@ v0.1.7 09-21-2015
 v.0.1.6 09-21-2015
 ------------------
 
+* Removed the passing of one session variable, and instead make DBConnect() sessions as needed
+
+v.0.1.6 09-21-2015
+------------------
+
 * Chartbeat toppages command saves hourly max visits for documents in Article collection
 * Passing around session variable instead of MongoUri
 

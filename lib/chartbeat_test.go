@@ -55,9 +55,9 @@ func TestFormatChartbeatUrls(t *testing.T) {
 }
 
 func TestSaveTimeInterval(t *testing.T) {
-	mongoUri := os.Getenv("MONGOURI")
+	mongoUri := os.Getenv("MONGO_URI")
 	if mongoUri == "" {
-		t.Fatalf("No MONGOURI env variable set")
+		t.Fatalf("No MONGO_URI env variable set")
 	}
 
 	session := DBConnect(mongoUri)
@@ -90,7 +90,7 @@ func TestSaveTimeInterval(t *testing.T) {
 		visits[articleId] = numVisits
 		topPages = append(topPages, article)
 	}
-	CalculateTimeInterval(topPages, session)
+	CalculateTimeInterval(topPages, mongoUri)
 
 	// Now check the articles saved and make sure they updated the visits
 	savedArticles := make([]*Article, 0, numArticles)
@@ -173,13 +173,10 @@ func TestGetTopPages(t *testing.T) {
 }
 
 func TestSaveSnapshot(t *testing.T) {
-	mongoUri := os.Getenv("MONGOURI")
+	mongoUri := os.Getenv("MONGO_URI")
 	if mongoUri == "" {
 		t.Fatalf("%v", "No mongo URI specified, failing test")
 	}
-
-	session := DBConnect(mongoUri)
-	defer DBClose(session)
 
 	// Make an article snapshot and save it
 	numArticles := 20
@@ -194,12 +191,14 @@ func TestSaveSnapshot(t *testing.T) {
 	}
 
 	// Add the collection 4 times
-	SaveTopPagesSnapshot(toppages, session)
-	SaveTopPagesSnapshot(toppages, session)
-	SaveTopPagesSnapshot(toppages, session)
-	SaveTopPagesSnapshot(toppages, session)
+	SaveTopPagesSnapshot(toppages, mongoUri)
+	SaveTopPagesSnapshot(toppages, mongoUri)
+	SaveTopPagesSnapshot(toppages, mongoUri)
+	SaveTopPagesSnapshot(toppages, mongoUri)
 
 	// Now verify
+	session := DBConnect(mongoUri)
+	defer DBClose(session)
 	col := session.DB("").C("Toppages")
 	numSnapshots, err := col.Count()
 

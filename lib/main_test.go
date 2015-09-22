@@ -11,7 +11,7 @@ var (
 )
 
 func TestMain(m *testing.M) {
-	TestMongoUri = os.Getenv("MONGOURI")
+	TestMongoUri = os.Getenv("MONGO_URI")
 	if TestMongoUri == "" {
 		panic("Mongo URI not specified, please set the MONGOURI environment variable and try again")
 	}

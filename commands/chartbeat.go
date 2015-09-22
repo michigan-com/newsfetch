@@ -7,7 +7,6 @@ import (
 
 	"github.com/michigan-com/newsfetch/lib"
 	"github.com/spf13/cobra"
-	"gopkg.in/mgo.v2"
 )
 
 var debugger = lib.NewCondLogger("chartbeat")
@@ -23,9 +22,11 @@ var cmdTopPages = &cobra.Command{
 	Run:   ChartbeatToppagesCommand,
 }
 
+func RunChartbeatCommands(cmds []*cobra.Command) {
+}
+
 func ChartbeatToppagesCommand(cmd *cobra.Command, args []string) {
 	// Set up environment
-	var session *mgo.Session = nil
 	if mongoUri == "" {
 		mongoUri = os.Getenv("MONGO_URI")
 	}
@@ -33,16 +34,11 @@ func ChartbeatToppagesCommand(cmd *cobra.Command, args []string) {
 		apiKey = os.Getenv("CHARTBEAT_API_KEY")
 	}
 
-	if mongoUri != "" {
-		session = lib.DBConnect(mongoUri)
-		defer lib.DBClose(session)
-	}
-
 	for {
 		startTime := time.Now()
 
 		// Run the actual meat of the program
-		ChartbeatToppages(session)
+		ChartbeatToppages(mongoUri)
 
 		if timeit {
 			getElapsedTime(&startTime)
@@ -58,7 +54,7 @@ func ChartbeatToppagesCommand(cmd *cobra.Command, args []string) {
 	}
 }
 
-func ChartbeatToppages(session *mgo.Session) {
+func ChartbeatToppages(mongoUri string) {
 	debugger.Println("Fetching toppages")
 	urls, err := lib.FormatChartbeatUrls("live/toppages/v3", lib.Sites, apiKey)
 	if err != nil {
@@ -68,15 +64,15 @@ func ChartbeatToppages(session *mgo.Session) {
 
 	snapshot := lib.FetchTopPages(urls)
 
-	if session != nil {
+	if mongoUri != "" {
 		debugger.Println("Saving toppages snapshot")
-		err := lib.SaveTopPagesSnapshot(snapshot, session)
+		err := lib.SaveTopPagesSnapshot(snapshot, mongoUri)
 		if err != nil {
 			debugger.Printf("ERROR: %v", err)
 			return
 		}
 
-		lib.CalculateTimeInterval(snapshot, session)
+		lib.CalculateTimeInterval(snapshot, mongoUri)
 
 		// Update mapi to let it know that a new snapshot has been saved
 		_, err = http.Get("https://api.michigan.com/popular/")
