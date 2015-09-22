@@ -1,6 +1,12 @@
 CHANGELOG
 =========
 
+v0.1.7 09-21-2015
+-----------------
+
+* [FIX] moved `go clean` after `go get` which was causing newsfetch compilation to fail
+* [FIX] Snapshots are being stored properly
+
 v.0.1.6 09-21-2015
 ------------------
 
