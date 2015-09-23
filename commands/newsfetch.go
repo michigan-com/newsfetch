@@ -57,9 +57,9 @@ func AddFlags() {
 
 	cmdSummary.Flags().StringVarP(&title, "title", "t", "", "Title for article summarizer, if not supplied then the summarizer assumes first line is title")
 
-	cmdTopPages.Flags().StringVarP(&apiKey, "apikey", "k", "", "Chartbeat API Key. Required for fetching chartbeat data")
-	cmdTopPages.Flags().StringVarP(&mongoUri, "save", "s", "", "Saves articles to mongodb server specified in this option, e.g. mongodb://localhost:27017/mapi")
-	cmdTopPages.Flags().IntVarP(&loop, "loop", "l", -1, "Specify the internval in seconds to loop the fetching of the toppages api")
+	cmdChartbeat.PersistentFlags().StringVarP(&apiKey, "apikey", "k", "", "Chartbeat API Key. Required for fetching chartbeat data")
+	cmdChartbeat.PersistentFlags().StringVarP(&mongoUri, "save", "s", "", "Saves articles to mongodb server specified in this option, e.g. mongodb://localhost:27017/mapi")
+	cmdChartbeat.PersistentFlags().IntVarP(&loop, "loop", "l", -1, "Specify the internval in seconds to loop the fetching of the toppages api")
 }
 
 func AddCommands() {
@@ -67,6 +67,8 @@ func AddCommands() {
 	cmdArticles.AddCommand(cmdRemoveArticles)
 
 	cmdChartbeat.AddCommand(cmdTopPages)
+	cmdChartbeat.AddCommand(cmdQuickStats)
+	cmdChartbeat.AddCommand(cmdAllBeats)
 
 	NewsfetchCmd.AddCommand(cmdBody, cmdArticles, cmdSummary, cmdVersion, cmdChartbeat)
 }

@@ -3,11 +3,20 @@ package commands
 import (
 	"net/http"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/michigan-com/newsfetch/lib"
 	"github.com/spf13/cobra"
 )
+
+// Beats
+type Beat interface {
+	Run(string)
+}
+
+type TopPages struct{}
+type QuickStats struct{}
 
 var debugger = lib.NewCondLogger("chartbeat")
 
@@ -16,16 +25,31 @@ var cmdChartbeat = &cobra.Command{
 	Short: "Hit the Chartbeat API",
 }
 
+var cmdAllBeats = &cobra.Command{
+	Use:   "all",
+	Short: "Fetch all Chartbeat Beats (toppages, quickstats)",
+	Run: func(cmd *cobra.Command, argv []string) {
+		RunChartbeatCommands([]Beat{&TopPages{}, &QuickStats{}})
+	},
+}
+
 var cmdTopPages = &cobra.Command{
 	Use:   "toppages",
 	Short: "Fetch toppages snapshot for Chartbeat",
-	Run:   ChartbeatToppagesCommand,
+	Run: func(cmd *cobra.Command, argv []string) {
+		RunChartbeatCommands([]Beat{&TopPages{}})
+	},
 }
 
-func RunChartbeatCommands(cmds []*cobra.Command) {
+var cmdQuickStats = &cobra.Command{
+	Use:   "quickstats",
+	Short: "Fetch quickstats snapshot for Chartbeat",
+	Run: func(cmd *cobra.Command, argv []string) {
+		RunChartbeatCommands([]Beat{&QuickStats{}})
+	},
 }
 
-func ChartbeatToppagesCommand(cmd *cobra.Command, args []string) {
+func RunChartbeatCommands(beats []Beat) {
 	// Set up environment
 	if mongoUri == "" {
 		mongoUri = os.Getenv("MONGO_URI")
@@ -38,7 +62,18 @@ func ChartbeatToppagesCommand(cmd *cobra.Command, args []string) {
 		startTime := time.Now()
 
 		// Run the actual meat of the program
-		ChartbeatToppages(mongoUri)
+		var beatWait sync.WaitGroup
+
+		for _, beat := range beats {
+			beatWait.Add(1)
+
+			go func(beat Beat) {
+				beat.Run(mongoUri)
+				beatWait.Done()
+			}(beat)
+		}
+
+		beatWait.Wait()
 
 		if timeit {
 			getElapsedTime(&startTime)
@@ -54,7 +89,7 @@ func ChartbeatToppagesCommand(cmd *cobra.Command, args []string) {
 	}
 }
 
-func ChartbeatToppages(mongoUri string) {
+func (t *TopPages) Run(mongoUri string) {
 	debugger.Println("Fetching toppages")
 	urls, err := lib.FormatChartbeatUrls("live/toppages/v3", lib.Sites, apiKey)
 	if err != nil {
@@ -85,4 +120,8 @@ func ChartbeatToppages(mongoUri string) {
 	} else {
 		debugger.Printf("Variable 'mongoUri' not specified, no data will be saved")
 	}
+}
+
+func (q *QuickStats) Run(mongoUri string) {
+	debugger.Printf("Quickstats")
 }
