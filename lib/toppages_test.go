@@ -166,9 +166,15 @@ func TestGetTopPages(t *testing.T) {
 	// This is a url that should return an error
 	badUrl := "this is not a real url"
 	_, err = GetTopPages(badUrl)
-
 	if err == nil {
-		t.Fatalf(fmt.Sprintf("Url '%s' should have thrown an error", badUrl))
+		t.Fatalf("Url '%s' should have thrown an error", badUrl)
+	}
+
+	// This is a valid url that should return an error
+	badUrl = "http://google.com"
+	_, err = GetTopPages(badUrl)
+	if err == nil {
+		t.Fatalf("Url '%s' should have thrown an error", badUrl)
 	}
 }
 
@@ -197,6 +203,7 @@ func TestSaveSnapshot(t *testing.T) {
 	SaveTopPagesSnapshot(toppages, mongoUri)
 
 	// Now verify
+	Debugger.Printf("%v", mongoUri)
 	session := DBConnect(mongoUri)
 	defer DBClose(session)
 	col := session.DB("").C("Toppages")
@@ -209,7 +216,7 @@ func TestSaveSnapshot(t *testing.T) {
 		t.Fatalf("Should only be one collection")
 	}
 
-	snapshot := &Snapshot{}
+	snapshot := &TopPagesSnapshot{}
 	err = col.Find(bson.M{}).One(&snapshot)
 
 	if len(snapshot.Articles) != numArticles {

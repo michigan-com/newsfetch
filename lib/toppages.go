@@ -22,7 +22,7 @@ func (a ByVisits) Len() int           { return len(a) }
 func (a ByVisits) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a ByVisits) Less(i, j int) bool { return a[i].Visits > a[j].Visits }
 
-type Snapshot struct {
+type TopPagesSnapshot struct {
 	Id         bson.ObjectId `bson:"_id,omitempty"`
 	Created_at time.Time     `bson:"created_at"`
 	Articles   []*TopArticle `bson:"articles"`
@@ -246,7 +246,7 @@ func SaveTopPagesSnapshot(toppages []*TopArticle, mongoUri string) error {
 	session := DBConnect(mongoUri)
 	defer DBClose(session)
 	snapshotCollection := session.DB("").C("Toppages")
-	snapshot := Snapshot{}
+	snapshot := TopPagesSnapshot{}
 	snapshot.Articles = toppages
 	snapshot.Created_at = time.Now()
 	snapshotCollection.Insert(snapshot)

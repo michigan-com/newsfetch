@@ -124,4 +124,19 @@ func (t *TopPages) Run(mongoUri string) {
 
 func (q *QuickStats) Run(mongoUri string) {
 	debugger.Printf("Quickstats")
+
+	urls, err := lib.FormatChartbeatUrls("live/quickstats/v4", lib.Sites, apiKey)
+	if err != nil {
+		debugger.Println("ERROR: %v", err)
+		return
+	}
+
+	quickStats := lib.FetchQuickStats(urls)
+
+	if mongoUri != "" {
+		debugger.Printf("Saving quickstats...")
+
+		lib.SaveQuickStats(quickStats, mongoUri)
+	}
+
 }
