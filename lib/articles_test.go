@@ -121,9 +121,7 @@ func TestParseArticle(t *testing.T) {
 func TestArticlesMongo(t *testing.T) {
 	t.Log("Ensure no duplicate articles are in the database.")
 
-	uri := "mongodb://localhost:27017/mapi_test"
-
-	RemoveArticles(uri)
+	RemoveArticles(TestMongoUri)
 
 	urls := FormatFeedUrls([]string{"freep.com"}, []string{"news"})
 	getBody := false
@@ -141,10 +139,10 @@ func TestArticlesMongo(t *testing.T) {
 			}
 		}
 
-		SaveArticles(uri, articles)
+		SaveArticles(TestMongoUri, articles)
 	}
 
-	session := DBConnect(uri)
+	session := DBConnect(TestMongoUri)
 	defer DBClose(session)
 	articleCol := session.DB("").C("Article")
 
