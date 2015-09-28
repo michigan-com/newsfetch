@@ -8,7 +8,6 @@ import (
 )
 
 var (
-	mongoUri     string
 	articleUrl   string
 	siteStr      string
 	sectionStr   string
@@ -47,11 +46,9 @@ func AddFlags() {
 
 	cmdGetArticles.Flags().StringVarP(&siteStr, "sites", "i", "all", "Comma separated list of Gannett sites to fetch articles from")
 	cmdGetArticles.Flags().StringVarP(&sectionStr, "sections", "e", "all", "Comma separated list of article sections to fetch from")
-	cmdGetArticles.Flags().StringVarP(&mongoUri, "save", "s", "", "Saves articles to mongodb server specified in this option, e.g. mongodb://localhost:27017/mapi")
 	cmdGetArticles.Flags().BoolVarP(&body, "body", "b", false, "Fetches the article body content")
 
 	cmdRemoveArticles.Flags().BoolVarP(&noprompt, "noprompt", "n", false, "Skips the confirmation prompt and automatically removes articles")
-	cmdRemoveArticles.Flags().StringVarP(&mongoUri, "save", "s", "", "Saves articles to mongodb server specified in this option, e.g. mongodb://localhost:27017/mapi")
 
 	cmdBody.Flags().StringVarP(&articleUrl, "url", "u", url, "URL of Gannett article")
 	cmdBody.Flags().BoolVarP(&includeTitle, "title", "t", false, "Place title of article on the first line of output")
@@ -59,7 +56,6 @@ func AddFlags() {
 	cmdSummary.Flags().StringVarP(&title, "title", "t", "", "Title for article summarizer, if not supplied then the summarizer assumes first line is title")
 
 	cmdTopPages.Flags().StringVarP(&apiKey, "apikey", "k", "", "Chartbeat API Key. Required for fetching chartbeat data")
-	cmdTopPages.Flags().StringVarP(&mongoUri, "save", "s", "", "Saves articles to mongodb server specified in this option, e.g. mongodb://localhost:27017/mapi")
 	cmdTopPages.Flags().IntVarP(&loop, "loop", "l", -1, "Specify the internval in seconds to loop the fetching of the toppages api")
 }
 

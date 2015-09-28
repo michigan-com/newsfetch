@@ -5,7 +5,7 @@ import (
 )
 
 type GlobalConfig struct {
-	MongoUrl string
+	MongoUrl string `envconfig:"mongo_uri" required:"true"`
 }
 
 var globalConfig GlobalConfig
@@ -16,5 +16,5 @@ func loadConfig() {
 		panic(err)
 	}
 
-	// println("MongoUrl =", globalConfig.MongoUrl)
+	println("MongoUrl (env) =", globalConfig.MongoUrl)
 }

@@ -27,9 +27,6 @@ func RunChartbeatCommands(cmds []*cobra.Command) {
 
 func ChartbeatToppagesCommand(cmd *cobra.Command, args []string) {
 	// Set up environment
-	if mongoUri == "" {
-		mongoUri = os.Getenv("MONGO_URI")
-	}
 	if apiKey == "" {
 		apiKey = os.Getenv("CHARTBEAT_API_KEY")
 	}
@@ -38,7 +35,7 @@ func ChartbeatToppagesCommand(cmd *cobra.Command, args []string) {
 		startTime := time.Now()
 
 		// Run the actual meat of the program
-		ChartbeatToppages(mongoUri)
+		ChartbeatToppages(globalConfig.MongoUrl)
 
 		if timeit {
 			getElapsedTime(&startTime)

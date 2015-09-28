@@ -37,12 +37,6 @@ var cmdGetArticles = &cobra.Command{
 			startTime = time.Now()
 		}
 
-		if mongoUri != "" {
-			globalConfig.MongoUrl = mongoUri
-		} else if globalConfig.MongoUrl != "" {
-			mongoUri = globalConfig.MongoUrl
-		}
-
 		var sites []string
 		var sections []string
 
@@ -69,19 +63,19 @@ var cmdGetArticles = &cobra.Command{
 
 		foodArticles := lib.FilterArticlesForRecipeExtraction(articles)
 		if len(foodArticles) > 0 {
-			err = lib.DownloadAndSaveRecipesForArticles(mongoUri, foodArticles)
+			err = lib.DownloadAndSaveRecipesForArticles(globalConfig.MongoUrl, foodArticles)
 			if err != nil {
 				panic(err)
 			}
 		}
 
-		if mongoUri != "" {
-			/*err := lib.RemoveArticles(mongoUri)
+		if globalConfig.MongoUrl != "" {
+			/*err := lib.RemoveArticles(globalConfig.MongoUrl)
 			if err != nil {
 				panic(err)
 			}*/
 
-			err = lib.SaveArticles(mongoUri, articles)
+			err = lib.SaveArticles(globalConfig.MongoUrl, articles)
 			if err != nil {
 				panic(err)
 			}
@@ -111,7 +105,7 @@ var cmdRemoveArticles = &cobra.Command{
 			startTime = time.Now()
 		}
 
-		err := lib.RemoveArticles(mongoUri)
+		err := lib.RemoveArticles(globalConfig.MongoUrl)
 		if err != nil {
 			panic(err)
 		}
