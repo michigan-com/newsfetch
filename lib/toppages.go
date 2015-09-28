@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 
@@ -32,6 +33,7 @@ type TopArticle struct {
 	ArticleId int           `bson:"article_id"`
 	Headline  string        `bson:"headline"`
 	Url       string        `bson:"url"`
+	Source    string        `bson:"source"`
 	Sections  []string      `bson:"sections"`
 	Visits    int           `bson:"visits"`
 }
@@ -68,6 +70,7 @@ func FetchTopPages(urls []string) []*TopArticle {
 
 		go func(url string) {
 			pages, err := GetTopPages(url)
+			host, _ := GetHostFromParams(url)
 
 			if err != nil {
 				Debugger.Println("%v", err)
@@ -92,6 +95,7 @@ func FetchTopPages(urls []string) []*TopArticle {
 				article.Url = page.Path
 				article.Sections = page.Sections
 				article.Visits = page.Stats.Visits
+				article.Source = strings.Replace(host, ".com", "", -1)
 
 				articleQueue <- article
 			}
