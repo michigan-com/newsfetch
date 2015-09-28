@@ -33,6 +33,7 @@ var url = "http://www.freep.com/story/news/local/michigan/2015/08/06/farid-fata-
 
 func Execute(ver string) {
 	VERSION = ver
+	loadConfig()
 	AddCommands()
 	AddFlags()
 
@@ -65,10 +66,16 @@ func AddFlags() {
 func AddCommands() {
 	cmdArticles.AddCommand(cmdGetArticles)
 	cmdArticles.AddCommand(cmdRemoveArticles)
+	cmdArticles.AddCommand(cmdCopyArticles)
 
 	cmdChartbeat.AddCommand(cmdTopPages)
 
 	NewsfetchCmd.AddCommand(cmdBody, cmdArticles, cmdSummary, cmdVersion, cmdChartbeat)
+
+	cmdRecipes.AddCommand(cmdReprocessRecipies)
+	cmdRecipes.AddCommand(cmdReprocessRecipeById)
+	cmdRecipes.AddCommand(cmdExtractRecipiesFromUrl)
+	NewsfetchCmd.AddCommand(cmdRecipes)
 }
 
 func getElapsedTime(sTime *time.Time) {

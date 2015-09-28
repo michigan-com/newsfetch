@@ -7,7 +7,12 @@ import (
 	gq "github.com/PuerkitoBio/goquery"
 )
 
-var TWITTER_RE = regexp.MustCompile("^twitter.com/[a-zA-Z0-9_]*$")
+type ExtractedBody struct {
+	Text       string
+	RecipeData RecipeExtractionResult
+}
+
+var TWITTER_RE = regexp.MustCompile("(?i)(serves|)")
 
 func withoutEmptyStrings(strings []string) []string {
 	result := make([]string, 0, len(strings))
@@ -19,7 +24,7 @@ func withoutEmptyStrings(strings []string) []string {
 	return result
 }
 
-func extractBodyFromDocument(doc *gq.Document, includeTitle bool) string {
+func extractBodyFromDocument(doc *gq.Document, includeTitle bool) *ExtractedBody {
 	paragraphs := doc.Find("div[itemprop=articleBody] > p")
 
 	// remove contact info at the end of the article
@@ -65,8 +70,9 @@ func extractBodyFromDocument(doc *gq.Document, includeTitle bool) string {
 	content = append(content, withoutEmptyStrings(paragraphStrings)...)
 
 	body := strings.Join(content, "\n")
-
-	return body
+	recipeData := ExtractRecipes(doc)
+	extracted := ExtractedBody{body, recipeData}
+	return &extracted
 }
 
 func ExtractTitleFromDocument(doc *gq.Document) string {
@@ -74,13 +80,21 @@ func ExtractTitleFromDocument(doc *gq.Document) string {
 	return strings.TrimSpace(title.Text())
 }
 
-func ExtractBodyFromURL(ch chan string, url string, includeTitle bool) {
+func ExtractBodyFromURLDirectly(url string, includeTitle bool) *ExtractedBody {
 	Debugger.Printf("Fetching %s ...\n", url)
 	doc, err := gq.NewDocument(url)
 	if err != nil {
-		ch <- ""
-		return
+		return nil
 	}
 
-	ch <- extractBodyFromDocument(doc, includeTitle)
+	extracted := extractBodyFromDocument(doc, includeTitle)
+	for _, recipe := range extracted.RecipeData.Recipes {
+		recipe.Url = url
+	}
+
+	return extracted
+}
+
+func ExtractBodyFromURL(ch chan *ExtractedBody, url string, includeTitle bool) {
+	ch <- ExtractBodyFromURLDirectly(url, includeTitle)
 }

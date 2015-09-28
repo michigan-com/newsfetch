@@ -24,6 +24,10 @@ func GetArticleId(url string) int {
 	}
 }
 
+func IsValidArticleId(id int) bool {
+	return id > 0
+}
+
 /*
 	Get the url host from the url string (inputUrl)
 
