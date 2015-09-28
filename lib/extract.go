@@ -12,7 +12,7 @@ type ExtractedBody struct {
 	RecipeData RecipeExtractionResult
 }
 
-var TWITTER_RE = regexp.MustCompile("(?i)(serves|)")
+var TWITTER_RE = regexp.MustCompile("^twitter.com/[a-zA-Z0-9_]*$")
 
 func withoutEmptyStrings(strings []string) []string {
 	result := make([]string, 0, len(strings))
