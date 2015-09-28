@@ -34,21 +34,21 @@ type Photo struct {
 }
 
 type Article struct {
-	Id          bson.ObjectId  `bson:"_id,omitempty"`
-	ArticleId   int            `bson:"article_id"`
-	Headline    string         `bson:"headline"`
-	Subheadline string         `bson:"subheadline"`
-	Section     string         `bson:"section"`
-	Subsection  string         `bson:"subsection"`
-	Source      string         `bson:"source"`
-	Summary     []string       `bson:"summary"`
-	Created_at  time.Time      `bson:"created_at"`
-	Updated_at  time.Time      `bson:"updated_at"`
-	Timestamp   time.Time      `bson:"timestamp"`
-	Url         string         `bson:"url"`
-	Photo       *Photo         `bson:"photo"`
-	BodyText    string         `bson:"body"`
-	Visits      []TimeInterval `body:"visits"`
+	Id          bson.ObjectId  `bson:"_id,omitempty" json:"_id"`
+	ArticleId   int            `bson:"article_id" json:"article_id"`
+	Headline    string         `bson:"headline" json:"headline`
+	Subheadline string         `bson:"subheadline" json:"subheadline"`
+	Section     string         `bson:"section" json:"section"`
+	Subsection  string         `bson:"subsection" json:"subsection"`
+	Source      string         `bson:"source" json:"source"`
+	Summary     interface{}    `bson:"summary" json:"summary"`
+	Created_at  time.Time      `bson:"created_at" json:"created_at"`
+	Updated_at  time.Time      `bson:"updated_at" json:"updated_at"`
+	Timestamp   time.Time      `bson:"timestamp" json:"timestamp"`
+	Url         string         `bson:"url" json:"url"`
+	Photo       *Photo         `bson:"photo" json:"photo"`
+	BodyText    string         `bson:"body" json:"body"`
+	Visits      []TimeInterval `body:"visits" json:"visits"`
 }
 
 type TimeInterval struct {
@@ -98,6 +98,10 @@ type Attrs struct {
 	Brief         string `json:"brief"`
 }
 
+type MapiArticlesResponse struct {
+	Articles []Article `json:"articles"`
+}
+
 func isBlacklisted(url string) bool {
 	blacklist := []string{
 		"/videos/",
@@ -141,7 +145,7 @@ func FetchAndParseArticles(urls []string, extractBody bool) []*Article {
 				_, repeatArticle := articleMap[articleId]
 				mapMutex.RUnlock()
 
-				if articleId == -1 || repeatArticle || isBlacklisted(articleUrl) {
+				if !IsValidArticleId(articleId) || repeatArticle || isBlacklisted(articleUrl) {
 					continue
 				}
 
@@ -228,7 +232,7 @@ func ParseArticle(articleUrl string, articleJson *Content, extractBody bool) (*A
 	articleId := GetArticleId(articleUrl)
 
 	// Check to make sure we could parse the ID
-	if articleId < 0 {
+	if !IsValidArticleId(articleId) {
 		return nil, fmt.Errorf("Failed to parse an article ID, likely not a news article: %s", articleUrl)
 	}
 
@@ -273,16 +277,16 @@ func ParseArticle(articleUrl string, articleJson *Content, extractBody bool) (*A
 		},
 	}
 
-	body := ""
+	var extracted *ExtractedBody
 	var summary []string
 	if extractBody {
-		ch := make(chan string)
+		ch := make(chan *ExtractedBody)
 		go ExtractBodyFromURL(ch, articleUrl, false)
-		body = <-ch
+		extracted = <-ch
 
-		if body != "" {
-			Debugger.Println("Extracted body contains %d characters, %d paragraphs.", len(strings.Split(body, "")), len(strings.Split(body, "\n\n")))
-			summarizer := NewPunktSummarizer(articleJson.Headline, body, tokenizer)
+		if extracted.Text != "" {
+			Debugger.Println("Extracted extracted contains %d characters, %d paragraphs.", len(strings.Split(extracted.Text, "")), len(strings.Split(extracted.Text, "\n\n")))
+			summarizer := NewPunktSummarizer(articleJson.Headline, extracted.Text, tokenizer)
 			summary = summarizer.KeyPoints()
 			Debugger.Println("Generated summary ...")
 		}
@@ -308,8 +312,8 @@ func ParseArticle(articleUrl string, articleJson *Content, extractBody bool) (*A
 		Photo:       &photo,
 	}
 
-	if body != "" {
-		article.BodyText = body
+	if extracted != nil {
+		article.BodyText = extracted.Text
 	}
 
 	return article, nil
@@ -365,4 +369,69 @@ func SaveArticles(mongoUri string, articles []*Article) error {
 
 	Debugger.Println("Saved a batch of articles ...")
 	return nil
+}
+
+func LoadArticles(mongoUri string) ([]*Article, error) {
+	session := DBConnect(mongoUri)
+	defer DBClose(session)
+
+	articleCol := session.DB("").C("Article")
+
+	var result []*Article
+	err := articleCol.Find(nil).All(&result)
+	return result, err
+}
+
+func LoadArticleById(mongoUri string, articleId int) (*Article, error) {
+	session := DBConnect(mongoUri)
+	defer DBClose(session)
+
+	articleCol := session.DB("").C("Article")
+
+	var result *Article
+	err := articleCol.Find(bson.M{"article_id": articleId}).One(&result)
+	return result, err
+}
+
+func LoadRemoteArticles(url string) ([]*Article, error) {
+	Debugger.Println("Fetching ", url)
+
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+
+	Debugger.Println(fmt.Sprintf("Successfully fetched %s", url))
+
+	var response MapiArticlesResponse
+	decoder := json.NewDecoder(resp.Body)
+	err = decoder.Decode(&response)
+	if err != nil {
+		return nil, err
+	}
+
+	return sliceOfArticlesToSliceOfPointers(response.Articles), nil
+}
+
+func FilterArticlesBySubsection(articles []*Article, section string, subsection string) []*Article {
+	result := make([]*Article, 0, len(articles))
+	for _, el := range articles {
+		if (el.Section == section) && (el.Subsection == subsection) {
+			result = append(result, el)
+		}
+	}
+	return result
+}
+
+func FilterArticlesForRecipeExtraction(articles []*Article) []*Article {
+	return FilterArticlesBySubsection(articles, "life", "food")
+}
+
+func sliceOfArticlesToSliceOfPointers(articles []Article) []*Article {
+	result := make([]*Article, 0, len(articles))
+	for _, el := range articles {
+		copy := el
+		result = append(result, &copy)
+	}
+	return result
 }

@@ -121,9 +121,7 @@ func TestParseArticle(t *testing.T) {
 func TestArticlesMongo(t *testing.T) {
 	t.Log("Ensure no duplicate articles are in the database.")
 
-	uri := "mongodb://localhost:27017/mapi_test"
-
-	RemoveArticles(uri)
+	RemoveArticles(TestMongoUri)
 
 	urls := FormatFeedUrls([]string{"freep.com"}, []string{"news"})
 	getBody := false
@@ -141,10 +139,10 @@ func TestArticlesMongo(t *testing.T) {
 			}
 		}
 
-		SaveArticles(uri, articles)
+		SaveArticles(TestMongoUri, articles)
 	}
 
-	session := DBConnect(uri)
+	session := DBConnect(TestMongoUri)
 	defer DBClose(session)
 	articleCol := session.DB("").C("Article")
 
@@ -183,8 +181,11 @@ func TestArticlesMongo(t *testing.T) {
 		if art.BodyText != "" {
 			t.Log("Found one body with content.")
 			foundBody = true
-			if len(art.Summary) == 0 {
-				t.Fatal("Found a non-empty body with an empty summary.")
+			switch summary := art.Summary.(type) {
+			case []string:
+				if len(summary) == 0 {
+					t.Fatal("Found a non-empty body with an empty summary.")
+				}
 			}
 		}
 	}

@@ -59,13 +59,23 @@ var cmdGetArticles = &cobra.Command{
 			printArticleBrief(articles)
 		}
 
-		if mongoUri != "" {
-			/*err := lib.RemoveArticles(mongoUri)
+		var err error
+
+		foodArticles := lib.FilterArticlesForRecipeExtraction(articles)
+		if len(foodArticles) > 0 {
+			err = lib.DownloadAndSaveRecipesForArticles(globalConfig.MongoUrl, foodArticles)
+			if err != nil {
+				panic(err)
+			}
+		}
+
+		if globalConfig.MongoUrl != "" {
+			/*err := lib.RemoveArticles(globalConfig.MongoUrl)
 			if err != nil {
 				panic(err)
 			}*/
 
-			err := lib.SaveArticles(mongoUri, articles)
+			err = lib.SaveArticles(globalConfig.MongoUrl, articles)
 			if err != nil {
 				panic(err)
 			}
@@ -95,7 +105,39 @@ var cmdRemoveArticles = &cobra.Command{
 			startTime = time.Now()
 		}
 
-		err := lib.RemoveArticles(mongoUri)
+		err := lib.RemoveArticles(globalConfig.MongoUrl)
+		if err != nil {
+			panic(err)
+		}
+
+		if timeit {
+			getElapsedTime(&startTime)
+		}
+	},
+}
+
+var cmdCopyArticles = &cobra.Command{
+	Use:   "copy-from",
+	Short: "Copies articles from a mapi JSON URL",
+	Run: func(cmd *cobra.Command, args []string) {
+		if timeit {
+			startTime = time.Now()
+		}
+
+		if len(args) != 1 {
+			panic("Required argument: URL")
+		}
+		url := args[0]
+
+		articles, err := lib.LoadRemoteArticles(url)
+		if err != nil {
+			panic(err)
+		}
+
+		printArticleBrief(articles)
+
+		fmt.Printf("Saving %d articles...\n", len(articles))
+		err = lib.SaveArticles(globalConfig.MongoUrl, articles)
 		if err != nil {
 			panic(err)
 		}

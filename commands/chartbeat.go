@@ -2,7 +2,6 @@ package commands
 
 import (
 	"net/http"
-	"os"
 	"sync"
 	"time"
 
@@ -18,7 +17,7 @@ type Beat interface {
 type TopPages struct{}
 type QuickStats struct{}
 
-var debugger = lib.NewCondLogger("chartbeat")
+var chartbeatDebugger = lib.NewCondLogger("chartbeat")
 
 var cmdChartbeat = &cobra.Command{
 	Use:   "chartbeat",
@@ -51,12 +50,6 @@ var cmdQuickStats = &cobra.Command{
 
 func RunChartbeatCommands(beats []Beat) {
 	// Set up environment
-	if mongoUri == "" {
-		mongoUri = os.Getenv("MONGO_URI")
-	}
-	if apiKey == "" {
-		apiKey = os.Getenv("CHARTBEAT_API_KEY")
-	}
 
 	for {
 		startTime := time.Now()
@@ -68,7 +61,7 @@ func RunChartbeatCommands(beats []Beat) {
 			beatWait.Add(1)
 
 			go func(beat Beat) {
-				beat.Run(mongoUri)
+				beat.Run(globalConfig.MongoUrl)
 				beatWait.Done()
 			}(beat)
 		}
@@ -80,9 +73,9 @@ func RunChartbeatCommands(beats []Beat) {
 		}
 
 		if loop != -1 {
-			debugger.Printf("Looping! Sleeping for %d seconds...", loop)
+			chartbeatDebugger.Printf("Looping! Sleeping for %d seconds...", loop)
 			time.Sleep(time.Duration(loop) * time.Second)
-			debugger.Printf("...and now I'm awake!")
+			chartbeatDebugger.Printf("...and now I'm awake!")
 		} else {
 			break
 		}
@@ -90,53 +83,54 @@ func RunChartbeatCommands(beats []Beat) {
 }
 
 func (t *TopPages) Run(mongoUri string) {
-	debugger.Println("Fetching toppages")
-	urls, err := lib.FormatChartbeatUrls("live/toppages/v3", lib.Sites, apiKey)
+	chartbeatDebugger.Println("Fetching toppages")
+	urls, err := lib.FormatChartbeatUrls("live/toppages/v3", lib.Sites, globalConfig.ChartbeatApiKey)
+
 	if err != nil {
-		debugger.Printf("ERROR: %v", err)
+		chartbeatDebugger.Printf("ERROR: %v", err)
 		return
 	}
 
 	snapshot := lib.FetchTopPages(urls)
 
-	if mongoUri != "" {
-		debugger.Println("Saving toppages snapshot")
-		err := lib.SaveTopPagesSnapshot(snapshot, mongoUri)
+	if globalConfig.MongoUrl != "" {
+		chartbeatDebugger.Println("Saving toppages snapshot")
+		err := lib.SaveTopPagesSnapshot(snapshot, globalConfig.MongoUrl)
 		if err != nil {
-			debugger.Printf("ERROR: %v", err)
+			chartbeatDebugger.Printf("ERROR: %v", err)
 			return
 		}
 
-		lib.CalculateTimeInterval(snapshot, mongoUri)
+		lib.CalculateTimeInterval(snapshot, globalConfig.MongoUrl)
 
 		// Update mapi to let it know that a new snapshot has been saved
 		_, err = http.Get("https://api.michigan.com/popular/")
 		if err != nil {
-			debugger.Printf("%v", err)
+			chartbeatDebugger.Printf("%v", err)
 		} else {
 			now := time.Now()
-			debugger.Printf("Updated snapshot at Mapi at %v", now)
+			chartbeatDebugger.Printf("Updated snapshot at Mapi at %v", now)
 		}
 	} else {
-		debugger.Printf("Variable 'mongoUri' not specified, no data will be saved")
+		chartbeatDebugger.Printf("Variable 'mongoUri' not specified, no data will be saved")
 	}
 }
 
 func (q *QuickStats) Run(mongoUri string) {
-	debugger.Printf("Quickstats")
+	chartbeatDebugger.Printf("Quickstats")
 
-	urls, err := lib.FormatChartbeatUrls("live/quickstats/v4", lib.Sites, apiKey)
+	urls, err := lib.FormatChartbeatUrls("live/quickstats/v4", lib.Sites, globalConfig.ChartbeatApiKey)
 	if err != nil {
-		debugger.Println("ERROR: %v", err)
+		chartbeatDebugger.Println("ERROR: %v", err)
 		return
 	}
 
 	quickStats := lib.FetchQuickStats(urls)
 
-	if mongoUri != "" {
-		debugger.Printf("Saving quickstats...")
+	if globalConfig.ChartbeatApiKey != "" {
+		chartbeatDebugger.Printf("Saving quickstats...")
 
-		lib.SaveQuickStats(quickStats, mongoUri)
+		lib.SaveQuickStats(quickStats, globalConfig.MongoUrl)
 	}
 
 }

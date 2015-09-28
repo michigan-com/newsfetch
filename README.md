@@ -27,8 +27,11 @@ $ make bump 0.1.0
 ```
 
 ## Run
-Run the executable
-* `./newsfetch`
+
+Run the executable:
+
+    export NEWSFETCH_MONGO_URL=mongodb://localhost:27017/mapi
+    ./newsfetch
 
 ## Usage
 
@@ -83,6 +86,13 @@ Skip prompt
 ```
 $ ./newsfetch articles rm -ns mongodb://localhost:27017/mapi
 ```
+
+### Copy Articles
+
+Copy articles returned by Michigan API into the local Mongo database:
+
+    export NEWSFETCH_MONGO_URL=mongodb://localhost:27017/mapi
+    newsfetch articles copy-from 'https://api.michigan.com/v1/news/freep/life?limit=1000'
 
 ### Generate Summary
 

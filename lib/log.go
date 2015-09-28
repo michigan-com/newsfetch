@@ -17,11 +17,11 @@ type CondLogger struct {
 }
 
 func (c *CondLogger) Enable() {
-	c.SetOutput(os.Stdout)
+	c.Logger.SetOutput(os.Stdout)
 }
 
 func (c *CondLogger) Disable() {
-	c.SetOutput(ioutil.Discard)
+	c.Logger.SetOutput(ioutil.Discard)
 }
 
 func NewCondLogger(name string) *CondLogger {

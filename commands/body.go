@@ -21,13 +21,13 @@ var cmdBody = &cobra.Command{
 			articleUrl = args[0]
 		}
 
-		var body string
-		ch := make(chan string)
+		var extracted *lib.ExtractedBody
+		ch := make(chan *lib.ExtractedBody)
 		go lib.ExtractBodyFromURL(ch, articleUrl, includeTitle)
-		body = <-ch
+		extracted = <-ch
 
 		if output {
-			bodyFmt := strings.Join(strings.Split(body, "\n"), "\n\n")
+			bodyFmt := strings.Join(strings.Split(extracted.Text, "\n"), "\n\n")
 			fmt.Println(bodyFmt)
 		}
 
