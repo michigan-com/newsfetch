@@ -1,6 +1,11 @@
 CHANGELOG
 =========
 
+v0.1.9 2015-09-28
+-----------------
+
+* Added chartbeat quickstats command `./newsfetch chartbeat quickstats`
+
 v0.1.8 2015-09-28
 -----------------
 
