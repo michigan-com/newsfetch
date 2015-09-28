@@ -9,6 +9,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var recipeDebugger = lib.NewCondLogger("recipes")
+
 func printRecipies(articles []*lib.Article) {
 	for _, article := range articles {
 		fmt.Printf("%s/%s/%s - %s - %s\n", article.Source, article.Section, article.Subsection, article.Headline, article.Url)
@@ -36,7 +38,7 @@ var cmdReprocessRecipies = &cobra.Command{
 		beforeCount := len(articles)
 		articles = lib.FilterArticlesForRecipeExtraction(articles)
 
-		println("Loaded", beforeCount, "articles including", len(articles), "in food subsection.")
+		recipeDebugger.Printf("Loaded %d articles including %d in food subsection.", beforeCount, len(articles))
 
 		if output {
 			printRecipies(articles)

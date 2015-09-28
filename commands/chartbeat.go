@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var debugger = lib.NewCondLogger("chartbeat")
+var chartbeatDebugger = lib.NewCondLogger("chartbeat")
 
 var cmdChartbeat = &cobra.Command{
 	Use:   "chartbeat",
@@ -36,9 +36,9 @@ func ChartbeatToppagesCommand(cmd *cobra.Command, args []string) {
 		}
 
 		if loop != -1 {
-			debugger.Printf("Looping! Sleeping for %d seconds...", loop)
+			chartbeatDebugger.Printf("Looping! Sleeping for %d seconds...", loop)
 			time.Sleep(time.Duration(loop) * time.Second)
-			debugger.Printf("...and now I'm awake!")
+			chartbeatDebugger.Printf("...and now I'm awake!")
 		} else {
 			break
 		}
@@ -46,20 +46,20 @@ func ChartbeatToppagesCommand(cmd *cobra.Command, args []string) {
 }
 
 func ChartbeatToppages(mongoUri string) {
-	debugger.Println("Fetching toppages")
+	chartbeatDebugger.Println("Fetching toppages")
 	urls, err := lib.FormatChartbeatUrls("live/toppages/v3", lib.Sites, globalConfig.ChartbeatApiKey)
 	if err != nil {
-		debugger.Printf("ERROR: %v", err)
+		chartbeatDebugger.Printf("ERROR: %v", err)
 		return
 	}
 
 	snapshot := lib.FetchTopPages(urls)
 
 	if mongoUri != "" {
-		debugger.Println("Saving toppages snapshot")
+		chartbeatDebugger.Println("Saving toppages snapshot")
 		err := lib.SaveTopPagesSnapshot(snapshot, mongoUri)
 		if err != nil {
-			debugger.Printf("ERROR: %v", err)
+			chartbeatDebugger.Printf("ERROR: %v", err)
 			return
 		}
 
@@ -68,12 +68,12 @@ func ChartbeatToppages(mongoUri string) {
 		// Update mapi to let it know that a new snapshot has been saved
 		_, err = http.Get("https://api.michigan.com/popular/")
 		if err != nil {
-			debugger.Printf("%v", err)
+			chartbeatDebugger.Printf("%v", err)
 		} else {
 			now := time.Now()
-			debugger.Printf("Updated snapshot at Mapi at %v", now)
+			chartbeatDebugger.Printf("Updated snapshot at Mapi at %v", now)
 		}
 	} else {
-		debugger.Printf("Variable 'mongoUri' not specified, no data will be saved")
+		chartbeatDebugger.Printf("Variable 'mongoUri' not specified, no data will be saved")
 	}
 }

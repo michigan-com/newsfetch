@@ -38,11 +38,11 @@ func DownloadRecipesFromUrls(urls []string) []*Recipe {
 		}
 		visited[url] = true
 
-		println("Recipe extraction for URL", url)
+		Debugger.Println("Recipe extraction for URL", url)
 
 		articleId := GetArticleId(url)
 		if !IsValidArticleId(articleId) {
-			println("Skipped, cannot determine article ID")
+			Debugger.Println("Skipped, cannot determine article ID")
 			continue
 		}
 
@@ -52,13 +52,13 @@ func DownloadRecipesFromUrls(urls []string) []*Recipe {
 			recipe.ArticleId = articleId
 		}
 
-		println("  found", len(extracted.RecipeData.Recipes), "recipes")
+		Debugger.Println("  found", len(extracted.RecipeData.Recipes), "recipes")
 
 		if false {
 			for i, recipe := range recipes {
-				println()
-				println("Recipe ", i, "=", recipe.String())
-				println()
+				Debugger.Println()
+				Debugger.Println("Recipe ", i, "=", recipe.String())
+				Debugger.Println()
 			}
 		}
 

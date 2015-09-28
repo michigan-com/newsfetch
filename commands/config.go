@@ -16,6 +16,4 @@ func loadConfig() {
 	if err != nil {
 		panic(err)
 	}
-
-	println("MongoUrl (env) =", globalConfig.MongoUrl)
 }

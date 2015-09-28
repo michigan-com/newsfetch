@@ -70,7 +70,6 @@ func ExtractRecipes(doc *gq.Document) RecipeExtractionResult {
 	var unused []RecipeFragment
 
 	setState := func(newState recipeState) {
-		// println("setState", newState)
 		if newState == state {
 			return
 		}
@@ -96,7 +95,6 @@ func ExtractRecipes(doc *gq.Document) RecipeExtractionResult {
 
 	for _, fragment := range fragments {
 		tag := fragment.Tag()
-		// println("fragment", tag)
 
 		switch tag {
 		case TitleTag:

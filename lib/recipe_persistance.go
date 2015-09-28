@@ -19,15 +19,13 @@ func SaveRecipes(mongoUri string, recipes []*Recipe) error {
 			One(&existing)
 		if err == nil {
 			collection.Update(bson.M{"_id": existing.Id}, recipe)
-			// println("Recipe updated: ", recipe.Url)
 			totalUpdates++
 		} else {
 			collection.Insert(recipe)
-			// println("Recipe added: ", recipe.Url)
 			totalInserts++
 		}
 	}
-	println(totalUpdates, "recipes updated,", totalInserts, "recipes added")
+	Debugger.Println(totalUpdates, "recipes updated,", totalInserts, "recipes added")
 
 	return nil
 }
