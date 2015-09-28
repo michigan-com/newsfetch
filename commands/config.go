@@ -5,7 +5,7 @@ import (
 )
 
 type GlobalConfig struct {
-	MongoUrl        string `envconfig:"mongo_uri" required:"true"`
+	MongoUrl        string `envconfig:"mongo_uri"`
 	ChartbeatApiKey string `envconfig:"chartbeat_api_key"`
 }
 
