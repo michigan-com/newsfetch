@@ -1,6 +1,13 @@
 CHANGELOG
 =========
 
+v0.1.8 2015-09-28
+-----------------
+
+* Added Recipe parsing
+* [FIX] Older single-string article summaries can now be successfully from the db
+
+
 v0.1.7 09-21-2015
 -----------------
 
