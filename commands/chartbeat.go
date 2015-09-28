@@ -2,7 +2,6 @@ package commands
 
 import (
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/michigan-com/newsfetch/lib"
@@ -26,11 +25,6 @@ func RunChartbeatCommands(cmds []*cobra.Command) {
 }
 
 func ChartbeatToppagesCommand(cmd *cobra.Command, args []string) {
-	// Set up environment
-	if apiKey == "" {
-		apiKey = os.Getenv("CHARTBEAT_API_KEY")
-	}
-
 	for {
 		startTime := time.Now()
 
@@ -53,7 +47,7 @@ func ChartbeatToppagesCommand(cmd *cobra.Command, args []string) {
 
 func ChartbeatToppages(mongoUri string) {
 	debugger.Println("Fetching toppages")
-	urls, err := lib.FormatChartbeatUrls("live/toppages/v3", lib.Sites, apiKey)
+	urls, err := lib.FormatChartbeatUrls("live/toppages/v3", lib.Sites, globalConfig.ChartbeatApiKey)
 	if err != nil {
 		debugger.Printf("ERROR: %v", err)
 		return

@@ -12,7 +12,6 @@ var (
 	siteStr      string
 	sectionStr   string
 	title        string
-	apiKey       string
 	output       bool
 	timeit       bool
 	body         bool
@@ -55,7 +54,6 @@ func AddFlags() {
 
 	cmdSummary.Flags().StringVarP(&title, "title", "t", "", "Title for article summarizer, if not supplied then the summarizer assumes first line is title")
 
-	cmdTopPages.Flags().StringVarP(&apiKey, "apikey", "k", "", "Chartbeat API Key. Required for fetching chartbeat data")
 	cmdTopPages.Flags().IntVarP(&loop, "loop", "l", -1, "Specify the internval in seconds to loop the fetching of the toppages api")
 }
 
