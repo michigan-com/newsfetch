@@ -183,7 +183,7 @@ func TestArticlesMongo(t *testing.T) {
 		if art.BodyText != "" {
 			t.Log("Found one body with content.")
 			foundBody = true
-			if len(art.Summary) == 0 {
+			if len(art.Summary.([]string)) == 0 {
 				t.Fatal("Found a non-empty body with an empty summary.")
 			}
 		}
