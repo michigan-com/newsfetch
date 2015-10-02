@@ -10,50 +10,16 @@ import (
 	"time"
 )
 
-func PArticle(proc ArticleProcessor, body Parser) {
-	articleIn, err := proc.GetData()
-	if !proc.IsValid() {
-		Debugger.Println(err)
-		return
+func TheOneRing(middleEarth ...Middleware) *Article {
+	article := &Article{}
+	for _, frodo := range middleEarth {
+		frodo.Process(article)
 	}
-
-	article, err := proc.Parse(articleIn)
-	rawBody, err := body.GetData()
-	if err != nil {
-	}
-	article.BodyText, err = body.Parse(rawBody)
-	article.Save(nil)
+	return article
 }
 
-type Parser interface {
-	GetData() (interface{}, error)
-	Parse() (interface{}, error)
-}
-
-type ArticleProcessor interface {
-	Parser
-	IsValid() bool
-}
-
-type DefaultBodyParser struct {
-	Text string
-}
-
-func (b *DefaultBodyParser) Parse() string {
-	return ""
-}
-
-type DefaultArticleProcessor struct {
-	Processor ArticleProcessor
-	Parser
-	*Article
-}
-
-func NewArticleProcessor(url string) *DefaultArticleProcessor {
-	return &DefaultArticleProcessor{
-		Processor:  &ArticleIn{Url: url},
-		BodyParser: &DefaultBodyParser{},
-	}
+type Middleware interface {
+	Process(*Article) error
 }
 
 type ArticleIn struct {
@@ -81,77 +47,24 @@ type ArticleIn struct {
 }
 
 func NewArticleIn(url string) *ArticleIn {
-	return &ArticleIn{Url: url}
+	article := &ArticleIn{Url: url}
+	err := article.GetData()
+	if err != nil {
+		Debugger.Println(err)
+	}
+
+	if !article.IsValid() {
+		Debugger.Println("Article is not valid: %s", article)
+	}
+
+	return article
 }
 
 func (a *ArticleIn) String() string {
 	return fmt.Sprintf("<ArticleIn Site: %s, Id: %s, Url: %s>", a.Site, a.Article.Id, a.Url)
 }
 
-func (a *ArticleIn) IsValid() bool {
-	if !IsValidArticleId(a.Article.Id) {
-		Debugger.Println("Could not parse article id: %s", a)
-		return false
-	}
-
-	if isBlacklisted(a.Url) {
-		Debugger.Println("Article URL has been blacklisted: %s", a)
-		return false
-	}
-
-	if a.Article.Photo == nil {
-		Debugger.Println("Failed to find photo object for %s", a)
-		return false
-	}
-
-	if a.Article.Photo.AssetMetadata == nil {
-		Debugger.Println("Failed to find asset_metadata object for %s", a)
-		return false
-	}
-
-	if a.Article.Photo.AssetMetadata.Attrs == nil {
-		Debugger.Println("Failed to find photo.attrs object for %s", a)
-		return false
-	}
-
-	return true
-}
-
-func (a *ArticleIn) GetData() (interface{}, error) {
-	json_url := ""
-	if strings.HasSuffix(a.Url, "/") {
-		json_url = fmt.Sprintf("%s%s", a.Url, "json")
-	} else {
-		json_url = fmt.Sprintf("%s/%s", a.Url, "json")
-	}
-
-	Debugger.Println("Fetching: ", json_url)
-
-	resp, err := http.Get(json_url)
-	if err != nil {
-		return a, err
-	}
-
-	site, err := GetSiteFromHost(resp.Request.URL.Host)
-	if err != nil {
-		return a, err
-	}
-
-	a.Site = site
-
-	var jso []byte
-	decoder := json.NewDecoder(resp.Body)
-	err = decoder.Decode(&a.Article)
-	if err != nil {
-		return a, err
-	}
-
-	json.Unmarshal(jso, a.Article)
-
-	return a, nil
-}
-
-func (a *ArticleIn) Parse() (*Article, error) {
+func (a *ArticleIn) Process(article *Article) error {
 	art := a.Article
 	ssts := art.Ssts
 	attrs := art.Photo.AssetMetadata.Attrs
@@ -193,20 +106,81 @@ func (a *ArticleIn) Parse() (*Article, error) {
 		Debugger.Println("Error parsing timestamp: %v", aerr)
 	}
 
-	article := &Article{
-		ArticleId:   art.Id,
-		Headline:    a.Metadata.Headline,
-		Subheadline: a.Metadata.Description,
-		Section:     ssts.Section,
-		Subsection:  ssts.Subsection,
-		Created_at:  time.Now(),
-		Updated_at:  time.Now(),
-		Timestamp:   timestamp,
-		Url:         a.Url,
-		Photo:       &photo,
+	article.ArticleId = art.Id
+	article.Headline = a.Metadata.Headline
+	article.Subheadline = a.Metadata.Description
+	article.Section = ssts.Section
+	article.Subsection = ssts.Subsection
+	article.Created_at = time.Now()
+	article.Updated_at = time.Now()
+	article.Timestamp = timestamp
+	article.Url = a.Url
+	article.Photo = &photo
+
+	return nil
+}
+
+func (a *ArticleIn) IsValid() bool {
+	if !IsValidArticleId(a.Article.Id) {
+		Debugger.Println("Could not parse article id: %s", a)
+		return false
 	}
 
-	return article, nil
+	if isBlacklisted(a.Url) {
+		Debugger.Println("Article URL has been blacklisted: %s", a)
+		return false
+	}
+
+	if a.Article.Photo == nil {
+		Debugger.Println("Failed to find photo object for %s", a)
+		return false
+	}
+
+	if a.Article.Photo.AssetMetadata == nil {
+		Debugger.Println("Failed to find asset_metadata object for %s", a)
+		return false
+	}
+
+	if a.Article.Photo.AssetMetadata.Attrs == nil {
+		Debugger.Println("Failed to find photo.attrs object for %s", a)
+		return false
+	}
+
+	return true
+}
+
+func (a *ArticleIn) GetData() error {
+	json_url := ""
+	if strings.HasSuffix(a.Url, "/") {
+		json_url = fmt.Sprintf("%s%s", a.Url, "json")
+	} else {
+		json_url = fmt.Sprintf("%s/%s", a.Url, "json")
+	}
+
+	Debugger.Println("Fetching: ", json_url)
+
+	resp, err := http.Get(json_url)
+	if err != nil {
+		return err
+	}
+
+	site, err := GetSiteFromHost(resp.Request.URL.Host)
+	if err != nil {
+		return err
+	}
+
+	a.Site = site
+
+	var jso []byte
+	decoder := json.NewDecoder(resp.Body)
+	err = decoder.Decode(&a.Article)
+	if err != nil {
+		return err
+	}
+
+	json.Unmarshal(jso, a.Article)
+
+	return nil
 }
 
 func GetSiteFromHost(host string) (string, error) {
