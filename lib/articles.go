@@ -10,12 +10,19 @@ import (
 	"sync"
 	"time"
 
+	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 
 var tokenizer = LoadTokenizer()
 
 const maxarticles = 20 // Expected number of articles to be returned per URL
+
+var articleIdIndex = mgo.Index{
+	Key:      []string{"article_id"},
+	Unique:   true,
+	DropDups: true,
+}
 
 /*
  * DATA GOING OUT
@@ -51,6 +58,31 @@ type Article struct {
 	Visits      []TimeInterval `body:"visits" json:"visits"`
 }
 
+func (a *Article) String() string {
+	return fmt.Sprintf("<Article Id: %d, Headline: %s, Url: %s>", a.Id, a.Headline, a.Url)
+}
+
+func (article *Article) Save(session *mgo.Session) error {
+	// Save the snapshot
+	articleCol := session.DB("").C("Article")
+	art := Article{}
+	err := articleCol.
+		Find(bson.M{"article_id": article.ArticleId}).
+		Select(bson.M{"_id": 1, "created_at": 1}).
+		One(&art)
+	if err == nil {
+		article.Created_at = art.Created_at
+		articleCol.Update(bson.M{"_id": art.Id}, article)
+		Debugger.Println("Article updated: ", article)
+	} else {
+		//bulk.Insert(article)
+		articleCol.Insert(article)
+		Debugger.Println("Article added: ", article)
+	}
+
+	return nil
+}
+
 type TimeInterval struct {
 	Max       int       `bson:"max"`
 	Timestamp time.Time `bson:"timestamp"`
@@ -66,16 +98,18 @@ type Feed struct {
 	}
 }
 
+type Ssts struct {
+	Section    string `json:"section"`
+	Subsection string `json:"subsection"`
+}
+
 type Content struct {
 	Url       string `json:"url"`
 	Headline  string `json:"headline"`
 	Summary   string `json:"summary"`
 	Timestamp string `json:"timestamp"`
-	Ssts      *struct {
-		Section    string `json:"section"`
-		Subsection string `json:"subsection"`
-	} `json:"ssts"`
-	Photo *struct {
+	*Ssts     `json:"ssts"`
+	Photo     *struct {
 		*Attrs `json:"attrs"`
 	} `json:"photo"`
 	Attrs *struct {
