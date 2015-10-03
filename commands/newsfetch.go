@@ -43,6 +43,8 @@ func AddFlags() {
 	NewsfetchCmd.PersistentFlags().BoolVarP(&output, "output", "o", true, "Outputs results of command")
 	NewsfetchCmd.PersistentFlags().BoolVarP(&timeit, "time", "m", false, "Outputs how long a command takes to finish")
 
+	cmdArticle.Flags().StringVarP(&articleUrl, "url", "u", url, "URL of Gannett article")
+
 	cmdGetArticles.Flags().StringVarP(&siteStr, "sites", "i", "all", "Comma separated list of Gannett sites to fetch articles from")
 	cmdGetArticles.Flags().StringVarP(&sectionStr, "sections", "e", "all", "Comma separated list of article sections to fetch from")
 	cmdGetArticles.Flags().BoolVarP(&body, "body", "b", false, "Fetches the article body content")
@@ -66,7 +68,14 @@ func AddCommands() {
 	cmdChartbeat.AddCommand(cmdQuickStats)
 	cmdChartbeat.AddCommand(cmdAllBeats)
 
-	NewsfetchCmd.AddCommand(cmdBody, cmdArticles, cmdSummary, cmdVersion, cmdChartbeat)
+	NewsfetchCmd.AddCommand(
+		cmdArticle,
+		cmdBody,
+		cmdArticles,
+		cmdSummary,
+		cmdVersion,
+		cmdChartbeat,
+	)
 
 	cmdRecipes.AddCommand(cmdReprocessRecipies)
 	cmdRecipes.AddCommand(cmdReprocessRecipeById)

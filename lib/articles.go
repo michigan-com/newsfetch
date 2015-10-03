@@ -59,7 +59,7 @@ type Article struct {
 }
 
 func (a *Article) String() string {
-	return fmt.Sprintf("<Article Id: %d, Headline: %s, Url: %s>", a.Id, a.Headline, a.Url)
+	return fmt.Sprintf("<Article Id: %d, Headline: %s, Url: %s>", a.ArticleId, a.Headline, a.Url)
 }
 
 func (article *Article) Save(session *mgo.Session) error {

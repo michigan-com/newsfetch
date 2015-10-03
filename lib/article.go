@@ -10,8 +10,7 @@ import (
 	"time"
 )
 
-func TheOneRing(middleEarth ...Middleware) *Article {
-	article := &Article{}
+func TheOneRing(article *Article, middleEarth ...Middleware) *Article {
 	for _, frodo := range middleEarth {
 		frodo.Process(article)
 	}
@@ -46,6 +45,16 @@ type ArticleIn struct {
 	} `json:"metadata"`
 }
 
+type BodyParser struct{}
+
+func NewBodyParser() *BodyParser {
+	return &BodyParser{}
+}
+
+func (b *BodyParser) Process(article *Article) error {
+	return nil
+}
+
 func NewArticleIn(url string) *ArticleIn {
 	article := &ArticleIn{Url: url}
 	err := article.GetData()
@@ -54,14 +63,14 @@ func NewArticleIn(url string) *ArticleIn {
 	}
 
 	if !article.IsValid() {
-		Debugger.Println("Article is not valid: %s", article)
+		Debugger.Println("Article is not valid: ", article)
 	}
 
 	return article
 }
 
 func (a *ArticleIn) String() string {
-	return fmt.Sprintf("<ArticleIn Site: %s, Id: %s, Url: %s>", a.Site, a.Article.Id, a.Url)
+	return fmt.Sprintf("<ArticleIn Site: %s, Id: %d, Url: %s>", a.Site, a.Article.Id, a.Url)
 }
 
 func (a *ArticleIn) Process(article *Article) error {
@@ -103,7 +112,7 @@ func (a *ArticleIn) Process(article *Article) error {
 	timestamp, aerr := time.Parse("2006-1-2T15:04:05.0000000", art.Metadata.Dates.Timestamp)
 	if aerr != nil {
 		timestamp = time.Now()
-		Debugger.Println("Error parsing timestamp: %v", aerr)
+		Debugger.Println("Error parsing timestamp: ", aerr)
 	}
 
 	article.ArticleId = art.Id
@@ -121,28 +130,23 @@ func (a *ArticleIn) Process(article *Article) error {
 }
 
 func (a *ArticleIn) IsValid() bool {
-	if !IsValidArticleId(a.Article.Id) {
-		Debugger.Println("Could not parse article id: %s", a)
-		return false
-	}
-
 	if isBlacklisted(a.Url) {
-		Debugger.Println("Article URL has been blacklisted: %s", a)
+		Debugger.Println("Article URL has been blacklisted: ", a)
 		return false
 	}
 
 	if a.Article.Photo == nil {
-		Debugger.Println("Failed to find photo object for %s", a)
+		Debugger.Println("Failed to find photo object: ", a)
 		return false
 	}
 
 	if a.Article.Photo.AssetMetadata == nil {
-		Debugger.Println("Failed to find asset_metadata object for %s", a)
+		Debugger.Println("Failed to find asset_metadata object: ", a)
 		return false
 	}
 
 	if a.Article.Photo.AssetMetadata.Attrs == nil {
-		Debugger.Println("Failed to find photo.attrs object for %s", a)
+		Debugger.Println("Failed to find photo.attrs object: ", a)
 		return false
 	}
 
@@ -160,6 +164,7 @@ func (a *ArticleIn) GetData() error {
 	Debugger.Println("Fetching: ", json_url)
 
 	resp, err := http.Get(json_url)
+	defer resp.Body.Close()
 	if err != nil {
 		return err
 	}
@@ -173,12 +178,12 @@ func (a *ArticleIn) GetData() error {
 
 	var jso []byte
 	decoder := json.NewDecoder(resp.Body)
-	err = decoder.Decode(&a.Article)
+	err = decoder.Decode(&a)
 	if err != nil {
 		return err
 	}
 
-	json.Unmarshal(jso, a.Article)
+	json.Unmarshal(jso, a)
 
 	return nil
 }
