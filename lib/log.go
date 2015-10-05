@@ -25,18 +25,26 @@ func (c *CondLogger) Disable() {
 }
 
 func NewCondLogger(name string) *CondLogger {
-	out := ioutil.Discard
+	prefix := fmt.Sprintf("(newsfetch:%s) ", name)
+	logger := &CondLogger{name, log.New(ioutil.Discard, prefix, log.Lshortfile)}
+
+	if shouldEnableDebugger(name) {
+		logger.Enable()
+	}
+
+	return logger
+}
+
+func shouldEnableDebugger(name string) bool {
 	name = strings.ToLower(name)
 
 	for _, bugger := range debuggers {
 		if bugger == "*" || bugger == name {
-			out = os.Stdout
-			break
+			return true
 		}
 	}
 
-	prefix := fmt.Sprintf("(newsfetch:%s) ", name)
-	return &CondLogger{name, log.New(out, prefix, log.Lshortfile)}
+	return false
 }
 
 // This logger should be used for essential information that will be viewable by
