@@ -13,16 +13,19 @@ func SaveRecipes(mongoUri string, recipes []*Recipe) error {
 	totalUpdates := 0
 	totalInserts := 0
 	for _, recipe := range recipes {
-		existing := Recipe{}
+		// make sure the recipe doesn't have _id before upsert to avoid strange bugs stuff
+		temp := *recipe
+		temp.Id = ""
+		info, err := collection.Upsert(bson.M{"article_id": recipe.ArticleId}, temp)
+		if err != nil {
+			panic(err)
+		}
 
-		err := collection.Find(bson.M{"article_id": recipe.ArticleId}).Select(bson.M{"_id": 1}).
-			One(&existing)
-		if err == nil {
-			collection.Update(bson.M{"_id": existing.Id}, recipe)
-			totalUpdates++
-		} else {
-			collection.Insert(recipe)
+		if info.UpsertedId != nil {
+			recipe.Id = info.UpsertedId.(bson.ObjectId)
 			totalInserts++
+		} else {
+			totalUpdates++
 		}
 	}
 	Debugger.Println(totalUpdates, "recipes updated,", totalInserts, "recipes added")
