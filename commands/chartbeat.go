@@ -109,7 +109,7 @@ func (t *TopPages) Run(mongoUri string) {
 			chartbeatDebugger.Printf("%v", err)
 		} else {
 			now := time.Now()
-			chartbeatDebugger.Printf("Updated snapshot at Mapi at %v", now)
+			chartbeatDebugger.Printf("Updated toppages snapshot at Mapi at %v", now)
 		}
 	} else {
 		chartbeatDebugger.Printf("Variable 'mongoUri' not specified, no data will be saved")
@@ -127,10 +127,19 @@ func (q *QuickStats) Run(mongoUri string) {
 
 	quickStats := lib.FetchQuickStats(urls)
 
-	if globalConfig.ChartbeatApiKey != "" {
+	if globalConfig.MongoUrl != "" {
 		chartbeatDebugger.Printf("Saving quickstats...")
 
 		lib.SaveQuickStats(quickStats, globalConfig.MongoUrl)
-	}
 
+		// Update mapi
+		_, err = http.Get("https://api.michigan.com/quickstats/")
+		if err != nil {
+			chartbeatDebugger.Printf("%v", err)
+		} else {
+			chartbeatDebugger.Printf("Updated quickstats snapshot at Mapi at %v", time.Now())
+		}
+	} else {
+		chartbeatDebugger.Printf("Variable 'mongoUri' not specified, no data will be saved")
+	}
 }
