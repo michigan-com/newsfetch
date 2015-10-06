@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"sync"
 	"text/tabwriter"
 	"time"
 
@@ -11,16 +12,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func printArticleBrief(articles []*lib.Article) {
-	w := new(tabwriter.Writer)
-	w.Init(os.Stdout, 0, 8, 0, '\t', 0)
-	fmt.Fprintln(w, "Source\tSection\tHeadline\tURL\tTimestamp")
-	for _, article := range articles {
-		fmt.Fprintf(
-			w, "%s\t%s\t%s\t%s\t%s\n", article.Source, article.Section,
-			article.Headline, article.Url, article.Timestamp,
-		)
-	}
+var w = new(tabwriter.Writer)
+
+func printArticleBrief(w *tabwriter.Writer, article *lib.Article) {
+	fmt.Fprintf(
+		w, "%s\t%s\t%s\t%s\t%s\n", article.Source, article.Section,
+		article.Headline, article.Url, article.Timestamp,
+	)
 	w.Flush()
 }
 
@@ -52,39 +50,95 @@ var cmdGetArticles = &cobra.Command{
 			sections = strings.Split(sectionStr, ",")
 		}
 
-		urls := lib.FormatFeedUrls(sites, sections)
-		articles := lib.FetchAndParseArticles(urls, body)
-
 		if output {
-			printArticleBrief(articles)
+			w.Init(os.Stdout, 0, 8, 0, '\t', 0)
+			fmt.Fprintln(w, "Source\tSection\tHeadline\tURL\tTimestamp")
 		}
 
-		var err error
+		feedUrls := lib.FormatFeedUrls(sites, sections)
 
+		var wg sync.WaitGroup
+		ach := make(chan *lib.ArticleUrlsChan)
+		for _, url := range feedUrls {
+			go lib.GetArticleUrlsFromFeed(url, ach)
+			aurls := <-ach
+			for _, aurl := range aurls.Urls {
+				host, _ := lib.GetHost(url)
+				wg.Add(1)
+				go func(url string) {
+					defer wg.Done()
+					ProcessArticle(url)
+				}(fmt.Sprintf("http://%s.com%s", host, aurl))
+			}
+
+		}
+		close(ach)
+		wg.Wait()
+
+		lib.Debugger.Println("Sending request to brevity to process summaries")
+		go lib.ProcessSummaries(nil)
+		/*var err error
 		foodArticles := lib.FilterArticlesForRecipeExtraction(articles)
 		if len(foodArticles) > 0 {
 			err = lib.DownloadAndSaveRecipesForArticles(globalConfig.MongoUrl, foodArticles)
 			if err != nil {
 				panic(err)
 			}
-		}
-
-		if globalConfig.MongoUrl != "" {
-			/*err := lib.RemoveArticles(globalConfig.MongoUrl)
-			if err != nil {
-				panic(err)
-			}*/
-
-			err = lib.SaveArticles(globalConfig.MongoUrl, articles)
-			if err != nil {
-				panic(err)
-			}
-		}
+		}*/
 
 		if timeit {
 			getElapsedTime(&startTime)
 		}
 	},
+}
+
+func ProcessArticle(articleUrl string) {
+	article := &lib.Article{}
+
+	articleIn := lib.NewArticleIn(articleUrl)
+	err := articleIn.GetData()
+
+	if err != nil {
+		lib.Debugger.Println(err)
+		return
+	}
+
+	if !articleIn.IsValid() {
+		lib.Debugger.Println("Article is not valid: ", article)
+		return
+	}
+
+	err = articleIn.Process(article)
+	if err != nil {
+		lib.Debugger.Println("Article could not be processed: %s", articleIn)
+	}
+
+	if body {
+		ch := make(chan *lib.ExtractedBody)
+		go lib.ExtractBodyFromURL(ch, articleUrl, false)
+		bodyExtract := <-ch
+
+		if bodyExtract.Text != "" {
+			lib.Debugger.Printf(
+				"Extracted extracted contains %d characters, %d paragraphs.",
+				len(strings.Split(bodyExtract.Text, "")),
+				len(strings.Split(bodyExtract.Text, "\n\n")),
+			)
+			article.BodyText = bodyExtract.Text
+		}
+	}
+
+	if globalConfig.MongoUrl != "" {
+		lib.Debugger.Println("Attempting to save article ...")
+		session := lib.DBConnect(globalConfig.MongoUrl)
+		defer lib.DBClose(session)
+		article.Save(session)
+	}
+
+	fmt.Println(article)
+	/*if output {
+		printArticleBrief(w, article)
+	}*/
 }
 
 var cmdRemoveArticles = &cobra.Command{
@@ -134,7 +188,7 @@ var cmdCopyArticles = &cobra.Command{
 			panic(err)
 		}
 
-		printArticleBrief(articles)
+		//printArticleBrief(articles)
 
 		fmt.Printf("Saving %d articles...\n", len(articles))
 		err = lib.SaveArticles(globalConfig.MongoUrl, articles)
