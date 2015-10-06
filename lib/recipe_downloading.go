@@ -1,5 +1,10 @@
 package lib
 
+import (
+	"github.com/michigan-com/newsfetch/extraction"
+	m "github.com/michigan-com/newsfetch/model"
+)
+
 func DownloadAndSaveRecipesForArticles(mongoUrl string, articles []*Article) error {
 	for _, article := range articles {
 		err := DownloadAndSaveRecipesForArticle(mongoUrl, article)
@@ -21,12 +26,12 @@ func DownloadAndSaveRecipesForArticle(mongoUrl string, article *Article) error {
 	}
 }
 
-func DownloadRecipesForArticle(article *Article) []*Recipe {
+func DownloadRecipesForArticle(article *Article) []*m.Recipe {
 	return DownloadRecipesFromUrls([]string{article.Url})
 }
 
-func DownloadRecipesFromUrls(urls []string) []*Recipe {
-	recipes := make([]*Recipe, 0)
+func DownloadRecipesFromUrls(urls []string) []*m.Recipe {
+	recipes := make([]*m.Recipe, 0)
 
 	visited := make(map[string]bool)
 	for len(urls) > 0 {
@@ -46,7 +51,7 @@ func DownloadRecipesFromUrls(urls []string) []*Recipe {
 			continue
 		}
 
-		extracted := ExtractBodyFromURLDirectly(url, false)
+		extracted := extraction.ExtractBodyFromURLDirectly(url, false)
 
 		for _, recipe := range extracted.RecipeData.Recipes {
 			recipe.ArticleId = articleId

@@ -1,4 +1,4 @@
-package lib
+package model
 
 type RecipeFragmentTag int
 
@@ -37,11 +37,11 @@ type RecipeFragment interface {
 ///////////////////////////////////////////////////////////////////////////////
 
 type RecipeMarkerFragment struct {
-	tag RecipeFragmentTag
+	TagF RecipeFragmentTag
 }
 
 func (f RecipeMarkerFragment) Tag() RecipeFragmentTag {
-	return f.tag
+	return f.TagF
 }
 func (f RecipeMarkerFragment) Mark(tag RecipeFragmentTag) {
 	panic("Unsupported")
@@ -89,18 +89,18 @@ func (f RecipeIngredient) AddToRecipe(r *Recipe) {
 type ParagraphFragment struct {
 	RawHtml string
 	Text    string
-	tag     RecipeFragmentTag
+	TagF    RecipeFragmentTag
 }
 
 func (f ParagraphFragment) Tag() RecipeFragmentTag {
-	return f.tag
+	return f.TagF
 }
 func (f *ParagraphFragment) Mark(tag RecipeFragmentTag) {
-	f.tag = tag
+	f.TagF = tag
 }
 
 func (f ParagraphFragment) AddToRecipe(r *Recipe) {
-	switch f.tag {
+	switch f.TagF {
 	case TitleTag, PossibleTitleTag:
 		r.Title = f.Text
 	case InstructionTag, ParagraphTag, ShortParagraphTag, PossibleIngredientSubdivisionTag:

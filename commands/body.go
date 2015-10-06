@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/michigan-com/newsfetch/lib"
+	"github.com/michigan-com/newsfetch/extraction"
 	"github.com/spf13/cobra"
 )
 
@@ -21,10 +21,7 @@ var cmdBody = &cobra.Command{
 			articleUrl = args[0]
 		}
 
-		var extracted *lib.ExtractedBody
-		ch := make(chan *lib.ExtractedBody)
-		go lib.ExtractBodyFromURL(ch, articleUrl, includeTitle)
-		extracted = <-ch
+		extracted := extraction.ExtractBodyFromURLDirectly(articleUrl, includeTitle)
 
 		if output {
 			bodyFmt := strings.Join(strings.Split(extracted.Text, "\n"), "\n\n")

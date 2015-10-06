@@ -1,10 +1,11 @@
 package lib
 
 import (
+	m "github.com/michigan-com/newsfetch/model"
 	"gopkg.in/mgo.v2/bson"
 )
 
-func SaveRecipes(mongoUri string, recipes []*Recipe) error {
+func SaveRecipes(mongoUri string, recipes []*m.Recipe) error {
 	session := DBConnect(mongoUri)
 	defer DBClose(session)
 

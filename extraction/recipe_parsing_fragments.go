@@ -1,10 +1,11 @@
-package lib
+package extraction
 
 import (
 	"regexp"
 	"strings"
 
 	gq "github.com/PuerkitoBio/goquery"
+	m "github.com/michigan-com/newsfetch/model"
 )
 
 var ingredientsSubtitle = regexp.MustCompile(`(?i)^Ingredients$`)
@@ -32,62 +33,62 @@ var whitespaceRe = regexp.MustCompile(`\s+`)
 var unwantedSentenceBreakRe = regexp.MustCompile(`[?!]`)
 var potentialSentenceBreakRe = regexp.MustCompile(`\.(\s+\p{Lu}|$)`)
 
-func extractRecipeFragments(doc *gq.Document) []RecipeFragment {
+func extractRecipeFragments(doc *gq.Document, msg *m.Messages) []m.RecipeFragment {
 	paragraphs := doc.Find("div[itemprop=articleBody] > p, div[itemprop=articleBody] li")
 
-	fragments := make([]RecipeFragment, 0, paragraphs.Length())
+	fragments := make([]m.RecipeFragment, 0, paragraphs.Length())
 
 	paragraphs.Each(func(_ int, paragraph *gq.Selection) {
 		html, _ := paragraph.Html()
 		text := strings.TrimSpace(paragraph.Text())
 
-		var fragment RecipeFragment
+		var fragment m.RecipeFragment
 
 		if hasSingleChildMatching(paragraph, ".-newsgate-paragraph-cci-howto-head-") {
-			fragment = &ParagraphFragment{RawHtml: html, Text: text, tag: TitleTag}
+			fragment = &m.ParagraphFragment{RawHtml: html, Text: text, TagF: m.TitleTag}
 		} else if hasSingleChildMatching(paragraph, ".-newsgate-paragraph-cci-howto-components-") {
-			fragment = &RecipeIngredient{Text: text}
+			fragment = &m.RecipeIngredient{Text: text}
 		} else if paragraph.Is("li") {
-			fragment = &RecipeIngredient{Text: text}
+			fragment = &m.RecipeIngredient{Text: text}
 		} else if hasSingleChildMatching(paragraph, ".-newsgate-element-cci-howto--end") {
-			fragment = &RecipeMarkerFragment{EndMarkerTag}
+			fragment = &m.RecipeMarkerFragment{m.EndMarkerTag}
 
 		} else if ingredientsSubtitle.MatchString(text) {
-			fragment = &ParagraphFragment{RawHtml: html, Text: text, tag: IngredientsSubtitleTag}
+			fragment = &m.ParagraphFragment{RawHtml: html, Text: text, TagF: m.IngredientsSubtitleTag}
 		} else if directionsSubtitle.MatchString(text) {
-			fragment = &ParagraphFragment{RawHtml: html, Text: text, tag: DirectionsSubtitleTag}
+			fragment = &m.ParagraphFragment{RawHtml: html, Text: text, TagF: m.DirectionsSubtitleTag}
 
 		} else if servesRe.MatchString(text) || prepTimeRe.MatchString(text) || totalTimeRe.MatchString(text) {
-			timing := parseTimingFragment(text)
+			timing := parseTimingFragment(text, msg)
 			fragment = &timing
 
 		} else if caloriesRe.MatchString(text) {
-			fragment = &NutritionData{Text: text}
+			fragment = &m.NutritionData{Text: text}
 
 		} else if createdByRe.MatchString(text) || testedByRe.MatchString(text) || createdAndTestedByRe.MatchString(text) || testKitchenRe.MatchString(text) || noNutricionRe.MatchString(text) {
-			fragment = &ParagraphFragment{RawHtml: html, Text: text, tag: SignatureTag}
+			fragment = &m.ParagraphFragment{RawHtml: html, Text: text, TagF: m.SignatureTag}
 
 		} else if copyrightRe.MatchString(text) {
-			fragment = &ParagraphFragment{RawHtml: html, Text: text, tag: CopyrightTag}
+			fragment = &m.ParagraphFragment{RawHtml: html, Text: text, TagF: m.CopyrightTag}
 
 		} else if startsWithNumberRe.MatchString(text) {
 			if ingredientRe.MatchString(text) {
-				fragment = &RecipeIngredient{Text: text}
+				fragment = &m.RecipeIngredient{Text: text}
 			} else {
-				fragment = &ParagraphFragment{RawHtml: html, Text: text, tag: PossibleIngredientTag}
+				fragment = &m.ParagraphFragment{RawHtml: html, Text: text, TagF: m.PossibleIngredientTag}
 			}
 
 		} else if text == strings.ToUpper(text) {
-			fragment = &ParagraphFragment{RawHtml: html, Text: text, tag: PossibleIngredientSubdivisionTag}
+			fragment = &m.ParagraphFragment{RawHtml: html, Text: text, TagF: m.PossibleIngredientSubdivisionTag}
 
 		} else if hasSingleChildMatching(paragraph, "strong") {
-			fragment = &ParagraphFragment{RawHtml: html, Text: text, tag: PossibleTitleTag}
+			fragment = &m.ParagraphFragment{RawHtml: html, Text: text, TagF: m.PossibleTitleTag}
 
 		} else if isShortParagraph(text) {
-			fragment = &ParagraphFragment{RawHtml: html, Text: text, tag: ShortParagraphTag}
+			fragment = &m.ParagraphFragment{RawHtml: html, Text: text, TagF: m.ShortParagraphTag}
 
 		} else {
-			fragment = &ParagraphFragment{RawHtml: html, Text: text, tag: ParagraphTag}
+			fragment = &m.ParagraphFragment{RawHtml: html, Text: text, TagF: m.ParagraphTag}
 			if servesInlineRe.MatchString(text) {
 				// TODO
 			}
@@ -99,8 +100,8 @@ func extractRecipeFragments(doc *gq.Document) []RecipeFragment {
 	return fragments
 }
 
-func parseTimingFragment(text string) RecipeTimingFragment {
-	result := RecipeTimingFragment{}
+func parseTimingFragment(text string, msg *m.Messages) m.RecipeTimingFragment {
+	result := m.RecipeTimingFragment{}
 
 	for _, component := range strings.Split(text, "/") {
 		component = strings.TrimSpace(component)
@@ -111,8 +112,7 @@ func parseTimingFragment(text string) RecipeTimingFragment {
 		} else if value, ok := extractComponent(component, prepTimeRe); ok {
 			result.PreparationTime = parseDuration(value)
 		} else {
-			Debugger.Println("Unknown duration component: >>>", component, "<<<")
-			//panic("Unknown duration component")
+			msg.AddWarningf("Unknown duration component: %#v", component)
 		}
 	}
 
@@ -129,9 +129,9 @@ func extractComponent(component string, re *regexp.Regexp) (string, bool) {
 	}
 }
 
-func parseDuration(text string) *RecipeDuration {
+func parseDuration(text string) *m.RecipeDuration {
 	if text != "" {
-		return &RecipeDuration{Text: text}
+		return &m.RecipeDuration{Text: text}
 	} else {
 		return nil
 	}

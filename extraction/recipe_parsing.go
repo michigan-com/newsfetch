@@ -1,16 +1,11 @@
-package lib
+package extraction
 
 import (
 	"strings"
 
 	gq "github.com/PuerkitoBio/goquery"
+	m "github.com/michigan-com/newsfetch/model"
 )
-
-type RecipeExtractionResult struct {
-	Recipes             []*Recipe
-	UnusedParagraphs    []RecipeFragment
-	EmbeddedArticleUrls []string
-}
 
 type recipeState int
 
@@ -20,7 +15,9 @@ const (
 	confirmed
 )
 
-func ExtractRecipes(doc *gq.Document) RecipeExtractionResult {
+func ExtractRecipes(doc *gq.Document) (m.RecipeExtractionResult, *m.Messages) {
+	msg := new(m.Messages)
+
 	var embeddedArticleUrls []string
 	doc.Find(".story-asset.oembed-asset a").Each(func(_ int, s *gq.Selection) {
 		url, exists := s.Attr("href")
@@ -31,7 +28,7 @@ func ExtractRecipes(doc *gq.Document) RecipeExtractionResult {
 		}
 	})
 
-	var photo *RecipePhoto
+	var photo *m.RecipePhoto
 	doc.Find("img[data-mycapture-src]").Each(func(_ int, s *gq.Selection) {
 		url, exists := s.Attr("data-mycapture-src")
 		if exists && len(url) == 0 {
@@ -49,25 +46,25 @@ func ExtractRecipes(doc *gq.Document) RecipeExtractionResult {
 		}
 
 		if exists || smallExists || srcExists {
-			photo = new(RecipePhoto)
+			photo = new(m.RecipePhoto)
 			if exists {
-				photo.FullSizeImage = &RecipeImage{Url: url}
+				photo.FullSizeImage = &m.RecipeImage{Url: url}
 			}
 			if smallExists {
-				photo.SmallImage = &RecipeImage{Url: smallUrl}
+				photo.SmallImage = &m.RecipeImage{Url: smallUrl}
 			} else if srcExists {
-				photo.SmallImage = &RecipeImage{Url: srcUrl}
+				photo.SmallImage = &m.RecipeImage{Url: srcUrl}
 			}
 		}
 	})
 
-	fragments := extractRecipeFragments(doc)
+	fragments := extractRecipeFragments(doc, msg)
 
-	recipes := make([]*Recipe, 0)
+	recipes := make([]*m.Recipe, 0)
 
 	state := none
-	var recipeFragments []RecipeFragment
-	var unused []RecipeFragment
+	var recipeFragments []m.RecipeFragment
+	var unused []m.RecipeFragment
 
 	setState := func(newState recipeState) {
 		if newState == state {
@@ -75,11 +72,11 @@ func ExtractRecipes(doc *gq.Document) RecipeExtractionResult {
 		}
 
 		if state == none {
-			recipeFragments = make([]RecipeFragment, 0)
+			recipeFragments = make([]m.RecipeFragment, 0)
 		}
 		if newState == none {
 			if state == confirmed {
-				recipe := NewRecipe()
+				recipe := m.NewRecipe()
 				recipe.Photo = photo
 				walkFragments(recipeFragments)
 				for _, fragment := range recipeFragments {
@@ -97,31 +94,31 @@ func ExtractRecipes(doc *gq.Document) RecipeExtractionResult {
 		tag := fragment.Tag()
 
 		switch tag {
-		case TitleTag:
+		case m.TitleTag:
 			setState(none)
 			setState(unconfirmed)
 
-		case PossibleTitleTag:
+		case m.PossibleTitleTag:
 			if state == none {
 				setState(unconfirmed)
 			}
 
-		case TimingTag, NutritionDataTag, SignatureTag, IngredientsSubtitleTag, DirectionsSubtitleTag:
+		case m.TimingTag, m.NutritionDataTag, m.SignatureTag, m.IngredientsSubtitleTag, m.DirectionsSubtitleTag:
 			if state == unconfirmed {
 				setState(confirmed)
 			}
 
-		case PossibleIngredientTag:
+		case m.PossibleIngredientTag:
 			if state == confirmed {
-				fragment.Mark(IngredientTag)
+				fragment.Mark(m.IngredientTag)
 			}
 
-		case PossibleIngredientSubdivisionTag:
+		case m.PossibleIngredientSubdivisionTag:
 			if state != none {
-				fragment.Mark(IngredientTag)
+				fragment.Mark(m.IngredientTag)
 			}
 
-		case EndMarkerTag:
+		case m.EndMarkerTag:
 			setState(none)
 		}
 
@@ -133,42 +130,42 @@ func ExtractRecipes(doc *gq.Document) RecipeExtractionResult {
 	}
 	setState(none)
 
-	return RecipeExtractionResult{Recipes: recipes, UnusedParagraphs: unused, EmbeddedArticleUrls: embeddedArticleUrls}
+	return m.RecipeExtractionResult{Recipes: recipes, UnusedParagraphs: unused, EmbeddedArticleUrls: embeddedArticleUrls}, msg
 }
 
-func walkFragments(fragments []RecipeFragment) {
+func walkFragments(fragments []m.RecipeFragment) {
 	for {
 		changed := false
 
 		// PossibleIngredientSubdivisionTag before an ingredient becomes IngredientSubdivisionTag
-		walkFragmentsBackward(fragments, func(cur RecipeFragment, curTag RecipeFragmentTag, nextTag RecipeFragmentTag) {
+		walkFragmentsBackward(fragments, func(cur m.RecipeFragment, curTag m.RecipeFragmentTag, nextTag m.RecipeFragmentTag) {
 			switch curTag {
-			case PossibleIngredientSubdivisionTag:
+			case m.PossibleIngredientSubdivisionTag:
 				switch nextTag {
-				case IngredientTag, PossibleIngredientTag:
-					cur.Mark(IngredientSubdivisionTag)
+				case m.IngredientTag, m.PossibleIngredientTag:
+					cur.Mark(m.IngredientSubdivisionTag)
 					changed = true
 				}
 			}
 		})
 
 		// ShortParagraphTag before and after an ingredient becomes IngredientTag
-		walkFragmentsBackward(fragments, func(cur RecipeFragment, curTag RecipeFragmentTag, nextTag RecipeFragmentTag) {
+		walkFragmentsBackward(fragments, func(cur m.RecipeFragment, curTag m.RecipeFragmentTag, nextTag m.RecipeFragmentTag) {
 			switch curTag {
-			case ShortParagraphTag:
+			case m.ShortParagraphTag:
 				switch nextTag {
-				case IngredientTag, PossibleIngredientTag, IngredientSubdivisionTag:
-					cur.Mark(IngredientTag)
+				case m.IngredientTag, m.PossibleIngredientTag, m.IngredientSubdivisionTag:
+					cur.Mark(m.IngredientTag)
 					changed = true
 				}
 			}
 		})
-		walkFragmentsForward(fragments, func(cur RecipeFragment, curTag RecipeFragmentTag, prevTag RecipeFragmentTag) {
+		walkFragmentsForward(fragments, func(cur m.RecipeFragment, curTag m.RecipeFragmentTag, prevTag m.RecipeFragmentTag) {
 			switch curTag {
-			case ShortParagraphTag:
+			case m.ShortParagraphTag:
 				switch prevTag {
-				case IngredientTag, PossibleIngredientTag, IngredientSubdivisionTag:
-					cur.Mark(IngredientTag)
+				case m.IngredientTag, m.PossibleIngredientTag, m.IngredientSubdivisionTag:
+					cur.Mark(m.IngredientTag)
 					changed = true
 				}
 			}
@@ -180,8 +177,8 @@ func walkFragments(fragments []RecipeFragment) {
 	}
 }
 
-func walkFragmentsForward(fragments []RecipeFragment, iter func(cur RecipeFragment, curTag RecipeFragmentTag, prevTag RecipeFragmentTag)) {
-	prevTag := NoTag
+func walkFragmentsForward(fragments []m.RecipeFragment, iter func(cur m.RecipeFragment, curTag m.RecipeFragmentTag, prevTag m.RecipeFragmentTag)) {
+	prevTag := m.NoTag
 	for _, cur := range fragments {
 		curTag := cur.Tag()
 		iter(cur, curTag, prevTag)
@@ -189,8 +186,8 @@ func walkFragmentsForward(fragments []RecipeFragment, iter func(cur RecipeFragme
 	}
 }
 
-func walkFragmentsBackward(fragments []RecipeFragment, iter func(cur RecipeFragment, curTag RecipeFragmentTag, nextTag RecipeFragmentTag)) {
-	nextTag := NoTag
+func walkFragmentsBackward(fragments []m.RecipeFragment, iter func(cur m.RecipeFragment, curTag m.RecipeFragmentTag, nextTag m.RecipeFragmentTag)) {
+	nextTag := m.NoTag
 	for i := len(fragments) - 1; i >= 0; i-- {
 		cur := fragments[i]
 		curTag := cur.Tag()

@@ -1,16 +1,12 @@
-package lib
+package extraction
 
 import (
 	"regexp"
 	"strings"
 
 	gq "github.com/PuerkitoBio/goquery"
+	m "github.com/michigan-com/newsfetch/model"
 )
-
-type ExtractedBody struct {
-	Text       string
-	RecipeData RecipeExtractionResult
-}
 
 var TWITTER_RE = regexp.MustCompile("^twitter.com/[a-zA-Z0-9_]*$")
 
@@ -24,7 +20,8 @@ func withoutEmptyStrings(strings []string) []string {
 	return result
 }
 
-func extractBodyFromDocument(doc *gq.Document, includeTitle bool) *ExtractedBody {
+func extractBodyFromDocument(doc *gq.Document, includeTitle bool) *m.ExtractedBody {
+	msg := new(m.Messages)
 	paragraphs := doc.Find("div[itemprop=articleBody] > p")
 
 	// remove contact info at the end of the article
@@ -70,8 +67,9 @@ func extractBodyFromDocument(doc *gq.Document, includeTitle bool) *ExtractedBody
 	content = append(content, withoutEmptyStrings(paragraphStrings)...)
 
 	body := strings.Join(content, "\n")
-	recipeData := ExtractRecipes(doc)
-	extracted := ExtractedBody{body, recipeData}
+	recipeData, recipeMsg := ExtractRecipes(doc)
+	msg.AddMessages("recipes", recipeMsg)
+	extracted := m.ExtractedBody{body, recipeData, msg}
 	return &extracted
 }
 
@@ -80,8 +78,8 @@ func ExtractTitleFromDocument(doc *gq.Document) string {
 	return strings.TrimSpace(title.Text())
 }
 
-func ExtractBodyFromURLDirectly(url string, includeTitle bool) *ExtractedBody {
-	Debugger.Printf("Fetching %s ...\n", url)
+func ExtractBodyFromURLDirectly(url string, includeTitle bool) *m.ExtractedBody {
+	// Debugger.Printf("Fetching %s ...\n", url)
 	doc, err := gq.NewDocument(url)
 	if err != nil {
 		return nil
@@ -95,6 +93,6 @@ func ExtractBodyFromURLDirectly(url string, includeTitle bool) *ExtractedBody {
 	return extracted
 }
 
-func ExtractBodyFromURL(ch chan *ExtractedBody, url string, includeTitle bool) {
+func ExtractBodyFromURL(ch chan *m.ExtractedBody, url string, includeTitle bool) {
 	ch <- ExtractBodyFromURLDirectly(url, includeTitle)
 }

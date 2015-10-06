@@ -8,6 +8,7 @@ import (
 	"text/tabwriter"
 	"time"
 
+	"github.com/michigan-com/newsfetch/extraction"
 	"github.com/michigan-com/newsfetch/lib"
 	"github.com/spf13/cobra"
 )
@@ -114,9 +115,7 @@ func ProcessArticle(articleUrl string) {
 	}
 
 	if body {
-		ch := make(chan *lib.ExtractedBody)
-		go lib.ExtractBodyFromURL(ch, articleUrl, false)
-		bodyExtract := <-ch
+		bodyExtract := extraction.ExtractBodyFromURLDirectly(articleUrl, false)
 
 		if bodyExtract.Text != "" {
 			lib.Debugger.Printf(
