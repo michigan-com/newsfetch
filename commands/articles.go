@@ -141,35 +141,6 @@ func ProcessArticle(articleUrl string) {
 	}*/
 }
 
-var cmdRemoveArticles = &cobra.Command{
-	Use:   "rm",
-	Short: "Removes news articles from mongodb",
-	Run: func(cmd *cobra.Command, args []string) {
-		if !noprompt {
-			resp := "n"
-			fmt.Printf("Are you sure you want to remove all articles from Snapshot collection? [y/N]: ")
-			fmt.Scanf("%s", &resp)
-
-			if strings.ToLower(resp) != "y" {
-				return
-			}
-		}
-
-		if timeit {
-			startTime = time.Now()
-		}
-
-		err := lib.RemoveArticles(globalConfig.MongoUrl)
-		if err != nil {
-			panic(err)
-		}
-
-		if timeit {
-			getElapsedTime(&startTime)
-		}
-	},
-}
-
 var cmdCopyArticles = &cobra.Command{
 	Use:   "copy-from",
 	Short: "Copies articles from a mapi JSON URL",

@@ -13,19 +13,16 @@ func GetArticleId(url string) int {
 	r := regexp.MustCompile("/([0-9]+)/{0,1}$")
 	match := r.FindStringSubmatch(url)
 
-	if len(match) > 1 {
-		i, err := strconv.Atoi(match[1])
-		if err != nil {
-			return -1
-		}
-		return i
-	} else {
+	if len(match) <= 1 {
 		return -1
 	}
-}
 
-func IsValidArticleId(id int) bool {
-	return id > 0
+	i, err := strconv.Atoi(match[1])
+	if err != nil {
+		return -1
+	}
+
+	return i
 }
 
 /*

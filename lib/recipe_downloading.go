@@ -41,7 +41,7 @@ func DownloadRecipesFromUrls(urls []string) []*Recipe {
 		Debugger.Println("Recipe extraction for URL", url)
 
 		articleId := GetArticleId(url)
-		if !IsValidArticleId(articleId) {
+		if articleId < 1 {
 			Debugger.Println("Skipped, cannot determine article ID")
 			continue
 		}

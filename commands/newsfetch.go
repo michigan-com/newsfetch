@@ -49,19 +49,14 @@ func AddFlags() {
 	cmdGetArticles.Flags().StringVarP(&sectionStr, "sections", "e", "all", "Comma separated list of article sections to fetch from")
 	cmdGetArticles.Flags().BoolVarP(&body, "body", "b", false, "Fetches the article body content")
 
-	cmdRemoveArticles.Flags().BoolVarP(&noprompt, "noprompt", "n", false, "Skips the confirmation prompt and automatically removes articles")
-
 	cmdBody.Flags().StringVarP(&articleUrl, "url", "u", url, "URL of Gannett article")
 	cmdBody.Flags().BoolVarP(&includeTitle, "title", "t", false, "Place title of article on the first line of output")
-
-	cmdSummary.Flags().StringVarP(&title, "title", "t", "", "Title for article summarizer, if not supplied then the summarizer assumes first line is title")
 
 	cmdChartbeat.PersistentFlags().IntVarP(&loop, "loop", "l", -1, "Specify the internval in seconds to loop the fetching of the toppages api")
 }
 
 func AddCommands() {
 	cmdArticles.AddCommand(cmdGetArticles)
-	cmdArticles.AddCommand(cmdRemoveArticles)
 	cmdArticles.AddCommand(cmdCopyArticles)
 
 	cmdChartbeat.AddCommand(cmdTopPages)
@@ -72,7 +67,6 @@ func AddCommands() {
 		cmdArticle,
 		cmdBody,
 		cmdArticles,
-		cmdSummary,
 		cmdVersion,
 		cmdChartbeat,
 	)
