@@ -10,11 +10,17 @@ import (
 	"time"
 )
 
-func TheOneRing(article *Article, middleEarth ...Middleware) *Article {
-	for _, frodo := range middleEarth {
-		frodo.Process(article)
+func ProcessSummaries(ch chan error) {
+	url := "http://brevity.detroitnow.io/newsfetch-summarize/"
+	Debugger.Println("Fetching: ", url)
+
+	resp, err := http.Get(url)
+	defer resp.Body.Close()
+	if err != nil {
+		ch <- err
 	}
-	return article
+
+	ch <- nil
 }
 
 type Middleware interface {
@@ -45,19 +51,13 @@ type ArticleIn struct {
 	} `json:"metadata"`
 }
 
-type BodyParser struct{}
-
-func NewBodyParser() *BodyParser {
-	return &BodyParser{}
-}
-
-func (b *BodyParser) Process(article *Article) error {
-	return nil
-}
-
 func NewArticleIn(url string) *ArticleIn {
 	article := &ArticleIn{Url: url}
-	err := article.GetData()
+
+	ch := make(chan error)
+	go article.GetData(ch)
+	err := <-ch
+
 	if err != nil {
 		Debugger.Println(err)
 	}
@@ -71,6 +71,80 @@ func NewArticleIn(url string) *ArticleIn {
 
 func (a *ArticleIn) String() string {
 	return fmt.Sprintf("<ArticleIn Site: %s, Id: %d, Url: %s>", a.Site, a.Article.Id, a.Url)
+}
+
+func (a *ArticleIn) GetData(ch chan error) {
+	json_url := ""
+	if strings.HasSuffix(a.Url, "/") {
+		json_url = fmt.Sprintf("%s%s", a.Url, "json")
+	} else {
+		json_url = fmt.Sprintf("%s/%s", a.Url, "json")
+	}
+
+	Debugger.Println("Fetching: ", json_url)
+
+	resp, err := http.Get(json_url)
+	defer resp.Body.Close()
+	if err != nil {
+		ch <- err
+	}
+
+	site, err := GetSiteFromHost(resp.Request.URL.Host)
+	if err != nil {
+		ch <- err
+	}
+
+	a.Site = site
+
+	var jso []byte
+	decoder := json.NewDecoder(resp.Body)
+	err = decoder.Decode(&a)
+	if err != nil {
+		ch <- err
+	}
+
+	json.Unmarshal(jso, a)
+
+	ch <- nil
+}
+
+func (a *ArticleIn) IsValid() bool {
+	if a.Article.Id == 0 {
+		Debugger.Println("Article ID missing ...")
+		return false
+	}
+
+	if isBlacklisted(a.Url) {
+		Debugger.Println("Article URL has been blacklisted: ", a)
+		return false
+	}
+
+	if a.Article.Photo == nil {
+		Debugger.Println("Failed to find photo object: ", a)
+		return false
+	}
+
+	if a.Article.Photo.AssetMetadata == nil {
+		Debugger.Println("Failed to find asset_metadata object: ", a)
+		return false
+	}
+
+	if a.Article.Photo.AssetMetadata.Attrs == nil {
+		Debugger.Println("Failed to find photo.attrs object: ", a)
+		return false
+	}
+
+	return true
+}
+
+func GetSiteFromHost(host string) (string, error) {
+	replace := regexp.MustCompile("^w{3}[.](.+)[.].+$")
+	match := replace.FindStringSubmatch(host)
+	if len(match) < 2 {
+		return "", fmt.Errorf("Could not parse %s for host", host)
+	}
+
+	return match[1], nil
 }
 
 func (a *ArticleIn) Process(article *Article) error {
@@ -127,73 +201,4 @@ func (a *ArticleIn) Process(article *Article) error {
 	article.Photo = &photo
 
 	return nil
-}
-
-func (a *ArticleIn) IsValid() bool {
-	if isBlacklisted(a.Url) {
-		Debugger.Println("Article URL has been blacklisted: ", a)
-		return false
-	}
-
-	if a.Article.Photo == nil {
-		Debugger.Println("Failed to find photo object: ", a)
-		return false
-	}
-
-	if a.Article.Photo.AssetMetadata == nil {
-		Debugger.Println("Failed to find asset_metadata object: ", a)
-		return false
-	}
-
-	if a.Article.Photo.AssetMetadata.Attrs == nil {
-		Debugger.Println("Failed to find photo.attrs object: ", a)
-		return false
-	}
-
-	return true
-}
-
-func (a *ArticleIn) GetData() error {
-	json_url := ""
-	if strings.HasSuffix(a.Url, "/") {
-		json_url = fmt.Sprintf("%s%s", a.Url, "json")
-	} else {
-		json_url = fmt.Sprintf("%s/%s", a.Url, "json")
-	}
-
-	Debugger.Println("Fetching: ", json_url)
-
-	resp, err := http.Get(json_url)
-	defer resp.Body.Close()
-	if err != nil {
-		return err
-	}
-
-	site, err := GetSiteFromHost(resp.Request.URL.Host)
-	if err != nil {
-		return err
-	}
-
-	a.Site = site
-
-	var jso []byte
-	decoder := json.NewDecoder(resp.Body)
-	err = decoder.Decode(&a)
-	if err != nil {
-		return err
-	}
-
-	json.Unmarshal(jso, a)
-
-	return nil
-}
-
-func GetSiteFromHost(host string) (string, error) {
-	replace := regexp.MustCompile("^w{3}[.](.+)[.].+$")
-	match := replace.FindStringSubmatch(host)
-	if len(match) < 2 {
-		return "", fmt.Errorf("Could not parse %s for host", host)
-	}
-
-	return match[1], nil
 }
