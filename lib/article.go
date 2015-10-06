@@ -10,6 +10,53 @@ import (
 	"time"
 )
 
+type ArticleFeedIn struct {
+	Content []*struct {
+		Url string `json:"url"`
+	} `json:"content"`
+}
+
+func (a *ArticleFeedIn) Urls() []string {
+	articleUrls := make([]string, 0, len(a.Content))
+	for _, content := range a.Content {
+		articleUrls = append(articleUrls, content.Url)
+	}
+	return articleUrls
+}
+
+type ArticleUrlsChan struct {
+	Urls []string
+	Err  error
+}
+
+func GetArticleUrlsFromFeed(url string, ch chan *ArticleUrlsChan) {
+	Debugger.Println("Fetching: ", url)
+
+	articleChan := &ArticleUrlsChan{}
+
+	resp, err := http.Get(url)
+	if err != nil {
+		articleChan.Err = err
+		ch <- articleChan
+		return
+	}
+	defer resp.Body.Close()
+
+	a := ArticleFeedIn{}
+	var jso []byte
+	decoder := json.NewDecoder(resp.Body)
+	err = decoder.Decode(&a)
+	if err != nil {
+		articleChan.Err = err
+		ch <- articleChan
+		return
+	}
+
+	json.Unmarshal(jso, a)
+	articleChan.Urls = a.Urls()
+	ch <- articleChan
+}
+
 func ProcessSummaries(ch chan error) {
 	url := "http://brevity.detroitnow.io/newsfetch-summarize/"
 	Debugger.Println("Fetching: ", url)
@@ -53,19 +100,6 @@ type ArticleIn struct {
 
 func NewArticleIn(url string) *ArticleIn {
 	article := &ArticleIn{Url: url}
-
-	ch := make(chan error)
-	go article.GetData(ch)
-	err := <-ch
-
-	if err != nil {
-		Debugger.Println(err)
-	}
-
-	if !article.IsValid() {
-		Debugger.Println("Article is not valid: ", article)
-	}
-
 	return article
 }
 
@@ -73,7 +107,7 @@ func (a *ArticleIn) String() string {
 	return fmt.Sprintf("<ArticleIn Site: %s, Id: %d, Url: %s>", a.Site, a.Article.Id, a.Url)
 }
 
-func (a *ArticleIn) GetData(ch chan error) {
+func (a *ArticleIn) GetData() error {
 	json_url := ""
 	if strings.HasSuffix(a.Url, "/") {
 		json_url = fmt.Sprintf("%s%s", a.Url, "json")
@@ -84,14 +118,14 @@ func (a *ArticleIn) GetData(ch chan error) {
 	Debugger.Println("Fetching: ", json_url)
 
 	resp, err := http.Get(json_url)
-	defer resp.Body.Close()
 	if err != nil {
-		ch <- err
+		return err
 	}
+	defer resp.Body.Close()
 
 	site, err := GetSiteFromHost(resp.Request.URL.Host)
 	if err != nil {
-		ch <- err
+		return err
 	}
 
 	a.Site = site
@@ -100,15 +134,20 @@ func (a *ArticleIn) GetData(ch chan error) {
 	decoder := json.NewDecoder(resp.Body)
 	err = decoder.Decode(&a)
 	if err != nil {
-		ch <- err
+		return err
 	}
 
 	json.Unmarshal(jso, a)
 
-	ch <- nil
+	return nil
 }
 
 func (a *ArticleIn) IsValid() bool {
+	if a.Article == nil {
+		Debugger.Println("Article struct missing ...")
+		return false
+	}
+
 	if a.Article.Id == 0 {
 		Debugger.Println("Article ID missing ...")
 		return false

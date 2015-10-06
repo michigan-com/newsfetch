@@ -14,7 +14,7 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
-var tokenizer = LoadTokenizer()
+//var tokenizer = LoadTokenizer()
 
 const maxarticles = 20 // Expected number of articles to be returned per URL
 
@@ -104,6 +104,7 @@ type Ssts struct {
 }
 
 type Content struct {
+	Id        string `json:"id"`
 	Url       string `json:"url"`
 	Headline  string `json:"headline"`
 	Summary   string `json:"summary"`
@@ -320,9 +321,9 @@ func ParseArticle(articleUrl string, articleJson *Content, extractBody bool) (*A
 
 		if extracted.Text != "" {
 			Debugger.Println("Extracted extracted contains %d characters, %d paragraphs.", len(strings.Split(extracted.Text, "")), len(strings.Split(extracted.Text, "\n\n")))
-			summarizer := NewPunktSummarizer(articleJson.Headline, extracted.Text, tokenizer)
-			summary = summarizer.KeyPoints()
-			Debugger.Println("Generated summary ...")
+			//summarizer := NewPunktSummarizer(articleJson.Headline, extracted.Text, tokenizer)
+			//summary = summarizer.KeyPoints()
+			//Debugger.Println("Generated summary ...")
 		}
 	}
 
