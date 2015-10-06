@@ -112,7 +112,7 @@ func parseTimingFragment(text string) RecipeTimingFragment {
 			result.PreparationTime = parseDuration(value)
 		} else {
 			Debugger.Println("Unknown duration component: >>>", component, "<<<")
-			panic("Unknown duration component")
+			//panic("Unknown duration component")
 		}
 	}
 
