@@ -74,6 +74,11 @@ type Middleware interface {
 	Process(*Article) error
 }
 
+type BodyPart struct {
+	Type  string `json:"type"`
+	Value string `json:"value"`
+}
+
 type ArticleIn struct {
 	Site    string
 	Url     string
@@ -85,7 +90,8 @@ type ArticleIn struct {
 				Timestamp string `json:"lastupdated"`
 			} `json:"dates"`
 		} `json:"metadata"`
-		Photo *struct {
+		BodyParts []BodyPart `json:"body"`
+		Photo     *struct {
 			AssetMetadata *struct {
 				Attrs *Attrs `json:"items"`
 			} `json:"asset_metadata"`
@@ -105,6 +111,16 @@ func NewArticleIn(url string) *ArticleIn {
 
 func (a *ArticleIn) String() string {
 	return fmt.Sprintf("<ArticleIn Site: %s, Id: %d, Url: %s>", a.Site, a.Article.Id, a.Url)
+}
+
+func (a *ArticleIn) BodyHTML() string {
+	var fragments []string
+	for _, part := range a.Article.BodyParts {
+		if part.Type == "text" && part.Value != "" {
+			fragments = append(fragments, part.Value)
+		}
+	}
+	return strings.Join(fragments, "\n")
 }
 
 func (a *ArticleIn) GetData() error {

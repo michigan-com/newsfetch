@@ -51,7 +51,7 @@ func DownloadRecipesFromUrls(urls []string) []*m.Recipe {
 			continue
 		}
 
-		extracted := extraction.ExtractBodyFromURLDirectly(url, false)
+		extracted := extraction.ExtractDataFromHTMLAtURL(url, false)
 
 		for _, recipe := range extracted.RecipeData.Recipes {
 			recipe.ArticleId = articleId

@@ -20,9 +20,15 @@ func withoutEmptyStrings(strings []string) []string {
 	return result
 }
 
-func extractBodyFromDocument(doc *gq.Document, includeTitle bool) *m.ExtractedBody {
+func extractBodyFromDocument(doc *gq.Document, fromJSON bool, includeTitle bool) *m.ExtractedBody {
 	msg := new(m.Messages)
-	paragraphs := doc.Find("div[itemprop=articleBody] > p")
+
+	var paragraphs *gq.Selection
+	if fromJSON {
+		paragraphs = doc.Find("p")
+	} else {
+		paragraphs = doc.Find("div[itemprop=articleBody] > p")
+	}
 
 	// remove contact info at the end of the article
 	paragraphs.Find("span.-newsgate-paragraph-cci-endnote-contact-").Remove()
@@ -76,23 +82,4 @@ func extractBodyFromDocument(doc *gq.Document, includeTitle bool) *m.ExtractedBo
 func ExtractTitleFromDocument(doc *gq.Document) string {
 	title := doc.Find("h1[itemprop=headline]")
 	return strings.TrimSpace(title.Text())
-}
-
-func ExtractBodyFromURLDirectly(url string, includeTitle bool) *m.ExtractedBody {
-	// Debugger.Printf("Fetching %s ...\n", url)
-	doc, err := gq.NewDocument(url)
-	if err != nil {
-		return nil
-	}
-
-	extracted := extractBodyFromDocument(doc, includeTitle)
-	for _, recipe := range extracted.RecipeData.Recipes {
-		recipe.Url = url
-	}
-
-	return extracted
-}
-
-func ExtractBodyFromURL(ch chan *m.ExtractedBody, url string, includeTitle bool) {
-	ch <- ExtractBodyFromURLDirectly(url, includeTitle)
 }

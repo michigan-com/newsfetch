@@ -8,7 +8,6 @@ import (
 	"text/tabwriter"
 	"time"
 
-	"github.com/michigan-com/newsfetch/extraction"
 	"github.com/michigan-com/newsfetch/lib"
 	"github.com/spf13/cobra"
 )
@@ -94,37 +93,10 @@ var cmdGetArticles = &cobra.Command{
 }
 
 func ProcessArticle(articleUrl string) {
-	article := &lib.Article{}
-
-	articleIn := lib.NewArticleIn(articleUrl)
-	err := articleIn.GetData()
-
+	article, _, _, err := lib.ParseArticleAtURL(articleUrl, body /* global flag */)
 	if err != nil {
-		lib.Debugger.Println(err)
+		lib.Debugger.Println("Failed to process article: ", err)
 		return
-	}
-
-	if !articleIn.IsValid() {
-		lib.Debugger.Println("Article is not valid: ", article)
-		return
-	}
-
-	err = articleIn.Process(article)
-	if err != nil {
-		lib.Debugger.Println("Article could not be processed: %s", articleIn)
-	}
-
-	if body {
-		bodyExtract := extraction.ExtractBodyFromURLDirectly(articleUrl, false)
-
-		if bodyExtract.Text != "" {
-			lib.Debugger.Printf(
-				"Extracted extracted contains %d characters, %d paragraphs.",
-				len(strings.Split(bodyExtract.Text, "")),
-				len(strings.Split(bodyExtract.Text, "\n\n")),
-			)
-			article.BodyText = bodyExtract.Text
-		}
 	}
 
 	if globalConfig.MongoUrl != "" {

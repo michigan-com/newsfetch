@@ -21,7 +21,7 @@ var cmdBody = &cobra.Command{
 			articleUrl = args[0]
 		}
 
-		extracted := extraction.ExtractBodyFromURLDirectly(articleUrl, includeTitle)
+		extracted := extraction.ExtractDataFromHTMLAtURL(articleUrl, includeTitle)
 
 		if output {
 			bodyFmt := strings.Join(strings.Split(extracted.Text, "\n"), "\n\n")
