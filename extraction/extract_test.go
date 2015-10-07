@@ -29,7 +29,19 @@ type TestRec struct {
 	html      string
 }
 
-func TestOakland(t *testing.T) {
+func TestContactLineRemovalWithoutSpecialStrings(t *testing.T) {
+	runTest(t, &TestRec{
+		url:       "",
+		expected:  []string{`Foo foo`, `Bar bar`},
+		forbidden: []string{`Contact Robert Allen`},
+		html: `
+			<p>Foo foo.</p>
+			<p>Bar bar.</p>
+			<p><em>Contact Robert Allen at rallen@freepress.com or <a href="http://www.twitter.com/rallenMI">@rallenMI</a>. </em></p>`,
+	})
+}
+
+func TestIntegrationOakland(t *testing.T) {
 	runTest(t, &TestRec{
 		url: "http://www.freep.com/story/news/local/michigan/oakland/2015/08/20/police-chase-troy-bloomfield-hills-warren-absconder-shooting/32056645/",
 		expected: []string{`The Oakland County Sheriff's office is reviewing the fatal shooting of a parolee by police late Wednesday night following a high-speed chase that started in Macomb County and ended with a crash on Telegraph Road in Bloomfield Hills.`,
@@ -50,10 +62,10 @@ func TestOakland(t *testing.T) {
 	})
 }
 
-func TestTigersManagerCandidates(t *testing.T) {
+func TestIntegrationTigersManagerCandidates(t *testing.T) {
 	runTest(t, &TestRec{
 		url:       "http://www.freep.com/story/sports/mlb/tigers/2015/09/11/detroit-tigers-possible-manager-candidates/72051912/",
-		expected:  []string{`First, it was the general manager.`, `Tigers general manager Al Avila today said that no decision has been made.`},
+		expected:  []string{`First, it was the general manager.`, "Tigers general manager Al Avila today\u00a0said that no decision has been made."},
 		forbidden: []string{`Contact Anthony Fenech`},
 		html: `
 			<p>First, it was the general manager.</p>
@@ -72,7 +84,7 @@ func TestTigersManagerCandidates(t *testing.T) {
 	})
 }
 
-func TestTigersMiguelComeback(t *testing.T) {
+func TestIntegrationTigersMiguelComeback(t *testing.T) {
 	runTest(t, &TestRec{
 		url:       "http://www.freep.com/story/sports/mlb/tigers/2015/10/05/detroit-tigers-miguel-cabrera/73391112/",
 		expected:  []string{`It could have been one of the most memorable comebacks in Los Angeles Angels history, but instead, it will go down as a mere footnote.`},
@@ -98,7 +110,7 @@ func TestTigersMiguelComeback(t *testing.T) {
 	})
 }
 
-func TestShoplifter(t *testing.T) {
+func TestIntegrationShoplifter(t *testing.T) {
 	runTest(t, &TestRec{
 		url:       "http://www.freep.com/story/news/local/michigan/oakland/2015/10/06/cpl-holder-opens-fire-shoplifter-home-depot/73468588/",
 		expected:  []string{},
@@ -116,7 +128,7 @@ func TestShoplifter(t *testing.T) {
 	})
 }
 
-func TestDingelHospital(t *testing.T) {
+func TestIntegrationDingelHospital(t *testing.T) {
 	runTest(t, &TestRec{
 		url:       "http://www.freep.com/story/news/politics/2015/10/06/john-dingell-back-hospital/73464268/",
 		expected:  []string{},
@@ -133,7 +145,7 @@ func TestDingelHospital(t *testing.T) {
 	})
 }
 
-func TestBankRobbery(t *testing.T) {
+func TestIntegrationBankRobbery(t *testing.T) {
 	runTest(t, &TestRec{
 		url:       "http://www.freep.com/story/news/local/michigan/wayne/2015/10/06/livonia-bank-robbery-arrest/73457536/",
 		expected:  []string{},
@@ -150,7 +162,7 @@ func TestBankRobbery(t *testing.T) {
 
 /* template
 
-func TestXXXXX(t *testing.T) {
+func TestIntegrationXXXXX(t *testing.T) {
 	runTest(t, &TestRec{
 		url: "URL",
 		expected: []string{},

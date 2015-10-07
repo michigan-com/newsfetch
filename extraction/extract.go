@@ -1,14 +1,11 @@
 package extraction
 
 import (
-	"regexp"
 	"strings"
 
 	gq "github.com/PuerkitoBio/goquery"
 	m "github.com/michigan-com/newsfetch/model"
 )
-
-var TWITTER_RE = regexp.MustCompile("^twitter.com/[a-zA-Z0-9_]*$")
 
 func withoutEmptyStrings(strings []string) []string {
 	result := make([]string, 0, len(strings))
@@ -30,7 +27,8 @@ func extractBodyFromDocument(doc *gq.Document, fromJSON bool, includeTitle bool)
 		paragraphs = doc.Find("div[itemprop=articleBody] > p")
 	}
 
-	// remove contact info at the end of the article
+	// remove contact info at the end of the article (might not be needed any more when parsing
+	// HTML from JSON?)
 	paragraphs.Find("span.-newsgate-paragraph-cci-endnote-contact-").Remove()
 	paragraphs.Find("span.-newsgate-paragraph-cci-endnote-contrib-").Remove()
 
@@ -48,7 +46,7 @@ func extractBodyFromDocument(doc *gq.Document, fromJSON bool, includeTitle bool)
 
 		text := strings.TrimSpace(paragraph.Text())
 
-		if TWITTER_RE.MatchString(text) {
+		if worthy, _ := IsWorthyParagraph(text); !worthy {
 			return ""
 		}
 
