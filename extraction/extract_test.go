@@ -22,13 +22,15 @@ var globalForbidden = []string{
 	`This material may not be published`,
 }
 
-var recs = []struct {
+type TestRec struct {
 	url       string
 	expected  []string
 	forbidden []string
 	html      string
-}{
-	{
+}
+
+func TestOakland(t *testing.T) {
+	runTest(t, &TestRec{
 		url: "http://www.freep.com/story/news/local/michigan/oakland/2015/08/20/police-chase-troy-bloomfield-hills-warren-absconder-shooting/32056645/",
 		expected: []string{`The Oakland County Sheriff's office is reviewing the fatal shooting of a parolee by police late Wednesday night following a high-speed chase that started in Macomb County and ended with a crash on Telegraph Road in Bloomfield Hills.`,
 			`"We've got a lot of work to do," McCabe said.`},
@@ -45,9 +47,11 @@ var recs = []struct {
 			<p>"We've got a lot of work to do," McCabe said.</p>
 			<p>Ransom was being sought for absconding from parole and assault with a deadly weapon at the time he was killed. Autopsy results were not immediately available. He was paroled from prison last December for a 2013 offense of assault by strangulation or suffocation.</p>
 			<p><em>Contact L.L. Brasier: 248-858-2262 or lbrasier@freepress.com</em></p>`,
-	},
+	})
+}
 
-	{
+func TestTigersManagerCandidates(t *testing.T) {
+	runTest(t, &TestRec{
 		url:       "http://www.freep.com/story/sports/mlb/tigers/2015/09/11/detroit-tigers-possible-manager-candidates/72051912/",
 		expected:  []string{`First, it was the general manager.`, `Tigers general manager Al Avila today said that no decision has been made.`},
 		forbidden: []string{`Contact Anthony Fenech`},
@@ -65,9 +69,11 @@ var recs = []struct {
 			<p><strong>■</strong>Ozzie Guillen: If the front office went with a full-scale change to a firecracker of a name, the Tigers could consider Guillen, who has nine years of managerial experience, including a World Series to his name. Guillen, 51, is close friends with Miguel Cabrera – he also hails from Venezuela – and has one of the stronger personalities in the game. Guillen turned in five winning records in eight seasons with the White Sox from 2004-11 but flamed out after one season with the Marlins in 2012.</p>
 			<p><strong>■</strong>A few familiar faces: It's highly unlikely that Tigers settle on another rookie manager, but first-base coach Omar Vizquel is well-liked in the clubhouse and profiles as a future manager in aspirations and baseball acumen. … Longtime teammates Alan Trammell and Kirk Gibson returned to the Tigers scene this season – Trammell as a special assistant to the general manager and Gibson as a broadcaster with Fox Sports Detroit – and both have managerial experience. Trammell was a Dombrowski hire and was handed a bad bunch, going 186-300 in three seasons before being fired after the 2005 season. Gibson, 58, managed the Diamondbacks to a National League West title in 2011 – his first full season – and checked in with two .500 seasons before getting fired late in the 2014 season with a 353-375 mark. With his recent diagnosis of Parkinson's disease, it's not known whether he is interested in managing again. … Jim Leyland, 70, is in his second season as a special assistant to the general manager after retiring from a 22-year career in the dugout and is likely done with the day-to-day grind.</p>
 			<p><em>Contact Anthony Fenech: <a href="mailto:afenech@freepress.com">afenech@freepress.com</a>. Follow him on Twitter <a href="http://www.twitter.com/anthonyfenech">@anthonyfenech</a>. Check out our latest Tigers podcast at <a href="http://www.freep.com/tigerspodcast">freep.com/tigerspodcast</a> or on iTunes. And download our free Tigers Xtra app on <a href="https://itunes.apple.com/us/app/tigers-xtra/id962147637?mt=8">Apple</a> and <a href="https://play.google.com/store/apps/details?id=com.cincinnati.dolly.Tigers&amp;hl=en">Android</a>!</em></p>`,
-	},
+	})
+}
 
-	{
+func TestTigersMiguelComeback(t *testing.T) {
+	runTest(t, &TestRec{
 		url:       "http://www.freep.com/story/sports/mlb/tigers/2015/10/05/detroit-tigers-miguel-cabrera/73391112/",
 		expected:  []string{`It could have been one of the most memorable comebacks in Los Angeles Angels history, but instead, it will go down as a mere footnote.`},
 		forbidden: []string{},
@@ -89,9 +95,11 @@ var recs = []struct {
 			<p>They’ll be talking about this night in New York for years. Reports surfaced that Gomez was going to the Mets, and Wilmer Flores, who was expected to leave New York in the deal, was wiping tears from his eyes on the field during a game.</p>
 			<p>The trade never was completed, though. Instead, the Mets kept Flores and traded for Cespedes. From July 31 on, Flores hit .296 with six homers. Cespedes hit .287 with 17 home runs and 44 RBIs in 57 games for New York. The Mets outlasted Washington in the NL East.</p>
 			<p>Gomez, meanwhile, was traded to Houston and hit only .242 for the Astros, who made the playoffs but fell short in their bid for the AL West title.</p>`,
-	},
+	})
+}
 
-	{
+func TestShoplifter(t *testing.T) {
+	runTest(t, &TestRec{
 		url:       "http://www.freep.com/story/news/local/michigan/oakland/2015/10/06/cpl-holder-opens-fire-shoplifter-home-depot/73468588/",
 		expected:  []string{},
 		forbidden: []string{},
@@ -105,9 +113,11 @@ var recs = []struct {
 			<p>The shooting comes just weeks after a bank customer in Warren opened fire on an armed robber, causing him to collapse from injuries. It’s not yet clear whether that man will face charges, either.</p>
 			<p><em>Anyone with details on what happened can call the Auburn Hills Police Department at 248-370-9444.</em></p>
 			<p><em>Contact Daniel Bethencourt: dbethencourt@freepress.com or 313-223-4531. Follow on Twitter at @_dbethencourt.</em></p>`,
-	},
+	})
+}
 
-	{
+func TestDingelHospital(t *testing.T) {
+	runTest(t, &TestRec{
 		url:       "http://www.freep.com/story/news/politics/2015/10/06/john-dingell-back-hospital/73464268/",
 		expected:  []string{},
 		forbidden: []string{`WASHINGTON`},
@@ -120,9 +130,11 @@ var recs = []struct {
 			<p>He was also one of its most powerful chairmen, sitting for years as the top Democrat atop the House Energy and Commerce Committee, a panel he helped expand into one of Congress' most influential.</p>
 			<p>Dingell announced in early 2014 that he wouldn't run for a 30th full two-year term. Late last year, shortly after casting his last congressional votes, he spent three weeks in the hospital after suffering a hairline hip fracture.</p>
 			<p><em>Contact Todd Spangler: 703-854-8947 or tspangler@freepress.com. Follow him on Twitter  @tsspangler.</em></p>`,
-	},
+	})
+}
 
-	{
+func TestBankRobbery(t *testing.T) {
+	runTest(t, &TestRec{
 		url:       "http://www.freep.com/story/news/local/michigan/wayne/2015/10/06/livonia-bank-robbery-arrest/73457536/",
 		expected:  []string{},
 		forbidden: []string{`Contact Robert Allen`},
@@ -133,58 +145,58 @@ var recs = []struct {
 			<p>Charges include bank robbery, punishable by up to life in prison; two counts of possessing less than 25 grams of cocaine, punishable by 4 years in prison and possible fines up to $25,000, and habitual offender, a third-offense notice.</p>
 			<p>Crowley's bond was set at $1-million cash or surety. His probable cause conference is set for Oct. 15, and his preliminary exam is set for Oct. 22.</p>
 			<p><em>Contact Robert Allen at rallen@freepress.com or <a href="http://www.twitter.com/rallenMI">@rallenMI</a>. </em></p>`,
-	},
+	})
+}
 
-	/* template
+/* template
 
-	{
+func TestXXXXX(t *testing.T) {
+	runTest(t, &TestRec{
 		url: "URL",
 		expected: []string{},
 		forbidden: []string{},
 		html: ``,
-	},
-	*/
+	})
 }
+*/
 
-func TestBodyExtractor(t *testing.T) {
-	for _, rec := range recs {
-		t.Logf("Testing URL: %v", rec.url)
+func runTest(t *testing.T, rec *TestRec) {
+	t.Logf("Testing URL: %v", rec.url)
 
-		var extract *m.ExtractedBody
-		if rec.html == "" {
-			_, html, e, err := lib.ParseArticleAtURL(rec.url, true)
-			extract = e
-			if err != nil {
-				t.Fatalf("Failed to parse article: %v", err)
-			}
-
-			println("Here's the HTML to embed for", rec.url)
-			println(html)
-		} else {
-			extract = extraction.ExtractDataFromHTMLString(rec.html, rec.url, false)
+	var extract *m.ExtractedBody
+	if rec.html == "" {
+		_, html, e, err := lib.ParseArticleAtURL(rec.url, true)
+		extract = e
+		if err != nil {
+			t.Fatalf("Failed to parse article: %v", err)
 		}
 
-		text := extract.Text
+		println("Here's the HTML to embed for", rec.url)
+		println(html)
+	} else {
+		extract = extraction.ExtractDataFromHTMLString(rec.html, rec.url, false)
+	}
 
-		if text == "" {
-			t.Errorf("Body extractor returned no text.")
-		} else {
-			for _, s := range rec.expected {
-				if !strings.Contains(text, s) {
-					t.Errorf("Expected body fragment not found: %#v", s)
-				}
+	text := extract.Text
+
+	if text == "" {
+		t.Errorf("Body extractor returned no text.")
+	} else {
+		for _, s := range rec.expected {
+			if !strings.Contains(text, s) {
+				t.Errorf("Expected body fragment not found: %#v", s)
 			}
-			for _, s := range rec.forbidden {
-				if strings.Contains(text, s) {
-					t.Errorf("Forbidden body fragment found: %#v", s)
-				}
-			}
-			for _, s := range globalForbidden {
-				if strings.Contains(text, s) {
-					t.Errorf("Globally forbidden body fragment found: %#v", s)
-				}
-			}
-			t.Logf("in body: %#v", text)
 		}
+		for _, s := range rec.forbidden {
+			if strings.Contains(text, s) {
+				t.Errorf("Forbidden body fragment found: %#v", s)
+			}
+		}
+		for _, s := range globalForbidden {
+			if strings.Contains(text, s) {
+				t.Errorf("Globally forbidden body fragment found: %#v", s)
+			}
+		}
+		t.Logf("in body: %#v", text)
 	}
 }
