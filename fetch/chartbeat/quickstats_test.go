@@ -4,6 +4,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/michigan-com/newsfetch/lib"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -42,7 +43,7 @@ func TestSaveQuickStats(t *testing.T) {
 	quickStats := make([]*QuickStats, 0, numStats)
 	for i := 0; i < numStats; i++ {
 		stat := &QuickStats{}
-		stat.Visits = RandomInt(100)
+		stat.Visits = lib.RandomInt(100)
 
 		quickStats = append(quickStats, stat)
 	}
@@ -56,8 +57,8 @@ func TestSaveQuickStats(t *testing.T) {
 	SaveQuickStats(quickStats, mongoUri)
 
 	// Now verify
-	session := DBConnect(mongoUri)
-	defer DBClose(session)
+	session := lib.DBConnect(mongoUri)
+	defer lib.DBClose(session)
 
 	col := session.DB("").C("Quickstats")
 	count, err := col.Count()
@@ -118,7 +119,7 @@ func TestSortQuickStats(t *testing.T) {
 	quickStats := make([]*QuickStats, 0, numQuickStats)
 	for i := 0; i < numQuickStats; i++ {
 		quickStat := &QuickStats{}
-		quickStat.Visits = RandomInt(100)
+		quickStat.Visits = lib.RandomInt(100)
 		quickStats = append(quickStats, quickStat)
 	}
 
@@ -138,7 +139,7 @@ func confirmQuickStatsSort(sorted []*QuickStats) bool {
 		}
 
 		if lastVal < stats.Visits {
-			Debugger.Printf("sorted[%d] == %d, sorted[%d] == %d, should be sorted in descending order", i-1, lastVal, i, stats.Visits)
+			lib.Debugger.Printf("sorted[%d] == %d, sorted[%d] == %d, should be sorted in descending order", i-1, lastVal, i, stats.Visits)
 			return false
 		}
 	}

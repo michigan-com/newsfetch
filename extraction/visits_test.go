@@ -6,11 +6,12 @@ import (
 	"time"
 
 	"github.com/michigan-com/newsfetch/lib"
+	m "github.com/michigan-com/newsfetch/model"
 )
 
 // Test the adding of an hour interval to an article.Visits array
 func TestAddHourInterval(t *testing.T) {
-	article := &lib.Article{}
+	article := &m.Article{}
 	timeVal := time.Now()
 	numToAdd := 20
 
@@ -44,7 +45,7 @@ func TestAddHourInterval(t *testing.T) {
 
 // Tests CheckHourlyMax when len(article.Visits) == 0
 func TestHourlyMaxAdd(t *testing.T) {
-	article := &lib.Article{}
+	article := &m.Article{}
 	timeVal := time.Now()
 	visits := 100
 
@@ -66,9 +67,9 @@ func TestHourlyMaxAdd(t *testing.T) {
 // make sure the max is chosen
 func TestSimpleHourlyMaxReplace(t *testing.T) {
 	startTime := time.Now()
-	article := &lib.Article{}
-	article.Visits = []TimeInterval{
-		TimeInterval{
+	article := &m.Article{}
+	article.Visits = []m.TimeInterval{
+		m.TimeInterval{
 			100,
 			startTime,
 		},
@@ -92,7 +93,7 @@ func TestSimpleHourlyMaxReplace(t *testing.T) {
 }
 
 func TestHourlyMaxNextHour(t *testing.T) {
-	article := &lib.Article{}
+	article := &m.Article{}
 	timeVal := time.Now()
 	visits := 100
 	numToAdd := 100
@@ -140,8 +141,8 @@ func TestRoundHourDown(t *testing.T) {
 		}
 
 		// adjust the time val
-		interval := intervals[RandomInt(len(intervals)-1)]
-		randomVal := RandomInt(200)
+		interval := intervals[lib.RandomInt(len(intervals)-1)]
+		randomVal := lib.RandomInt(200)
 
 		timeVal = timeVal.Add(time.Duration(randomVal) * interval)
 	}

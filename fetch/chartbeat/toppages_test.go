@@ -6,6 +6,9 @@ import (
 	"strings"
 	"testing"
 
+	a "github.com/michigan-com/newsfetch/fetch/article"
+	"github.com/michigan-com/newsfetch/lib"
+	m "github.com/michigan-com/newsfetch/model"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -16,21 +19,21 @@ func TestFormatChartbeatUrls(t *testing.T) {
 
 	// Test the toppages api
 	endPoint := "live/toppages/v3"
-	formattedUrls, err := FormatChartbeatUrls(endPoint, Sites, apiKey)
+	formattedUrls, err := FormatChartbeatUrls(endPoint, lib.Sites, apiKey)
 
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
 
 	// Check to make sure we have the right numnber of urls
-	if len(formattedUrls) != len(Sites) {
-		t.Fatalf("Expected %d urls, got %d", len(Sites), len(formattedUrls))
+	if len(formattedUrls) != len(lib.Sites) {
+		t.Fatalf("Expected %d urls, got %d", len(lib.Sites), len(formattedUrls))
 	}
 
 	// Test to make sure the URLs formatted correctly
 	for i := 0; i < len(formattedUrls); i++ {
 		url := formattedUrls[i]
-		site := Sites[i]
+		site := lib.Sites[i]
 		if !strings.Contains(url, endPoint) {
 			t.Fatalf(fmt.Sprintf("Url %s does not contain endPoint %s", url, endPoint))
 		} else if !strings.Contains(url, apiKey) {
@@ -48,7 +51,7 @@ func TestFormatChartbeatUrls(t *testing.T) {
 	}
 
 	// Test and make sure that no api key returns an error
-	_, err = FormatChartbeatUrls(endPoint, Sites, "")
+	_, err = FormatChartbeatUrls(endPoint, lib.Sites, "")
 	if err == nil {
 		t.Fatalf("Should have thrown an error when no API key was set")
 	}
@@ -60,18 +63,18 @@ func TestSaveTimeInterval(t *testing.T) {
 		t.Fatalf("No MONGO_URI env variable set")
 	}
 
-	session := DBConnect(mongoUri)
-	defer DBClose(session)
+	session := lib.DBConnect(mongoUri)
+	defer lib.DBClose(session)
 
 	// Save a bunch of articles
 	numArticles := 20
-	articles := make([]*Article, 0, numArticles)
+	articles := make([]*m.Article, 0, numArticles)
 	for i := 0; i < numArticles; i++ {
-		article := &Article{}
+		article := &m.Article{}
 		article.ArticleId = i + 1
 		articles = append(articles, article)
 	}
-	err := SaveArticles(mongoUri, articles)
+	err := a.SaveArticles(mongoUri, articles)
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
@@ -82,7 +85,7 @@ func TestSaveTimeInterval(t *testing.T) {
 	for i := 0; i < numArticles; i++ {
 		article := &TopArticle{}
 		articleId := i + 1
-		numVisits := RandomInt(500)
+		numVisits := lib.RandomInt(500)
 
 		article.ArticleId = articleId
 		article.Visits = numVisits
@@ -93,7 +96,7 @@ func TestSaveTimeInterval(t *testing.T) {
 	CalculateTimeInterval(topPages, mongoUri)
 
 	// Now check the articles saved and make sure they updated the visits
-	savedArticles := make([]*Article, 0, numArticles)
+	savedArticles := make([]*m.Article, 0, numArticles)
 	articleCol := session.DB("").C("Article")
 	articleCol.Find(bson.M{
 		"article_id": bson.M{
@@ -125,7 +128,7 @@ func TestSaveTimeInterval(t *testing.T) {
 }
 
 func TestCalculateTimeInterval(t *testing.T) {
-	articles := []*Article{&Article{}, &Article{}, &Article{}, &Article{}}
+	articles := []*m.Article{&m.Article{}, &m.Article{}, &m.Article{}, &m.Article{}}
 	articles[0].ArticleId = 1
 	articles[1].ArticleId = 2
 	articles[2].ArticleId = 3
@@ -203,9 +206,9 @@ func TestSaveSnapshot(t *testing.T) {
 	SaveTopPagesSnapshot(toppages, mongoUri)
 
 	// Now verify
-	Debugger.Printf("%v", mongoUri)
-	session := DBConnect(mongoUri)
-	defer DBClose(session)
+	lib.Debugger.Printf("%v", mongoUri)
+	session := lib.DBConnect(mongoUri)
+	defer lib.DBClose(session)
 	col := session.DB("").C("Toppages")
 	numSnapshots, err := col.Count()
 
