@@ -90,10 +90,10 @@ func TestSaveTimeInterval(t *testing.T) {
 	}
 
 	// Calculate a bunch of the time intervals
-	topPages := make([]*TopArticle, 0, numArticles)
+	topPages := make([]*m.TopArticle, 0, numArticles)
 	visits := map[int]int{}
 	for i := 0; i < numArticles; i++ {
-		article := &TopArticle{}
+		article := &m.TopArticle{}
 		articleId := i + 1
 		numVisits := lib.RandomInt(500)
 
@@ -199,9 +199,9 @@ func TestSaveSnapshot(t *testing.T) {
 
 	// Make an article snapshot and save it
 	numArticles := 20
-	toppages := make([]*TopArticle, 0, numArticles)
+	toppages := make([]*m.TopArticle, 0, numArticles)
 	for i := 0; i < numArticles; i++ {
-		article := &TopArticle{}
+		article := &m.TopArticle{}
 		article.ArticleId = i
 		article.Headline = fmt.Sprintf("Article %d", i)
 		article.Visits = 100
@@ -229,7 +229,7 @@ func TestSaveSnapshot(t *testing.T) {
 		t.Fatalf("Should only be one collection")
 	}
 
-	snapshot := &TopPagesSnapshot{}
+	snapshot := &m.TopPagesSnapshot{}
 	err = col.Find(bson.M{}).One(&snapshot)
 
 	if len(snapshot.Articles) != numArticles {
@@ -243,10 +243,10 @@ func TestSortTopArticles(t *testing.T) {
 	topPages, _ := GetTopPages(testUrl)
 
 	// Compile the top articles together
-	topArticles := make([]*TopArticle, 0, len(topPages.Pages))
+	topArticles := make([]*m.TopArticle, 0, len(topPages.Pages))
 	for i := 0; i < len(topPages.Pages); i++ {
 		page := topPages.Pages[i]
-		article := &TopArticle{}
+		article := &m.TopArticle{}
 		article.Visits = page.Stats.Visits
 		article.Url = page.Path
 		article.Headline = page.Title
