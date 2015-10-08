@@ -10,7 +10,9 @@ import (
 	"sync"
 	"time"
 
+	e "github.com/michigan-com/newsfetch/extraction"
 	"github.com/michigan-com/newsfetch/lib"
+	m "github.com/michigan-com/newsfetch/model"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -129,7 +131,7 @@ func CalculateTimeInterval(articles []*TopArticle, mongoUri string) {
 	chartbeatDebugger.Printf("Updating numbers for articles for this given time interval")
 	articleIds := make([]int, len(articles), len(articles))
 	articleVisits := map[int]int{}
-	savedArticles := make([]*lib.Article, len(articles), len(articles))
+	savedArticles := make([]*m.Article, len(articles), len(articles))
 
 	for _, article := range articles {
 		articleIds = append(articleIds, article.ArticleId)
@@ -139,7 +141,7 @@ func CalculateTimeInterval(articles []*TopArticle, mongoUri string) {
 	session := lib.DBConnect(mongoUri)
 	defer lib.DBClose(session)
 	db := session.DB("")
-	articleCol := db.C("lib.Article")
+	articleCol := db.C("Article")
 
 	err := articleCol.
 		Find(bson.M{
@@ -165,7 +167,7 @@ func CalculateTimeInterval(articles []*TopArticle, mongoUri string) {
 
 // In-memory adjusting of time intervals. Easier for testing since it doesnt
 // hit mongo
-func calculateTimeInterval(savedArticles []*lib.Article, articleVisits map[int]int) {
+func calculateTimeInterval(savedArticles []*m.Article, articleVisits map[int]int) {
 	now := time.Now()
 
 	for _, article := range savedArticles {
@@ -173,11 +175,11 @@ func calculateTimeInterval(savedArticles []*lib.Article, articleVisits map[int]i
 		if !ok {
 			continue
 		}
-		lib.CheckHourlyMax(article, now, visits)
+		e.CheckHourlyMax(article, now, visits)
 	}
 }
 
-func saveTimeInterval(articles []*lib.Article, session *mgo.Session) {
+func saveTimeInterval(articles []*m.Article, session *mgo.Session) {
 	articleCol := session.DB("").C("Article")
 	for _, article := range articles {
 		err := articleCol.Update(bson.M{"_id": article.Id}, bson.M{

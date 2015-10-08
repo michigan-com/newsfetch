@@ -1,13 +1,14 @@
-package lib
+package fetch
 
 import (
+	"github.com/michigan-com/newsfetch/lib"
 	m "github.com/michigan-com/newsfetch/model"
 	"gopkg.in/mgo.v2/bson"
 )
 
 func SaveRecipes(mongoUri string, recipes []*m.Recipe) error {
-	session := DBConnect(mongoUri)
-	defer DBClose(session)
+	session := lib.DBConnect(mongoUri)
+	defer lib.DBClose(session)
 
 	collection := session.DB("").C("Recipe")
 
@@ -29,7 +30,7 @@ func SaveRecipes(mongoUri string, recipes []*m.Recipe) error {
 			totalUpdates++
 		}
 	}
-	Debugger.Println(totalUpdates, "recipes updated,", totalInserts, "recipes added")
+	recipeDebugger.Println(totalUpdates, "recipes updated,", totalInserts, "recipes added")
 
 	return nil
 }

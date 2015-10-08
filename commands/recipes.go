@@ -5,13 +5,16 @@ import (
 	"strconv"
 	"time"
 
+	a "github.com/michigan-com/newsfetch/fetch/article"
+	r "github.com/michigan-com/newsfetch/fetch/recipe"
 	"github.com/michigan-com/newsfetch/lib"
+	m "github.com/michigan-com/newsfetch/model"
 	"github.com/spf13/cobra"
 )
 
 var recipeDebugger = lib.NewCondLogger("recipes")
 
-func printRecipies(articles []*lib.Article) {
+func printRecipies(articles []*m.Article) {
 	for _, article := range articles {
 		fmt.Printf("%s/%s/%s - %s - %s\n", article.Source, article.Section, article.Subsection, article.Headline, article.Url)
 	}
@@ -30,13 +33,13 @@ var cmdReprocessRecipies = &cobra.Command{
 			startTime = time.Now()
 		}
 
-		articles, err := lib.LoadArticles(globalConfig.MongoUrl)
+		articles, err := a.LoadArticles(globalConfig.MongoUrl)
 		if err != nil {
 			panic(err)
 		}
 
 		beforeCount := len(articles)
-		articles = lib.FilterArticlesForRecipeExtraction(articles)
+		articles = a.FilterArticlesForRecipeExtraction(articles)
 
 		recipeDebugger.Printf("Loaded %d articles including %d in food subsection.", beforeCount, len(articles))
 
@@ -45,7 +48,7 @@ var cmdReprocessRecipies = &cobra.Command{
 		}
 
 		for _, article := range articles {
-			err := lib.DownloadAndSaveRecipesForArticle(globalConfig.MongoUrl, article)
+			err := r.DownloadAndSaveRecipesForArticle(globalConfig.MongoUrl, article)
 			if err != nil {
 				panic(err)
 			}
@@ -71,12 +74,12 @@ var cmdReprocessRecipeById = &cobra.Command{
 				panic(err)
 			}
 
-			article, err := lib.LoadArticleById(globalConfig.MongoUrl, articleId)
+			article, err := a.LoadArticleById(globalConfig.MongoUrl, articleId)
 			if err != nil {
 				panic(err)
 			}
 
-			err = lib.DownloadAndSaveRecipesForArticle(globalConfig.MongoUrl, article)
+			err = r.DownloadAndSaveRecipesForArticle(globalConfig.MongoUrl, article)
 			if err != nil {
 				panic(err)
 			}
@@ -96,7 +99,7 @@ var cmdExtractRecipiesFromUrl = &cobra.Command{
 			startTime = time.Now()
 		}
 
-		recipes := lib.DownloadRecipesFromUrls(args)
+		recipes := r.DownloadRecipesFromUrls(args)
 
 		fmt.Printf("Found %d recipes.\n", len(recipes))
 		for i, recipe := range recipes {
@@ -104,7 +107,7 @@ var cmdExtractRecipiesFromUrl = &cobra.Command{
 		}
 
 		if globalConfig.MongoUrl != "" {
-			err := lib.SaveRecipes(globalConfig.MongoUrl, recipes)
+			err := r.SaveRecipes(globalConfig.MongoUrl, recipes)
 			if err != nil {
 				panic(err)
 			}

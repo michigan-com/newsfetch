@@ -1,7 +1,9 @@
-package lib
+package extraction
 
 import (
 	"time"
+
+	m "github.com/michigan-com/newsfetch/model"
 )
 
 // Given an article, a currentTime, and a currentVisits variable, check the
@@ -15,7 +17,7 @@ import (
 //		append onto article.Visits array using this hour
 // If currentTime.Hour() < lastInterval.Hour()
 //		ignore
-func CheckHourlyMax(article *Article, currentTime time.Time, currentVisits int) {
+func CheckHourlyMax(article *m.Article, currentTime time.Time, currentVisits int) {
 	length := len(article.Visits)
 	roundedTime := RoundHourDown(currentTime)
 	if length == 0 {
@@ -50,15 +52,15 @@ func CheckHourlyMax(article *Article, currentTime time.Time, currentVisits int) 
 }
 
 // Append a new interval onto the end of article.Visits
-func addHourInterval(article *Article, currentTime time.Time, currentVisits int) {
+func addHourInterval(article *m.Article, currentTime time.Time, currentVisits int) {
 	// Round down
-	newInterval := &TimeInterval{
+	newInterval := &m.TimeInterval{
 		currentVisits,
 		currentTime,
 	}
 
 	currentLength := len(article.Visits)
-	newVisits := make([]TimeInterval, currentLength+1, currentLength+1)
+	newVisits := make([]m.TimeInterval, currentLength+1, currentLength+1)
 
 	for i := 0; i < currentLength; i++ {
 		newVisits[i] = article.Visits[i]

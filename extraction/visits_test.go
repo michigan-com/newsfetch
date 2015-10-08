@@ -1,14 +1,16 @@
-package lib
+package extraction
 
 import (
 	"fmt"
 	"testing"
 	"time"
+
+	"github.com/michigan-com/newsfetch/lib"
 )
 
 // Test the adding of an hour interval to an article.Visits array
 func TestAddHourInterval(t *testing.T) {
-	article := &Article{}
+	article := &lib.Article{}
 	timeVal := time.Now()
 	numToAdd := 20
 
@@ -42,7 +44,7 @@ func TestAddHourInterval(t *testing.T) {
 
 // Tests CheckHourlyMax when len(article.Visits) == 0
 func TestHourlyMaxAdd(t *testing.T) {
-	article := &Article{}
+	article := &lib.Article{}
 	timeVal := time.Now()
 	visits := 100
 
@@ -64,7 +66,7 @@ func TestHourlyMaxAdd(t *testing.T) {
 // make sure the max is chosen
 func TestSimpleHourlyMaxReplace(t *testing.T) {
 	startTime := time.Now()
-	article := &Article{}
+	article := &lib.Article{}
 	article.Visits = []TimeInterval{
 		TimeInterval{
 			100,
@@ -90,7 +92,7 @@ func TestSimpleHourlyMaxReplace(t *testing.T) {
 }
 
 func TestHourlyMaxNextHour(t *testing.T) {
-	article := &Article{}
+	article := &lib.Article{}
 	timeVal := time.Now()
 	visits := 100
 	numToAdd := 100

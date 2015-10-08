@@ -1,4 +1,4 @@
-package lib
+package fetch
 
 import (
 	"errors"
@@ -8,8 +8,8 @@ import (
 	m "github.com/michigan-com/newsfetch/model"
 )
 
-func ParseArticleAtURL(articleUrl string, runExtraction bool) (*Article, string, *m.ExtractedBody, error) {
-	article := &Article{}
+func ParseArticleAtURL(articleUrl string, runExtraction bool) (*m.Article, string, *m.ExtractedBody, error) {
+	article := &m.Article{}
 
 	articleIn := NewArticleIn(articleUrl)
 	err := articleIn.GetData()
@@ -19,13 +19,13 @@ func ParseArticleAtURL(articleUrl string, runExtraction bool) (*Article, string,
 	}
 
 	if !articleIn.IsValid() {
-		Debugger.Println("Article is not valid: ", article)
+		articleDebugger.Println("Article is not valid: ", article)
 		return nil, "", nil, errors.New("Article is not valid: " + articleUrl)
 	}
 
 	err = articleIn.Process(article)
 	if err != nil {
-		Debugger.Println("Article could not be processed: %s", articleIn)
+		articleDebugger.Println("Article could not be processed: %s", articleIn)
 	}
 
 	html := articleIn.BodyHTML()
@@ -35,7 +35,7 @@ func ParseArticleAtURL(articleUrl string, runExtraction bool) (*Article, string,
 		bodyExtract = extraction.ExtractDataFromHTMLString(html, articleUrl, false)
 
 		if bodyExtract.Text != "" {
-			Debugger.Printf(
+			articleDebugger.Printf(
 				"Extracted extracted contains %d characters, %d paragraphs.",
 				len(strings.Split(bodyExtract.Text, "")),
 				len(strings.Split(bodyExtract.Text, "\n\n")),

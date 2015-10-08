@@ -1,11 +1,14 @@
-package lib
+package fetch
 
 import (
 	"github.com/michigan-com/newsfetch/extraction"
+	"github.com/michigan-com/newsfetch/lib"
 	m "github.com/michigan-com/newsfetch/model"
 )
 
-func DownloadAndSaveRecipesForArticles(mongoUrl string, articles []*Article) error {
+var recipeDebugger = lib.NewCondLogger("fetch-recipe")
+
+func DownloadAndSaveRecipesForArticles(mongoUrl string, articles []*m.Article) error {
 	for _, article := range articles {
 		err := DownloadAndSaveRecipesForArticle(mongoUrl, article)
 		if err != nil {
@@ -15,7 +18,7 @@ func DownloadAndSaveRecipesForArticles(mongoUrl string, articles []*Article) err
 	return nil
 }
 
-func DownloadAndSaveRecipesForArticle(mongoUrl string, article *Article) error {
+func DownloadAndSaveRecipesForArticle(mongoUrl string, article *m.Article) error {
 	recipes := DownloadRecipesForArticle(article)
 
 	if mongoUrl != "" {
@@ -26,7 +29,7 @@ func DownloadAndSaveRecipesForArticle(mongoUrl string, article *Article) error {
 	}
 }
 
-func DownloadRecipesForArticle(article *Article) []*m.Recipe {
+func DownloadRecipesForArticle(article *m.Article) []*m.Recipe {
 	return DownloadRecipesFromUrls([]string{article.Url})
 }
 
@@ -43,11 +46,11 @@ func DownloadRecipesFromUrls(urls []string) []*m.Recipe {
 		}
 		visited[url] = true
 
-		Debugger.Println("Recipe extraction for URL", url)
+		recipeDebugger.Println("Recipe extraction for URL", url)
 
-		articleId := GetArticleId(url)
+		articleId := lib.GetArticleId(url)
 		if articleId < 1 {
-			Debugger.Println("Skipped, cannot determine article ID")
+			recipeDebugger.Println("Skipped, cannot determine article ID")
 			continue
 		}
 
@@ -57,13 +60,13 @@ func DownloadRecipesFromUrls(urls []string) []*m.Recipe {
 			recipe.ArticleId = articleId
 		}
 
-		Debugger.Println("  found", len(extracted.RecipeData.Recipes), "recipes")
+		recipeDebugger.Println("  found", len(extracted.RecipeData.Recipes), "recipes")
 
 		if false {
 			for i, recipe := range recipes {
-				Debugger.Println()
-				Debugger.Println("Recipe ", i, "=", recipe.String())
-				Debugger.Println()
+				recipeDebugger.Println()
+				recipeDebugger.Println("Recipe ", i, "=", recipe.String())
+				recipeDebugger.Println()
 			}
 		}
 

@@ -1,4 +1,4 @@
-package lib
+package fetch
 
 import (
 	"encoding/json"
@@ -8,7 +8,12 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/michigan-com/newsfetch/lib"
+	m "github.com/michigan-com/newsfetch/model"
 )
+
+var articleDebugger = lib.NewCondLogger("fetch-article")
 
 type ArticleFeedIn struct {
 	Content []*struct {
@@ -30,7 +35,7 @@ type ArticleUrlsChan struct {
 }
 
 func GetArticleUrlsFromFeed(url string, ch chan *ArticleUrlsChan) {
-	Debugger.Println("Fetching: ", url)
+	articleDebugger.Println("Fetching: ", url)
 
 	articleChan := &ArticleUrlsChan{}
 
@@ -59,7 +64,7 @@ func GetArticleUrlsFromFeed(url string, ch chan *ArticleUrlsChan) {
 
 func ProcessSummaries(ch chan error) {
 	url := "http://brevity.detroitnow.io/newsfetch-summarize/"
-	Debugger.Println("Fetching: ", url)
+	articleDebugger.Println("Fetching: ", url)
 
 	resp, err := http.Get(url)
 	defer resp.Body.Close()
@@ -71,7 +76,7 @@ func ProcessSummaries(ch chan error) {
 }
 
 type Middleware interface {
-	Process(*Article) error
+	Process(*m.Article) error
 }
 
 type BodyPart struct {
@@ -131,7 +136,7 @@ func (a *ArticleIn) GetData() error {
 		json_url = fmt.Sprintf("%s/%s", a.Url, "json")
 	}
 
-	Debugger.Println("Fetching: ", json_url)
+	articleDebugger.Println("Fetching: ", json_url)
 
 	resp, err := http.Get(json_url)
 	if err != nil {
@@ -160,32 +165,32 @@ func (a *ArticleIn) GetData() error {
 
 func (a *ArticleIn) IsValid() bool {
 	if a.Article == nil {
-		Debugger.Println("Article struct missing ...")
+		articleDebugger.Println("Article struct missing ...")
 		return false
 	}
 
 	if a.Article.Id == 0 {
-		Debugger.Println("Article ID missing ...")
+		articleDebugger.Println("Article ID missing ...")
 		return false
 	}
 
 	if isBlacklisted(a.Url) {
-		Debugger.Println("Article URL has been blacklisted: ", a)
+		articleDebugger.Println("Article URL has been blacklisted: ", a)
 		return false
 	}
 
 	if a.Article.Photo == nil {
-		Debugger.Println("Failed to find photo object: ", a)
+		articleDebugger.Println("Failed to find photo object: ", a)
 		return false
 	}
 
 	if a.Article.Photo.AssetMetadata == nil {
-		Debugger.Println("Failed to find asset_metadata object: ", a)
+		articleDebugger.Println("Failed to find asset_metadata object: ", a)
 		return false
 	}
 
 	if a.Article.Photo.AssetMetadata.Attrs == nil {
-		Debugger.Println("Failed to find photo.attrs object: ", a)
+		articleDebugger.Println("Failed to find photo.attrs object: ", a)
 		return false
 	}
 
@@ -202,7 +207,7 @@ func GetSiteFromHost(host string) (string, error) {
 	return match[1], nil
 }
 
-func (a *ArticleIn) Process(article *Article) error {
+func (a *ArticleIn) Process(article *m.Article) error {
 	art := a.Article
 	ssts := art.Ssts
 	attrs := art.Photo.AssetMetadata.Attrs
@@ -223,15 +228,15 @@ func (a *ArticleIn) Process(article *Article) error {
 	swidth, _ := strconv.Atoi(attrs.Swidth)
 	sheight, _ := strconv.Atoi(attrs.Sheight)
 
-	photo := Photo{
+	photo := m.Photo{
 		attrs.Caption,
 		attrs.Credit,
-		PhotoInfo{
+		m.PhotoInfo{
 			photoUrl,
 			owidth,
 			oheight,
 		},
-		PhotoInfo{
+		m.PhotoInfo{
 			thumbUrl,
 			swidth,
 			sheight,
@@ -241,7 +246,7 @@ func (a *ArticleIn) Process(article *Article) error {
 	timestamp, aerr := time.Parse("2006-1-2T15:04:05.0000000", art.Metadata.Dates.Timestamp)
 	if aerr != nil {
 		timestamp = time.Now()
-		Debugger.Println("Error parsing timestamp: ", aerr)
+		articleDebugger.Println("Error parsing timestamp: ", aerr)
 	}
 
 	article.ArticleId = art.Id

@@ -8,13 +8,17 @@ import (
 	"text/tabwriter"
 	"time"
 
+	a "github.com/michigan-com/newsfetch/fetch/article"
 	"github.com/michigan-com/newsfetch/lib"
+	m "github.com/michigan-com/newsfetch/model"
 	"github.com/spf13/cobra"
 )
 
+var articlesDebugger = lib.NewCondLogger("command-article")
+
 var w = new(tabwriter.Writer)
 
-func printArticleBrief(w *tabwriter.Writer, article *lib.Article) {
+func printArticleBrief(w *tabwriter.Writer, article *m.Article) {
 	fmt.Fprintf(
 		w, "%s\t%s\t%s\t%s\t%s\n", article.Source, article.Section,
 		article.Headline, article.Url, article.Timestamp,
@@ -55,12 +59,12 @@ var cmdGetArticles = &cobra.Command{
 			fmt.Fprintln(w, "Source\tSection\tHeadline\tURL\tTimestamp")
 		}
 
-		feedUrls := lib.FormatFeedUrls(sites, sections)
+		feedUrls := a.FormatFeedUrls(sites, sections)
 
 		var wg sync.WaitGroup
-		ach := make(chan *lib.ArticleUrlsChan)
+		ach := make(chan *a.ArticleUrlsChan)
 		for _, url := range feedUrls {
-			go lib.GetArticleUrlsFromFeed(url, ach)
+			go a.GetArticleUrlsFromFeed(url, ach)
 			aurls := <-ach
 			for _, aurl := range aurls.Urls {
 				host, _ := lib.GetHost(url)
@@ -75,8 +79,8 @@ var cmdGetArticles = &cobra.Command{
 		close(ach)
 		wg.Wait()
 
-		lib.Debugger.Println("Sending request to brevity to process summaries")
-		go lib.ProcessSummaries(nil)
+		articlesDebugger.Println("Sending request to brevity to process summaries")
+		go a.ProcessSummaries(nil)
 		/*var err error
 		foodArticles := lib.FilterArticlesForRecipeExtraction(articles)
 		if len(foodArticles) > 0 {
@@ -93,14 +97,14 @@ var cmdGetArticles = &cobra.Command{
 }
 
 func ProcessArticle(articleUrl string) {
-	article, _, _, err := lib.ParseArticleAtURL(articleUrl, body /* global flag */)
+	article, _, _, err := a.ParseArticleAtURL(articleUrl, body /* global flag */)
 	if err != nil {
-		lib.Debugger.Println("Failed to process article: ", err)
+		articlesDebugger.Println("Failed to process article: ", err)
 		return
 	}
 
 	if globalConfig.MongoUrl != "" {
-		lib.Debugger.Println("Attempting to save article ...")
+		articlesDebugger.Println("Attempting to save article ...")
 		session := lib.DBConnect(globalConfig.MongoUrl)
 		defer lib.DBClose(session)
 		article.Save(session)
@@ -125,7 +129,7 @@ var cmdCopyArticles = &cobra.Command{
 		}
 		url := args[0]
 
-		articles, err := lib.LoadRemoteArticles(url)
+		articles, err := a.LoadRemoteArticles(url)
 		if err != nil {
 			panic(err)
 		}
@@ -133,7 +137,7 @@ var cmdCopyArticles = &cobra.Command{
 		//printArticleBrief(articles)
 
 		fmt.Printf("Saving %d articles...\n", len(articles))
-		err = lib.SaveArticles(globalConfig.MongoUrl, articles)
+		err = a.SaveArticles(globalConfig.MongoUrl, articles)
 		if err != nil {
 			panic(err)
 		}
