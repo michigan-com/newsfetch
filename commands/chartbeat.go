@@ -5,6 +5,7 @@ import (
 	"sync"
 	"time"
 
+	f "github.com/michigan-com/newsfetch/fetch/chartbeat"
 	"github.com/michigan-com/newsfetch/lib"
 	"github.com/spf13/cobra"
 )
@@ -84,24 +85,24 @@ func RunChartbeatCommands(beats []Beat) {
 
 func (t *TopPages) Run(mongoUri string) {
 	chartbeatDebugger.Println("Fetching toppages")
-	urls, err := lib.FormatChartbeatUrls("live/toppages/v3", lib.Sites, globalConfig.ChartbeatApiKey)
+	urls, err := f.FormatChartbeatUrls("live/toppages/v3", lib.Sites, globalConfig.ChartbeatApiKey)
 
 	if err != nil {
 		chartbeatDebugger.Printf("ERROR: %v", err)
 		return
 	}
 
-	snapshot := lib.FetchTopPages(urls)
+	snapshot := f.FetchTopPages(urls)
 
 	if globalConfig.MongoUrl != "" {
 		chartbeatDebugger.Println("Saving toppages snapshot")
-		err := lib.SaveTopPagesSnapshot(snapshot, globalConfig.MongoUrl)
+		err := f.SaveTopPagesSnapshot(snapshot, globalConfig.MongoUrl)
 		if err != nil {
 			chartbeatDebugger.Printf("ERROR: %v", err)
 			return
 		}
 
-		lib.CalculateTimeInterval(snapshot, globalConfig.MongoUrl)
+		f.CalculateTimeInterval(snapshot, globalConfig.MongoUrl)
 
 		// Update mapi to let it know that a new snapshot has been saved
 		_, err = http.Get("https://api.michigan.com/popular/")
@@ -119,18 +120,18 @@ func (t *TopPages) Run(mongoUri string) {
 func (q *QuickStats) Run(mongoUri string) {
 	chartbeatDebugger.Printf("Quickstats")
 
-	urls, err := lib.FormatChartbeatUrls("live/quickstats/v4", lib.Sites, globalConfig.ChartbeatApiKey)
+	urls, err := f.FormatChartbeatUrls("live/quickstats/v4", lib.Sites, globalConfig.ChartbeatApiKey)
 	if err != nil {
 		chartbeatDebugger.Println("ERROR: %v", err)
 		return
 	}
 
-	quickStats := lib.FetchQuickStats(urls)
+	quickStats := f.FetchQuickStats(urls)
 
 	if globalConfig.MongoUrl != "" {
 		chartbeatDebugger.Printf("Saving quickstats...")
 
-		lib.SaveQuickStats(quickStats, globalConfig.MongoUrl)
+		f.SaveQuickStats(quickStats, globalConfig.MongoUrl)
 
 		// Update mapi
 		_, err = http.Get("https://api.michigan.com/quickstats/")
@@ -141,5 +142,6 @@ func (q *QuickStats) Run(mongoUri string) {
 		}
 	} else {
 		chartbeatDebugger.Printf("Variable 'mongoUri' not specified, no data will be saved")
+		chartbeatDebugger.Printf("%v", quickStats)
 	}
 }

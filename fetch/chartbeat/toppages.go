@@ -1,4 +1,4 @@
-package lib
+package fetch
 
 import (
 	"encoding/json"
@@ -10,6 +10,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/michigan-com/newsfetch/lib"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -59,7 +60,7 @@ type ArticleStats struct {
 	to be http://api.chartbeat.com/live/toppages/v3
 */
 func FetchTopPages(urls []string) []*TopArticle {
-	Debugger.Println("Fetching chartbeat top pages")
+	chartbeatDebugger.Println("Fetching chartbeat top pages")
 	topArticles := make([]*TopArticle, 0, 100*len(urls))
 	articleQueue := make(chan *TopArticle, 100*len(urls))
 
@@ -73,7 +74,7 @@ func FetchTopPages(urls []string) []*TopArticle {
 			host, _ := GetHostFromParams(url)
 
 			if err != nil {
-				Debugger.Println("%v", err)
+				chartbeatDebugger.Println("%v", err)
 				wg.Done()
 				return
 			}
@@ -81,7 +82,7 @@ func FetchTopPages(urls []string) []*TopArticle {
 			for i := 0; i < len(pages.Pages); i++ {
 				page := pages.Pages[i]
 				articleUrl := page.Path
-				articleId := GetArticleId(articleUrl)
+				articleId := lib.GetArticleId(articleUrl)
 				article := &TopArticle{}
 
 				// this means we can't find an article ID. It's probably a section front,
@@ -105,40 +106,40 @@ func FetchTopPages(urls []string) []*TopArticle {
 	}
 
 	wg.Wait()
-	Debugger.Println("Done")
+	chartbeatDebugger.Println("Done")
 	close(articleQueue)
 
 	for article := range articleQueue {
 		topArticles = append(topArticles, article)
 	}
 
-	Debugger.Printf("Num article: %d", len(topArticles))
+	chartbeatDebugger.Printf("Num article: %d", len(topArticles))
 
-	Debugger.Println("Done fetching and parsing URLs...")
+	chartbeatDebugger.Println("Done fetching and parsing URLs...")
 
 	return SortTopArticles(topArticles)
 }
 
 func CalculateTimeInterval(articles []*TopArticle, mongoUri string) {
 	if mongoUri == "" {
-		Debugger.Printf("No mongoUri, cannot calculate time intervals")
+		chartbeatDebugger.Printf("No mongoUri, cannot calculate time intervals")
 		return
 	}
 
-	Debugger.Printf("Updating numbers for articles for this given time interval")
+	chartbeatDebugger.Printf("Updating numbers for articles for this given time interval")
 	articleIds := make([]int, len(articles), len(articles))
 	articleVisits := map[int]int{}
-	savedArticles := make([]*Article, len(articles), len(articles))
+	savedArticles := make([]*lib.Article, len(articles), len(articles))
 
 	for _, article := range articles {
 		articleIds = append(articleIds, article.ArticleId)
 		articleVisits[article.ArticleId] = article.Visits
 	}
 
-	session := DBConnect(mongoUri)
-	defer DBClose(session)
+	session := lib.DBConnect(mongoUri)
+	defer lib.DBClose(session)
 	db := session.DB("")
-	articleCol := db.C("Article")
+	articleCol := db.C("lib.Article")
 
 	err := articleCol.
 		Find(bson.M{
@@ -153,7 +154,7 @@ func CalculateTimeInterval(articles []*TopArticle, mongoUri string) {
 		All(&savedArticles)
 
 	if err != nil {
-		Debugger.Printf("ERROR: %v", err)
+		chartbeatDebugger.Printf("ERROR: %v", err)
 		return
 	}
 
@@ -164,7 +165,7 @@ func CalculateTimeInterval(articles []*TopArticle, mongoUri string) {
 
 // In-memory adjusting of time intervals. Easier for testing since it doesnt
 // hit mongo
-func calculateTimeInterval(savedArticles []*Article, articleVisits map[int]int) {
+func calculateTimeInterval(savedArticles []*lib.Article, articleVisits map[int]int) {
 	now := time.Now()
 
 	for _, article := range savedArticles {
@@ -172,11 +173,11 @@ func calculateTimeInterval(savedArticles []*Article, articleVisits map[int]int) 
 		if !ok {
 			continue
 		}
-		CheckHourlyMax(article, now, visits)
+		lib.CheckHourlyMax(article, now, visits)
 	}
 }
 
-func saveTimeInterval(articles []*Article, session *mgo.Session) {
+func saveTimeInterval(articles []*lib.Article, session *mgo.Session) {
 	articleCol := session.DB("").C("Article")
 	for _, article := range articles {
 		err := articleCol.Update(bson.M{"_id": article.Id}, bson.M{
@@ -185,7 +186,7 @@ func saveTimeInterval(articles []*Article, session *mgo.Session) {
 			},
 		})
 		if err != nil {
-			Debugger.Printf("ERROR: %v", err)
+			chartbeatDebugger.Printf("ERROR: %v", err)
 		}
 	}
 }
@@ -220,14 +221,14 @@ func FormatChartbeatUrls(endPoint string, sites []string, apiKey string) ([]stri
 	read the response
 */
 func GetTopPages(url string) (*TopPages, error) {
-	Debugger.Println("Fetching %s", url)
+	chartbeatDebugger.Println("Fetching %s", url)
 
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err
 	}
 
-	Debugger.Println("Successfully fetched %s", url)
+	chartbeatDebugger.Println("Successfully fetched %s", url)
 
 	topPages := &TopPages{}
 
@@ -244,11 +245,11 @@ func GetTopPages(url string) (*TopPages, error) {
 	toppages - Sorted array of top articles
 */
 func SaveTopPagesSnapshot(toppages []*TopArticle, mongoUri string) error {
-	Debugger.Println("Saving snapshot ...")
+	chartbeatDebugger.Println("Saving snapshot ...")
 
 	// Save the current snapshot
-	session := DBConnect(mongoUri)
-	defer DBClose(session)
+	session := lib.DBConnect(mongoUri)
+	defer lib.DBClose(session)
 	snapshotCollection := session.DB("").C("Toppages")
 	snapshot := TopPagesSnapshot{}
 	snapshot.Articles = toppages
@@ -268,14 +269,14 @@ func SaveTopPagesSnapshot(toppages []*TopArticle, mongoUri string) error {
 	})
 
 	if err != nil {
-		Debugger.Println("Error when removing older snapshots: %v", err)
+		chartbeatDebugger.Println("Error when removing older snapshots: %v", err)
 	}
 
 	return nil
 }
 
 func SortTopArticles(articles []*TopArticle) []*TopArticle {
-	Debugger.Println("Sorting articles ...")
+	chartbeatDebugger.Println("Sorting articles ...")
 	sort.Sort(ByVisits(articles))
 	return articles
 }

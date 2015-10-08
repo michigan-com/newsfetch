@@ -1,4 +1,4 @@
-package lib
+package fetch
 
 import (
 	"encoding/json"
@@ -9,6 +9,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/michigan-com/newsfetch/lib"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -59,7 +60,7 @@ func FetchQuickStats(urls []string) []*QuickStats {
 			stats, err := GetQuickStats(url)
 
 			if err != nil {
-				Debugger.Println("ERROR: %v", err)
+				chartbeatDebugger.Println("ERROR: %v", err)
 			} else {
 				statQueue <- stats
 			}
@@ -79,13 +80,13 @@ func FetchQuickStats(urls []string) []*QuickStats {
 }
 
 func GetQuickStats(url string) (*QuickStats, error) {
-	Debugger.Println("Fetching %s", url)
+	chartbeatDebugger.Println("Fetching %s", url)
 
 	// Parse out the host we're getting data on
 	host, err := GetHostFromParams(url)
 	if err != nil {
-		Debugger.Printf("ERROR: %v", err)
-		Debugger.Printf("Host will be \"\"")
+		chartbeatDebugger.Printf("ERROR: %v", err)
+		chartbeatDebugger.Printf("Host will be \"\"")
 	}
 
 	resp, err := http.Get(url)
@@ -93,7 +94,7 @@ func GetQuickStats(url string) (*QuickStats, error) {
 		return nil, err
 	}
 
-	Debugger.Println("Successfully fetched %s", url)
+	chartbeatDebugger.Println("Successfully fetched %s", url)
 
 	quickStatsResp := &QuickStatsResp{}
 	decoder := json.NewDecoder(resp.Body)
@@ -111,8 +112,8 @@ func GetQuickStats(url string) (*QuickStats, error) {
 
 func SaveQuickStats(quickStats []*QuickStats, mongoUri string) {
 
-	session := DBConnect(mongoUri)
-	defer DBClose(session)
+	session := lib.DBConnect(mongoUri)
+	defer lib.DBClose(session)
 
 	quickStatsCol := session.DB("").C("Quickstats")
 
@@ -123,7 +124,7 @@ func SaveQuickStats(quickStats []*QuickStats, mongoUri string) {
 	err := quickStatsCol.Insert(snapshot)
 
 	if err != nil {
-		Debugger.Printf("ERROR: %v", err)
+		chartbeatDebugger.Printf("ERROR: %v", err)
 	}
 
 	// Remove old snapshots
@@ -139,7 +140,7 @@ func SaveQuickStats(quickStats []*QuickStats, mongoUri string) {
 	})
 
 	if err != nil {
-		Debugger.Printf("Error while removing old quickstats snapshots %v", err)
+		chartbeatDebugger.Printf("Error while removing old quickstats snapshots %v", err)
 	}
 }
 
@@ -165,7 +166,7 @@ func GetHostFromParams(inputUrl string) (string, error) {
 }
 
 func SortQuickStats(quickStats []*QuickStats) []*QuickStats {
-	Debugger.Println("Sorting quickstats ...")
+	chartbeatDebugger.Println("Sorting quickstats ...")
 	sort.Sort(QuickStatsSort(quickStats))
 	return quickStats
 }
