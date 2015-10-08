@@ -2,8 +2,6 @@ package fetch
 
 import (
 	"encoding/json"
-	"errors"
-	"fmt"
 	"net/http"
 	"sort"
 	"strings"
@@ -17,54 +15,21 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
-const chartbeatApiUrlFormat = "http://api.chartbeat.com/%s/?apikey=%s&host=%s&limit=100"
-
 /** Sorting stuff */
-type ByVisits []*TopArticle
+type ByVisits []*m.TopArticle
 
 func (a ByVisits) Len() int           { return len(a) }
 func (a ByVisits) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a ByVisits) Less(i, j int) bool { return a[i].Visits > a[j].Visits }
 
-type TopPagesSnapshot struct {
-	Id         bson.ObjectId `bson:"_id,omitempty"`
-	Created_at time.Time     `bson:"created_at"`
-	Articles   []*TopArticle `bson:"articles"`
-}
-type TopArticle struct {
-	Id        bson.ObjectId `bson:"_id,omitempty"`
-	ArticleId int           `bson:"article_id"`
-	Headline  string        `bson:"headline"`
-	Url       string        `bson:"url"`
-	Source    string        `bson:"source"`
-	Sections  []string      `bson:"sections"`
-	Visits    int           `bson:"visits"`
-}
-
-type TopPages struct {
-	Site  string
-	Pages []*ArticleContent `json:"pages"`
-}
-
-type ArticleContent struct {
-	Path     string        `json:"path"`
-	Sections []string      `json:"sections"`
-	Stats    *ArticleStats `json: "stats"`
-	Title    string        `json:"title"`
-}
-
-type ArticleStats struct {
-	Visits int `json:"visits"`
-}
-
 /*
 	Fetch the top pages data for each url in the urls parameter. Url expected
 	to be http://api.chartbeat.com/live/toppages/v3
 */
-func FetchTopPages(urls []string) []*TopArticle {
+func FetchTopPages(urls []string) []*m.TopArticle {
 	chartbeatDebugger.Println("Fetching chartbeat top pages")
-	topArticles := make([]*TopArticle, 0, 100*len(urls))
-	articleQueue := make(chan *TopArticle, 100*len(urls))
+	topArticles := make([]*m.TopArticle, 0, 100*len(urls))
+	articleQueue := make(chan *m.TopArticle, 100*len(urls))
 
 	var wg sync.WaitGroup
 
@@ -85,7 +50,7 @@ func FetchTopPages(urls []string) []*TopArticle {
 				page := pages.Pages[i]
 				articleUrl := page.Path
 				articleId := lib.GetArticleId(articleUrl)
-				article := &TopArticle{}
+				article := &m.TopArticle{}
 
 				// this means we can't find an article ID. It's probably a section front,
 				// so ignore
@@ -122,7 +87,7 @@ func FetchTopPages(urls []string) []*TopArticle {
 	return SortTopArticles(topArticles)
 }
 
-func CalculateTimeInterval(articles []*TopArticle, mongoUri string) {
+func CalculateTimeInterval(articles []*m.TopArticle, mongoUri string) {
 	if mongoUri == "" {
 		chartbeatDebugger.Printf("No mongoUri, cannot calculate time intervals")
 		return
@@ -194,35 +159,10 @@ func saveTimeInterval(articles []*m.Article, session *mgo.Session) {
 }
 
 /*
-	Format chartbeat URLs based on a chartbeat API endpoint
-
-	Format: http://api.chartbeat.com/<endPoint>/?apikey=<key>&host=<site[i]>
-
-	Example endPoint (NOTE no starting or ending slashes): live/toppages/v3
-*/
-func FormatChartbeatUrls(endPoint string, sites []string, apiKey string) ([]string, error) {
-	urls := make([]string, 0, len(sites))
-
-	if apiKey == "" {
-		return urls, errors.New(fmt.Sprintf("No API key specified. Use the -k flag to specify (Run ./newsfetch chartbeat --help for more info)"))
-	}
-
-	for i := 0; i < len(sites); i++ {
-		site := sites[i]
-
-		url := fmt.Sprintf(chartbeatApiUrlFormat, endPoint, apiKey, site)
-
-		urls = append(urls, url)
-	}
-
-	return urls, nil
-}
-
-/*
 	Given a URL for the api.chartbeat.com/live/toppages/v3 API, get the data and
 	read the response
 */
-func GetTopPages(url string) (*TopPages, error) {
+func GetTopPages(url string) (*m.TopPages, error) {
 	chartbeatDebugger.Println("Fetching %s", url)
 
 	resp, err := http.Get(url)
@@ -232,7 +172,7 @@ func GetTopPages(url string) (*TopPages, error) {
 
 	chartbeatDebugger.Println("Successfully fetched %s", url)
 
-	topPages := &TopPages{}
+	topPages := &m.TopPages{}
 
 	decoder := json.NewDecoder(resp.Body)
 	err = decoder.Decode(&topPages)
@@ -246,14 +186,14 @@ func GetTopPages(url string) (*TopPages, error) {
 	mongoUri - connection string to Mongodb
 	toppages - Sorted array of top articles
 */
-func SaveTopPagesSnapshot(toppages []*TopArticle, mongoUri string) error {
+func SaveTopPagesSnapshot(toppages []*m.TopArticle, mongoUri string) error {
 	chartbeatDebugger.Println("Saving snapshot ...")
 
 	// Save the current snapshot
 	session := lib.DBConnect(mongoUri)
 	defer lib.DBClose(session)
 	snapshotCollection := session.DB("").C("Toppages")
-	snapshot := TopPagesSnapshot{}
+	snapshot := m.TopPagesSnapshot{}
 	snapshot.Articles = toppages
 	snapshot.Created_at = time.Now()
 	snapshotCollection.Insert(snapshot)
@@ -277,7 +217,7 @@ func SaveTopPagesSnapshot(toppages []*TopArticle, mongoUri string) error {
 	return nil
 }
 
-func SortTopArticles(articles []*TopArticle) []*TopArticle {
+func SortTopArticles(articles []*m.TopArticle) []*m.TopArticle {
 	chartbeatDebugger.Println("Sorting articles ...")
 	sort.Sort(ByVisits(articles))
 	return articles

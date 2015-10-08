@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/michigan-com/newsfetch/lib"
+	m "github.com/michigan-com/newsfetch/model"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -40,9 +41,9 @@ func TestSaveQuickStats(t *testing.T) {
 	}
 
 	numStats := 20
-	quickStats := make([]*QuickStats, 0, numStats)
+	quickStats := make([]*m.QuickStats, 0, numStats)
 	for i := 0; i < numStats; i++ {
-		stat := &QuickStats{}
+		stat := &m.QuickStats{}
 		stat.Visits = lib.RandomInt(100)
 
 		quickStats = append(quickStats, stat)
@@ -70,7 +71,7 @@ func TestSaveQuickStats(t *testing.T) {
 		t.Fatalf("Should be 1 Quickstats snapshot, there are %d", count)
 	}
 
-	snapshot := &QuickStatsSnapshot{}
+	snapshot := &m.QuickStatsSnapshot{}
 	col.Find(bson.M{}).One(&snapshot)
 	expectedLen, actualLen := len(quickStats), len(snapshot.Stats)
 
@@ -116,9 +117,9 @@ func TestGetHostFromParams(t *testing.T) {
 
 func TestSortQuickStats(t *testing.T) {
 	numQuickStats := 20
-	quickStats := make([]*QuickStats, 0, numQuickStats)
+	quickStats := make([]*m.QuickStats, 0, numQuickStats)
 	for i := 0; i < numQuickStats; i++ {
-		quickStat := &QuickStats{}
+		quickStat := &m.QuickStats{}
 		quickStat.Visits = lib.RandomInt(100)
 		quickStats = append(quickStats, quickStat)
 	}
@@ -130,7 +131,7 @@ func TestSortQuickStats(t *testing.T) {
 	}
 }
 
-func confirmQuickStatsSort(sorted []*QuickStats) bool {
+func confirmQuickStatsSort(sorted []*m.QuickStats) bool {
 	lastVal := -1
 	for i, stats := range sorted {
 		if lastVal == -1 {

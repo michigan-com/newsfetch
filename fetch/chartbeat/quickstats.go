@@ -10,48 +10,20 @@ import (
 	"time"
 
 	"github.com/michigan-com/newsfetch/lib"
+	m "github.com/michigan-com/newsfetch/model"
 	"gopkg.in/mgo.v2/bson"
 )
 
-type QuickStatsSnapshot struct {
-	Id         bson.ObjectId `bson:"_id,omitempty"`
-	Created_at time.Time     `bson:"created_at"`
-	Stats      []*QuickStats `bson:"stats"`
-}
-
-type QuickStatsResp struct {
-	Data *QuickStatsRespStats `bson:"data"`
-}
-
-type QuickStatsRespStats struct {
-	Stats *QuickStats `bson:"stats"`
-}
-
-type QuickStats struct {
-	Source   string        `bson:source`
-	Visits   int           `bson:"visits"`
-	Links    int           `bson:"links"`
-	Direct   int           `bson:"direct"`
-	Search   int           `bson:"search"`
-	Social   int           `bson:"social"`
-	Platform PlatformStats `bson:"platform"`
-}
-
-type PlatformStats struct {
-	M int `bson:"m"`
-	D int `bson:"d"`
-}
-
-type QuickStatsSort []*QuickStats
+type QuickStatsSort []*m.QuickStats
 
 func (q QuickStatsSort) Len() int           { return len(q) }
 func (q QuickStatsSort) Swap(i, j int)      { q[i], q[j] = q[j], q[i] }
 func (q QuickStatsSort) Less(i, j int) bool { return q[i].Visits > q[j].Visits }
 
-func FetchQuickStats(urls []string) []*QuickStats {
+func FetchQuickStats(urls []string) []*m.QuickStats {
 
 	var urlWait sync.WaitGroup
-	statQueue := make(chan *QuickStats, len(urls))
+	statQueue := make(chan *m.QuickStats, len(urls))
 
 	for _, url := range urls {
 		urlWait.Add(1)
@@ -71,7 +43,7 @@ func FetchQuickStats(urls []string) []*QuickStats {
 	urlWait.Wait()
 	close(statQueue)
 
-	quickStats := make([]*QuickStats, 0, len(urls))
+	quickStats := make([]*m.QuickStats, 0, len(urls))
 	for stats := range statQueue {
 		quickStats = append(quickStats, stats)
 	}
@@ -79,7 +51,7 @@ func FetchQuickStats(urls []string) []*QuickStats {
 	return SortQuickStats(quickStats)
 }
 
-func GetQuickStats(url string) (*QuickStats, error) {
+func GetQuickStats(url string) (*m.QuickStats, error) {
 	chartbeatDebugger.Println("Fetching %s", url)
 
 	// Parse out the host we're getting data on
@@ -96,7 +68,7 @@ func GetQuickStats(url string) (*QuickStats, error) {
 
 	chartbeatDebugger.Println("Successfully fetched %s", url)
 
-	quickStatsResp := &QuickStatsResp{}
+	quickStatsResp := &m.QuickStatsResp{}
 	decoder := json.NewDecoder(resp.Body)
 	err = decoder.Decode(&quickStatsResp)
 
@@ -110,7 +82,7 @@ func GetQuickStats(url string) (*QuickStats, error) {
 	return quickStats, err
 }
 
-func SaveQuickStats(quickStats []*QuickStats, mongoUri string) {
+func SaveQuickStats(quickStats []*m.QuickStats, mongoUri string) {
 
 	session := lib.DBConnect(mongoUri)
 	defer lib.DBClose(session)
@@ -118,7 +90,7 @@ func SaveQuickStats(quickStats []*QuickStats, mongoUri string) {
 	quickStatsCol := session.DB("").C("Quickstats")
 
 	// Insert this snapshot
-	snapshot := QuickStatsSnapshot{}
+	snapshot := m.QuickStatsSnapshot{}
 	snapshot.Created_at = time.Now()
 	snapshot.Stats = quickStats
 	err := quickStatsCol.Insert(snapshot)
@@ -165,7 +137,7 @@ func GetHostFromParams(inputUrl string) (string, error) {
 	return host, err
 }
 
-func SortQuickStats(quickStats []*QuickStats) []*QuickStats {
+func SortQuickStats(quickStats []*m.QuickStats) []*m.QuickStats {
 	chartbeatDebugger.Println("Sorting quickstats ...")
 	sort.Sort(QuickStatsSort(quickStats))
 	return quickStats

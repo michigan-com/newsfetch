@@ -43,6 +43,16 @@ func TestFormatChartbeatUrls(t *testing.T) {
 		}
 	}
 
+	// Add some url params
+	urlString := "this=1234&that=abcd&other=what"
+	formattedUrls = AddUrlParams(formattedUrls, urlString)
+	for _, url := range formattedUrls {
+		if !strings.HasSuffix(url, urlString) {
+			t.Fatalf("Url %s should end with %s", url, urlString)
+		}
+		t.Log("Url %s checks out", url)
+	}
+
 	// Test with no sites
 	endPoint = "blah"
 	formattedUrls, err = FormatChartbeatUrls(endPoint, []string{}, apiKey)
