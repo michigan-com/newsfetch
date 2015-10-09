@@ -10,7 +10,7 @@ APP_DIR="$GOPATH/src/github.com/michigan-com/newsfetch"
 cd $APP_DIR
 
 printer "Updating newsfetch golang src ..."
-git pull deploy master
+git pull deploy live
 
 printer "Download any required third part libraries ..."
 go get
