@@ -74,7 +74,6 @@ var cmdGetArticles = &cobra.Command{
 					ProcessArticle(url)
 				}(fmt.Sprintf("http://%s.com%s", host, aurl))
 			}
-
 		}
 		close(ach)
 		wg.Wait()
