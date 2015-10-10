@@ -5,6 +5,7 @@ import (
 
 	gq "github.com/PuerkitoBio/goquery"
 	"github.com/michigan-com/newsfetch/extraction/classify"
+	"github.com/michigan-com/newsfetch/extraction/dateline"
 	"github.com/michigan-com/newsfetch/extraction/recipe_parsing"
 	m "github.com/michigan-com/newsfetch/model"
 )
@@ -63,6 +64,10 @@ func ExtractBodyFromDocument(doc *gq.Document, fromJSON bool, includeTitle bool)
 
 		return marker + text
 	})
+
+	if len(paragraphStrings) > 0 {
+		paragraphStrings[0] = dateline.RemoveDateline(paragraphStrings[0])
+	}
 
 	content := make([]string, 0, len(paragraphStrings)+1)
 	if includeTitle {
