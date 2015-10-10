@@ -1,4 +1,4 @@
-package extraction
+package recipe_parsing
 
 import (
 	"regexp"

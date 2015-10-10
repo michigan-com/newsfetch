@@ -1,9 +1,10 @@
-package extraction
+package classify
 
 import (
 	"fmt"
 	"strings"
-	"unicode"
+
+	"github.com/michigan-com/newsfetch/extraction/split"
 )
 
 var ignoredWords = makeTable(`
@@ -56,7 +57,7 @@ var unwantedRecs = []unwantedInformationRec{
 }
 
 func IsWorthyParagraph(text string) (bool, string) {
-	words := SplitWords(text)
+	words := split.SplitWords(text)
 	lowerWords := stringsToLower(words)
 	total := len(words)
 
@@ -89,53 +90,4 @@ func IsWorthyParagraph(text string) (bool, string) {
 	}
 
 	return true, strings.Join(rationales, "; ")
-}
-
-func makeTable(spaceSeparated string) map[string]bool {
-	items := strings.Fields(spaceSeparated)
-
-	table := make(map[string]bool, len(items))
-
-	for _, item := range items {
-		table[item] = true
-	}
-
-	return table
-}
-
-func stringsToLower(input []string) []string {
-	result := make([]string, 0, len(input))
-	for _, el := range input {
-		el = strings.Map(unicode.ToLower, el)
-		result = append(result, el)
-	}
-	return result
-}
-
-func countIrregulars(words []string) int {
-	c := 0
-	for _, word := range words {
-		if !IsRegularWord(word) {
-			c++
-		}
-	}
-	return c
-}
-
-func countInTable(table map[string]bool, words []string) int {
-	c := 0
-	for _, word := range words {
-		if table[word] {
-			c++
-		}
-	}
-	return c
-}
-
-func percentageOf(amount, total int) int {
-	if total == 0 {
-		return 0
-	} else {
-		return amount * 100 / total
-	}
 }

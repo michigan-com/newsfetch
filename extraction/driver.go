@@ -4,6 +4,7 @@ import (
 	"bytes"
 
 	gq "github.com/PuerkitoBio/goquery"
+	"github.com/michigan-com/newsfetch/extraction/body_parsing"
 	m "github.com/michigan-com/newsfetch/model"
 )
 
@@ -13,7 +14,7 @@ func ExtractDataFromHTMLString(html string, url string, includeTitle bool) *m.Ex
 		return nil
 	}
 
-	extracted := extractBodyFromDocument(doc, true, includeTitle)
+	extracted := body_parsing.ExtractBodyFromDocument(doc, true, includeTitle)
 	for _, recipe := range extracted.RecipeData.Recipes {
 		recipe.Url = url
 	}
@@ -28,7 +29,7 @@ func ExtractDataFromHTMLAtURL(url string, includeTitle bool) *m.ExtractedBody {
 		return nil
 	}
 
-	extracted := extractBodyFromDocument(doc, false, includeTitle)
+	extracted := body_parsing.ExtractBodyFromDocument(doc, false, includeTitle)
 	for _, recipe := range extracted.RecipeData.Recipes {
 		recipe.Url = url
 	}

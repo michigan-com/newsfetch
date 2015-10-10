@@ -1,4 +1,4 @@
-package extraction
+package split
 
 import (
 	"strings"
