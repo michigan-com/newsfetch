@@ -3,6 +3,7 @@ package model
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -66,4 +67,27 @@ func (r Recipe) String() string {
 	out := new(bytes.Buffer)
 	json.Indent(out, b, "", "  ")
 	return out.String()
+}
+
+func (r Recipe) PlainLines() []string {
+	var lines []string
+	lines = append(lines, fmt.Sprintf("Title: %#v", r.Title))
+
+	if r.ServingSize != "" {
+		lines = append(lines, fmt.Sprintf("Serving size: %#v", r.ServingSize))
+	}
+	if r.TotalTime != nil {
+		lines = append(lines, fmt.Sprintf("Total time: %#v", r.TotalTime.Text))
+	}
+	if r.PreparationTime != nil {
+		lines = append(lines, fmt.Sprintf("Prep time: %#v", r.PreparationTime.Text))
+	}
+	for _, item := range r.Ingredients {
+		lines = append(lines, fmt.Sprintf("I: %#v", item.Text))
+	}
+	for _, item := range r.Instructions {
+		lines = append(lines, fmt.Sprintf("D: %#v", item.Text))
+	}
+
+	return lines
 }
