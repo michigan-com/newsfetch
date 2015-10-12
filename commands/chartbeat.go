@@ -17,6 +17,7 @@ type Beat interface {
 
 type TopPages struct{}
 type QuickStats struct{}
+type TopGeo struct{}
 
 var chartbeatDebugger = lib.NewCondLogger("chartbeat")
 
@@ -29,7 +30,7 @@ var cmdAllBeats = &cobra.Command{
 	Use:   "all",
 	Short: "Fetch all Chartbeat Beats (toppages, quickstats)",
 	Run: func(cmd *cobra.Command, argv []string) {
-		RunChartbeatCommands([]Beat{&TopPages{}, &QuickStats{}})
+		RunChartbeatCommands([]Beat{&TopPages{}, &QuickStats{}, &TopGeo{}})
 	},
 }
 
@@ -46,6 +47,14 @@ var cmdQuickStats = &cobra.Command{
 	Short: "Fetch quickstats snapshot for Chartbeat",
 	Run: func(cmd *cobra.Command, argv []string) {
 		RunChartbeatCommands([]Beat{&QuickStats{}})
+	},
+}
+
+var cmdTopGeo = &cobra.Command{
+	Use:   "topgeo",
+	Short: "Fetch topgeo snapshot for Chartbeat",
+	Run: func(cmd *cobra.Command, argv []string) {
+		RunChartbeatCommands([]Beat{&TopGeo{}})
 	},
 }
 
@@ -144,5 +153,34 @@ func (q *QuickStats) Run(mongoUri string) {
 	} else {
 		chartbeatDebugger.Printf("Variable 'mongoUri' not specified, no data will be saved")
 		chartbeatDebugger.Printf("%v", quickStats)
+	}
+}
+
+func (t *TopGeo) Run(mongoUri string) {
+	chartbeatDebugger.Printf("Topgeo")
+
+	urls, err := f.FormatChartbeatUrls("live/top_geo/v1", lib.Sites, globalConfig.ChartbeatApiKey)
+	if err != nil {
+		chartbeatDebugger.Println("ERROR: %v", err)
+		return
+	}
+
+	topGeo := f.FetchTopGeo(urls)
+
+	if globalConfig.MongoUrl != "" {
+		chartbeatDebugger.Printf("Saving topgeo...")
+
+		f.SaveTopGeo(topGeo, globalConfig.MongoUrl)
+
+		// Update mapi
+		_, err = http.Get("https://api.michigan.com/topgeo/")
+		if err != nil {
+			chartbeatDebugger.Printf("%v", err)
+		} else {
+			chartbeatDebugger.Printf("Updated topgeo snapshot at Mapi at %v", time.Now())
+		}
+	} else {
+		chartbeatDebugger.Printf("Variable 'mongoUri' not specified, no data will be saved")
+		chartbeatDebugger.Printf("%v", topGeo)
 	}
 }
