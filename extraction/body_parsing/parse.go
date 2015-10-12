@@ -1,9 +1,12 @@
-package extraction
+package body_parsing
 
 import (
 	"strings"
 
 	gq "github.com/PuerkitoBio/goquery"
+	"github.com/michigan-com/newsfetch/extraction/classify"
+	"github.com/michigan-com/newsfetch/extraction/dateline"
+	"github.com/michigan-com/newsfetch/extraction/recipe_parsing"
 	m "github.com/michigan-com/newsfetch/model"
 )
 
@@ -17,7 +20,7 @@ func withoutEmptyStrings(strings []string) []string {
 	return result
 }
 
-func extractBodyFromDocument(doc *gq.Document, fromJSON bool, includeTitle bool) *m.ExtractedBody {
+func ExtractBodyFromDocument(doc *gq.Document, fromJSON bool, includeTitle bool) *m.ExtractedBody {
 	msg := new(m.Messages)
 
 	var paragraphs *gq.Selection
@@ -46,7 +49,7 @@ func extractBodyFromDocument(doc *gq.Document, fromJSON bool, includeTitle bool)
 
 		text := strings.TrimSpace(paragraph.Text())
 
-		if worthy, _ := IsWorthyParagraph(text); !worthy {
+		if worthy, _ := classify.IsWorthyParagraph(text); !worthy {
 			return ""
 		}
 
@@ -62,6 +65,10 @@ func extractBodyFromDocument(doc *gq.Document, fromJSON bool, includeTitle bool)
 		return marker + text
 	})
 
+	if len(paragraphStrings) > 0 {
+		paragraphStrings[0] = dateline.RemoveDateline(paragraphStrings[0])
+	}
+
 	content := make([]string, 0, len(paragraphStrings)+1)
 	if includeTitle {
 		title := ExtractTitleFromDocument(doc)
@@ -71,7 +78,7 @@ func extractBodyFromDocument(doc *gq.Document, fromJSON bool, includeTitle bool)
 	content = append(content, withoutEmptyStrings(paragraphStrings)...)
 
 	body := strings.Join(content, "\n")
-	recipeData, recipeMsg := ExtractRecipes(doc)
+	recipeData, recipeMsg := recipe_parsing.ExtractRecipes(doc)
 	msg.AddMessages("recipes", recipeMsg)
 	extracted := m.ExtractedBody{body, recipeData, msg}
 	return &extracted

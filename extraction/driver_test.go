@@ -128,23 +128,22 @@ func TestIntegrationShoplifter(t *testing.T) {
 	})
 }
 
-// TODO
-// func TestIntegrationDingelHospital(t *testing.T) {
-// 	runTest(t, &TestRec{
-// 		url:       "http://www.freep.com/story/news/politics/2015/10/06/john-dingell-back-hospital/73464268/",
-// 		expected:  []string{},
-// 		forbidden: []string{`WASHINGTON`},
-// 		html: `
-// 			<p>WASHINGTON — Former U.S. Rep. John Dingell was admitted to Henry Ford Hospital on Monday and is expected to undergo a heart procedure, his wife's office said Tuesday.</p>
-// 			<p>According to a brief statement from U.S. Rep. Debbie Dingell's office, her husband, who she replaced in Congress this year, went to the hospital in Detroit on Monday and is currently being evaluated. He is 89.</p>
-// 			<p>Just before the congresswoman's office released the statement, her husband released his own statement via his Twitter feed, saying, "Back in the hospital. Being old sucks."</p>
-// 			<p>No other information was immediately released about Dingell's health or circumstances, but Mrs. Dingell's office said he was "resting comfortably under doctor's care and is his usual feisty self." The office also said Debbie Dingell will remain in Michigan this week rather than traveling to Washington, though the House is in session.</p>
-// 			<p>John Dingell retired from Congress early this year as its longest-serving member. Elected to replace his father, John Dingell Sr., in a special election in 1955, Dingell put together a career not only unparalleled in terms of longevity but helped write or pass much of the seminal legislation approved by Congress over the last 50 years.</p>
-// 			<p>He was also one of its most powerful chairmen, sitting for years as the top Democrat atop the House Energy and Commerce Committee, a panel he helped expand into one of Congress' most influential.</p>
-// 			<p>Dingell announced in early 2014 that he wouldn't run for a 30th full two-year term. Late last year, shortly after casting his last congressional votes, he spent three weeks in the hospital after suffering a hairline hip fracture.</p>
-// 			<p><em>Contact Todd Spangler: 703-854-8947 or tspangler@freepress.com. Follow him on Twitter  @tsspangler.</em></p>`,
-// 	})
-// }
+func TestIntegrationDingelHospital(t *testing.T) {
+	runTest(t, &TestRec{
+		url:       "http://www.freep.com/story/news/politics/2015/10/06/john-dingell-back-hospital/73464268/",
+		expected:  []string{},
+		forbidden: []string{`WASHINGTON`},
+		html: `
+			<p>WASHINGTON — Former U.S. Rep. John Dingell was admitted to Henry Ford Hospital on Monday and is expected to undergo a heart procedure, his wife's office said Tuesday.</p>
+			<p>According to a brief statement from U.S. Rep. Debbie Dingell's office, her husband, who she replaced in Congress this year, went to the hospital in Detroit on Monday and is currently being evaluated. He is 89.</p>
+			<p>Just before the congresswoman's office released the statement, her husband released his own statement via his Twitter feed, saying, "Back in the hospital. Being old sucks."</p>
+			<p>No other information was immediately released about Dingell's health or circumstances, but Mrs. Dingell's office said he was "resting comfortably under doctor's care and is his usual feisty self." The office also said Debbie Dingell will remain in Michigan this week rather than traveling to Washington, though the House is in session.</p>
+			<p>John Dingell retired from Congress early this year as its longest-serving member. Elected to replace his father, John Dingell Sr., in a special election in 1955, Dingell put together a career not only unparalleled in terms of longevity but helped write or pass much of the seminal legislation approved by Congress over the last 50 years.</p>
+			<p>He was also one of its most powerful chairmen, sitting for years as the top Democrat atop the House Energy and Commerce Committee, a panel he helped expand into one of Congress' most influential.</p>
+			<p>Dingell announced in early 2014 that he wouldn't run for a 30th full two-year term. Late last year, shortly after casting his last congressional votes, he spent three weeks in the hospital after suffering a hairline hip fracture.</p>
+			<p><em>Contact Todd Spangler: 703-854-8947 or tspangler@freepress.com. Follow him on Twitter  @tsspangler.</em></p>`,
+	})
+}
 
 func TestIntegrationBankRobbery(t *testing.T) {
 	runTest(t, &TestRec{
