@@ -1,11 +1,21 @@
 package model
 
 import (
-	"time"
 	"fmt"
+	"time"
+
+	"github.com/michigan-com/newsfetch/lib"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
+
+var Debugger = lib.NewCondLogger("article-model")
+
+var articleIdIndex = mgo.Index{
+	Key:      []string{"article_id"},
+	Unique:   true,
+	DropDups: true,
+}
 
 type Article struct {
 	Id          bson.ObjectId  `bson:"_id,omitempty" json:"_id"`
@@ -50,19 +60,24 @@ func (a *Article) String() string {
 func (article *Article) Save(session *mgo.Session) error {
 	// Save the snapshot
 	articleCol := session.DB("").C("Article")
+	err := articleCol.EnsureIndex(articleIdIndex)
+	if err != nil {
+		lib.Logger.Println("Article ensure article_id is unique failed: ", err)
+	}
+
 	art := Article{}
-	err := articleCol.
+	err = articleCol.
 		Find(bson.M{"article_id": article.ArticleId}).
 		Select(bson.M{"_id": 1, "created_at": 1}).
 		One(&art)
 	if err == nil {
 		article.Created_at = art.Created_at
 		articleCol.Update(bson.M{"_id": art.Id}, article)
-		// Debugger.Println("Article updated: ", article)
+		Debugger.Println("Article updated: ", article)
 	} else {
 		//bulk.Insert(article)
 		articleCol.Insert(article)
-		// Debugger.Println("Article added: ", article)
+		Debugger.Println("Article added: ", article)
 	}
 
 	return nil

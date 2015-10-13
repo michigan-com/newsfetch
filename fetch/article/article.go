@@ -178,21 +178,6 @@ func (a *ArticleIn) IsValid() bool {
 		return false
 	}
 
-	if a.Article.Photo == nil {
-		artDebugger.Println("Failed to find photo object: ", a)
-		return false
-	}
-
-	if a.Article.Photo.AssetMetadata == nil {
-		artDebugger.Println("Failed to find asset_metadata object: ", a)
-		return false
-	}
-
-	if a.Article.Photo.AssetMetadata.Attrs == nil {
-		artDebugger.Println("Failed to find photo.attrs object: ", a)
-		return false
-	}
-
 	return true
 }
 
@@ -206,9 +191,27 @@ func GetSiteFromHost(host string) (string, error) {
 	return match[1], nil
 }
 
-func (a *ArticleIn) Process(article *m.Article) error {
+func (a *ArticleIn) ProcessPhoto(article *m.Article) error {
 	art := a.Article
-	ssts := art.Ssts
+
+	if art.Photo == nil {
+		err := fmt.Sprintf("Failed to find photo object: %s", a)
+		artDebugger.Println(err)
+		return fmt.Errorf(err)
+	}
+
+	if art.Photo.AssetMetadata == nil {
+		err := fmt.Sprintf("Failed to find asset_metadata object: %s", a)
+		artDebugger.Println(err)
+		return fmt.Errorf(err)
+	}
+
+	if art.Photo.AssetMetadata.Attrs == nil {
+		err := fmt.Sprintf("Failed to find photo.attrs object: %s", a)
+		artDebugger.Println(err)
+		return fmt.Errorf(err)
+	}
+
 	attrs := art.Photo.AssetMetadata.Attrs
 
 	photoUrl := strings.Join([]string{attrs.PublishUrl, attrs.Basename}, "")
@@ -227,7 +230,7 @@ func (a *ArticleIn) Process(article *m.Article) error {
 	swidth, _ := strconv.Atoi(attrs.Swidth)
 	sheight, _ := strconv.Atoi(attrs.Sheight)
 
-	photo := m.Photo{
+	article.Photo = &m.Photo{
 		attrs.Caption,
 		attrs.Credit,
 		m.PhotoInfo{
@@ -241,6 +244,13 @@ func (a *ArticleIn) Process(article *m.Article) error {
 			sheight,
 		},
 	}
+
+	return nil
+}
+
+func (a *ArticleIn) Process(article *m.Article) error {
+	art := a.Article
+	ssts := art.Ssts
 
 	timestamp, aerr := time.Parse("2006-1-2T15:04:05.0000000", art.Metadata.Dates.Timestamp)
 	if aerr != nil {
@@ -258,7 +268,6 @@ func (a *ArticleIn) Process(article *m.Article) error {
 	article.Updated_at = time.Now()
 	article.Timestamp = timestamp
 	article.Url = a.Url
-	article.Photo = &photo
 
 	return nil
 }

@@ -8,15 +8,8 @@ import (
 
 	"github.com/michigan-com/newsfetch/lib"
 	m "github.com/michigan-com/newsfetch/model"
-	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
-
-var articleIdIndex = mgo.Index{
-	Key:      []string{"article_id"},
-	Unique:   true,
-	DropDups: true,
-}
 
 func SaveArticles(mongoUri string, articles []*m.Article) error {
 	session := lib.DBConnect(mongoUri)
@@ -29,9 +22,6 @@ func SaveArticles(mongoUri string, articles []*m.Article) error {
 	return nil
 }
 
-/*
- * DATA COMING IN
- */
 type Feed struct {
 	Site string
 	Body *struct {
