@@ -1,9 +1,9 @@
 package commands
 
 import (
-	"fmt"
 	"time"
 
+	"github.com/michigan-com/newsfetch/lib"
 	"github.com/spf13/cobra"
 )
 
@@ -20,6 +20,7 @@ var (
 	noprompt     bool
 	startTime    time.Time
 	VERSION      string
+	COMMITHASH   string
 	loop         int
 )
 
@@ -29,8 +30,9 @@ var NewsfetchCmd = &cobra.Command{
 
 var url = "http://www.freep.com/story/news/local/michigan/2015/08/06/farid-fata-cancer-sentencing/31213475/"
 
-func Execute(ver string) {
+func Execute(ver, commit string) {
 	VERSION = ver
+	COMMITHASH = commit
 	loadConfig()
 	AddCommands()
 	AddFlags()
@@ -82,5 +84,5 @@ func AddCommands() {
 
 func getElapsedTime(sTime *time.Time) {
 	endTime := time.Now()
-	fmt.Println("Total time to run: ", endTime.Sub(*sTime))
+	lib.Logger.Println("Total time to run: ", endTime.Sub(*sTime))
 }

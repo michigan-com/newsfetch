@@ -13,7 +13,13 @@ var cmdVersion = &cobra.Command{
 		if VERSION == "" {
 			fmt.Println("Could not find version number, package must be built with `make build`")
 		} else {
-			fmt.Println(VERSION)
+			fmt.Println("Version: ", VERSION)
+		}
+
+		if COMMITHASH == "" {
+			fmt.Println("Could not find git commit hash, package must be built with `make build`")
+		} else {
+			fmt.Println("Git commit: ", COMMITHASH)
 		}
 	},
 }
