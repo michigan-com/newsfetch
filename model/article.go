@@ -12,9 +12,8 @@ import (
 var Debugger = lib.NewCondLogger("article-model")
 
 var articleIdIndex = mgo.Index{
-	Key:      []string{"article_id"},
-	Unique:   true,
-	DropDups: true,
+	Key:    []string{"article_id"},
+	Unique: true,
 }
 
 type Article struct {
@@ -62,22 +61,30 @@ func (article *Article) Save(session *mgo.Session) error {
 	err := articleCol.EnsureIndex(articleIdIndex)
 	if err != nil {
 		lib.Logger.Println("Article ensure article_id is unique failed: ", err)
+		return err
 	}
 
-	art := Article{}
+	/*art := Article{}
 	err = articleCol.
 		Find(bson.M{"article_id": article.ArticleId}).
 		Select(bson.M{"_id": 1, "created_at": 1}).
-		One(&art)
+		One(&art)*/
 
-	if err == nil {
+	info, err := articleCol.Upsert(bson.M{"article_id": article.ArticleId}, article)
+	if err != nil {
+		return err
+	}
+
+	Debugger.Println(info)
+
+	/*if err == nil {
 		article.Created_at = art.Created_at
 		articleCol.Update(bson.M{"_id": art.Id}, article)
 		Debugger.Println("Article updated: ", article)
 	} else {
 		articleCol.Insert(article)
 		Debugger.Println("Article added: ", article)
-	}
+	}*/
 
 	return nil
 }
