@@ -1,9 +1,9 @@
 package commands
 
 import (
-	"fmt"
 	"time"
 
+	"github.com/michigan-com/newsfetch/lib"
 	"github.com/spf13/cobra"
 )
 
@@ -82,5 +82,5 @@ func AddCommands() {
 
 func getElapsedTime(sTime *time.Time) {
 	endTime := time.Now()
-	fmt.Println("Total time to run: ", endTime.Sub(*sTime))
+	lib.Logger.Println("Total time to run: ", endTime.Sub(*sTime))
 }
