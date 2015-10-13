@@ -102,7 +102,9 @@ func (f *ParagraphFragment) Mark(tag RecipeFragmentTag) {
 func (f ParagraphFragment) AddToRecipe(r *Recipe) {
 	switch f.TagF {
 	case TitleTag, PossibleTitleTag:
-		r.Title = f.Text
+		if r.Title == "" {
+			r.Title = f.Text
+		}
 	case InstructionTag, ParagraphTag, ShortParagraphTag, PossibleIngredientSubdivisionTag:
 		instruction := RecipeInstruction{RawHtml: f.RawHtml, Text: f.Text}
 		r.Instructions = append(r.Instructions, instruction)
