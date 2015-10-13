@@ -64,20 +64,27 @@ func (article *Article) Save(session *mgo.Session) error {
 		return err
 	}
 
-	art := Article{}
+	/*art := Article{}
 	err = articleCol.
 		Find(bson.M{"article_id": article.ArticleId}).
 		Select(bson.M{"_id": 1, "created_at": 1}).
-		One(&art)
+		One(&art)*/
 
-	if err == nil {
+	info, err := articleCol.Upsert(bson.M{"article_id": article.ArticleId}, article)
+	if err != nil {
+		return err
+	}
+
+	Debugger.Println(info)
+
+	/*if err == nil {
 		article.Created_at = art.Created_at
 		articleCol.Update(bson.M{"_id": art.Id}, article)
 		Debugger.Println("Article updated: ", article)
 	} else {
 		articleCol.Insert(article)
 		Debugger.Println("Article added: ", article)
-	}
+	}*/
 
 	return nil
 }
