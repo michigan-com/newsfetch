@@ -88,9 +88,9 @@ var cmdGetArticles = &cobra.Command{
 }
 
 func ProcessArticle(articleUrl string) {
-	article, _, _, err := a.ParseArticleAtURL(articleUrl, body /* global flag */)
-	if err != nil {
-		artDebugger.Println("Failed to process article: ", err)
+	processor := a.ParseArticleAtURL(articleUrl, body /* global flag */)
+	if processor.Err != nil {
+		artDebugger.Println("Failed to process article: ", processor.Err)
 		return
 	}
 
@@ -98,10 +98,10 @@ func ProcessArticle(articleUrl string) {
 		artDebugger.Println("Attempting to save article ...")
 		session := lib.DBConnect(globalConfig.MongoUrl)
 		defer lib.DBClose(session)
-		article.Save(session)
+		processor.Article.Save(session)
 	}
 
-	artDebugger.Println(article)
+	artDebugger.Println(processor.Article)
 }
 
 var cmdCopyArticles = &cobra.Command{

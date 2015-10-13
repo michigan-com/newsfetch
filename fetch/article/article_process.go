@@ -8,19 +8,32 @@ import (
 	m "github.com/michigan-com/newsfetch/model"
 )
 
-func ParseArticleAtURL(articleUrl string, runExtraction bool) (*m.Article, string, *m.ExtractedBody, error) {
+// Processor object that contains the Article to be saved
+// as well as the body text
+type ArticleProcess struct {
+	*m.Article
+	*m.ExtractedBody
+	Html string
+	Err  error
+}
+
+// Primary entry point to process an article's json
+// based on the article Url
+func ParseArticleAtURL(articleUrl string, runExtraction bool) *ArticleProcess {
+	processor := &ArticleProcess{}
 	article := &m.Article{}
 
 	articleIn := NewArticleIn(articleUrl)
 	err := articleIn.GetData()
-
 	if err != nil {
-		return nil, "", nil, err
+		processor.Err = err
+		return processor
 	}
 
 	if !articleIn.IsValid() {
 		artDebugger.Println("Article is not valid: ", article)
-		return nil, "", nil, errors.New("Article is not valid: " + articleUrl)
+		processor.Err = errors.New("Article is not valid: " + articleUrl)
+		return processor
 	}
 
 	err = articleIn.Process(article)
@@ -44,5 +57,9 @@ func ParseArticleAtURL(articleUrl string, runExtraction bool) (*m.Article, strin
 		}
 	}
 
-	return article, html, bodyExtract, nil
+	processor.Article = article
+	processor.ExtractedBody = bodyExtract
+	processor.Html = html
+
+	return processor
 }
