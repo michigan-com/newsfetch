@@ -1,6 +1,12 @@
 CHANGELOG
 =========
 
+v0.2.0 2015-10-13
+-----------------
+
+* Added Topgeo chartbeat command
+* Andrey recipe stuff
+
 v0.2.0 2015-10-08
 -----------------
 
