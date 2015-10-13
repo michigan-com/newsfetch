@@ -14,3 +14,5 @@ install:
 bump:
 	echo $(VER) > $(VERSION_FILE)
 
+test:
+	go test ./...
