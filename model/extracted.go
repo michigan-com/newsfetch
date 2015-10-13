@@ -16,9 +16,17 @@ type ExtractedBody struct {
 	Messages   *Messages
 }
 
+func (e *ExtractedBody) String() string {
+	return fmt.Sprintf("<ExtractedBody %s\n %s>\n", e.Text, e.Messages)
+}
+
 type Messages struct {
 	Errors   []string
 	Warnings []string
+}
+
+func (m *Messages) String() string {
+	return fmt.Sprintf("<Messages Errors: %v\n Warnings: %v>\n", m.Errors, m.Warnings)
 }
 
 func (msg *Messages) AddMessages(context string, other *Messages) {

@@ -59,14 +59,15 @@ func testRecipes(t *testing.T, url string, html string, expected string) {
 
 	var extract *m.ExtractedBody
 	if strings.TrimSpace(html) == "" {
-		_, html, e, err := a.ParseArticleAtURL(url, true)
-		extract = e
-		if err != nil {
-			t.Fatalf("Failed to parse article: %v", err)
+
+		processor := a.ParseArticleAtURL(url, true)
+		extract = processor.ExtractedBody
+		if processor.Err != nil {
+			t.Fatalf("Failed to parse article: %v", processor.Err)
 		}
 
 		println("Here's the HTML to embed for", url)
-		println(html)
+		println(processor.Html)
 	} else {
 		extract = extraction.ExtractDataFromHTMLString(html, url, false)
 	}

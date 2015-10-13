@@ -1,19 +1,18 @@
-package model
+package fetch
 
 import (
 	"testing"
-
-	a "github.com/michigan-com/newsfetch/fetch/article"
 )
 
 func TestArticleModelWithPhoto(t *testing.T) {
 	url := "http://www.detroitnews.com/story/news/nation/2015/10/13/planned-parenthood-fetal-tissue/73861022/"
 
-	article, _, _, err := a.ParseArticleAtURL(articleUrl, body /* global flag */)
-	if err != nil {
-		artDebugger.Println("Failed to process article: ", err)
-		return
+	processor := ParseArticleAtURL(url, true)
+	t.Log(processor)
+	if processor.Err != nil {
+		t.Fatalf("Failed to process article: %s", processor.Err)
 	}
+
 }
 
 func TestArticleModelWithoutPhoto(t *testing.T) {

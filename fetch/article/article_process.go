@@ -2,6 +2,7 @@ package fetch
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/michigan-com/newsfetch/extraction"
@@ -15,6 +16,10 @@ type ArticleProcess struct {
 	*m.ExtractedBody
 	Html string
 	Err  error
+}
+
+func (p *ArticleProcess) String() string {
+	return fmt.Sprintf("<ArticleProcess %s\n %s\n Error: %v>\n", p.Article, p.ExtractedBody, p.Err)
 }
 
 // Primary entry point to process an article's json

@@ -177,14 +177,14 @@ func runTest(t *testing.T, rec *TestRec) {
 
 	var extract *m.ExtractedBody
 	if rec.html == "" {
-		_, html, e, err := a.ParseArticleAtURL(rec.url, true)
-		extract = e
-		if err != nil {
-			t.Fatalf("Failed to parse article: %v", err)
+		processor := a.ParseArticleAtURL(rec.url, true)
+		extract = processor.ExtractedBody
+		if processor.Err != nil {
+			t.Fatalf("Failed to parse article: %v", processor.Err)
 		}
 
 		println("Here's the HTML to embed for", rec.url)
-		println(html)
+		println(processor.Html)
 	} else {
 		extract = extraction.ExtractDataFromHTMLString(rec.html, rec.url, false)
 	}
