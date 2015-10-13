@@ -12,9 +12,8 @@ import (
 var Debugger = lib.NewCondLogger("article-model")
 
 var articleIdIndex = mgo.Index{
-	Key:      []string{"article_id"},
-	Unique:   true,
-	DropDups: true,
+	Key:    []string{"article_id"},
+	Unique: true,
 }
 
 type Article struct {
@@ -62,6 +61,7 @@ func (article *Article) Save(session *mgo.Session) error {
 	err := articleCol.EnsureIndex(articleIdIndex)
 	if err != nil {
 		lib.Logger.Println("Article ensure article_id is unique failed: ", err)
+		return err
 	}
 
 	art := Article{}
