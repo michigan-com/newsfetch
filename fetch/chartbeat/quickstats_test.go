@@ -35,6 +35,7 @@ func TestGetQuickStats(t *testing.T) {
 }
 
 func TestSaveQuickStats(t *testing.T) {
+	t.Skip("No mongo tests allowed MIKE")
 	mongoUri := os.Getenv("MONGO_URI")
 	if mongoUri == "" {
 		t.Fatalf("%v", "No mongo URI specified, failing test")

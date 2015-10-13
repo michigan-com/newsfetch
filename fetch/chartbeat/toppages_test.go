@@ -68,6 +68,7 @@ func TestFormatChartbeatUrls(t *testing.T) {
 }
 
 func TestSaveTimeInterval(t *testing.T) {
+	t.Skip("No Mongo tests allowed")
 	mongoUri := os.Getenv("MONGO_URI")
 	if mongoUri == "" {
 		t.Fatalf("No MONGO_URI env variable set")
@@ -192,6 +193,7 @@ func TestGetTopPages(t *testing.T) {
 }
 
 func TestSaveSnapshot(t *testing.T) {
+	t.Skip("No Mongo tests")
 	mongoUri := os.Getenv("MONGO_URI")
 	if mongoUri == "" {
 		t.Fatalf("%v", "No mongo URI specified, failing test")
