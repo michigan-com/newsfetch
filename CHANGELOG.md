@@ -1,15 +1,17 @@
 CHANGELOG
 =========
 
+v0.2.1 2015-10-13
+-----------------
+
+* Cleaned up logging
+* Added git commit hash to `newsfetch version`
+
 v0.2.0 2015-10-13
 -----------------
 
 * Added Topgeo chartbeat command
 * Andrey recipe stuff
-
-v0.2.0 2015-10-08
------------------
-
 * Moved from a batch article processor to a single article processor
 * Re-organized newsfetch into packages separated by layers: fetching data, processing data, and saving data
 
