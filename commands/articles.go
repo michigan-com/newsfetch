@@ -14,7 +14,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var articlesDebugger = lib.NewCondLogger("command-article")
+var artDebugger = lib.NewCondLogger("command-article")
 
 var w = new(tabwriter.Writer)
 
@@ -79,16 +79,8 @@ var cmdGetArticles = &cobra.Command{
 		close(ach)
 		wg.Wait()
 
-		articlesDebugger.Println("Sending request to brevity to process summaries")
+		artDebugger.Println("Sending request to brevity to process summaries")
 		go a.ProcessSummaries(nil)
-		/*var err error
-		foodArticles := lib.FilterArticlesForRecipeExtraction(articles)
-		if len(foodArticles) > 0 {
-			err = lib.DownloadAndSaveRecipesForArticles(globalConfig.MongoUrl, foodArticles)
-			if err != nil {
-				panic(err)
-			}
-		}*/
 
 		if timeit {
 			getElapsedTime(&startTime)
@@ -99,21 +91,18 @@ var cmdGetArticles = &cobra.Command{
 func ProcessArticle(articleUrl string) {
 	article, _, _, err := a.ParseArticleAtURL(articleUrl, body /* global flag */)
 	if err != nil {
-		articlesDebugger.Println("Failed to process article: ", err)
+		artDebugger.Println("Failed to process article: ", err)
 		return
 	}
 
 	if globalConfig.MongoUrl != "" {
-		articlesDebugger.Println("Attempting to save article ...")
+		artDebugger.Println("Attempting to save article ...")
 		session := lib.DBConnect(globalConfig.MongoUrl)
 		defer lib.DBClose(session)
 		article.Save(session)
 	}
 
-	fmt.Println(article)
-	/*if output {
-		printArticleBrief(w, article)
-	}*/
+	artDebugger.Println(article)
 }
 
 var cmdCopyArticles = &cobra.Command{
@@ -134,9 +123,7 @@ var cmdCopyArticles = &cobra.Command{
 			panic(err)
 		}
 
-		//printArticleBrief(articles)
-
-		fmt.Printf("Saving %d articles...\n", len(articles))
+		artDebugger.Printf("Saving %d articles...\n", len(articles))
 		err = a.SaveArticles(globalConfig.MongoUrl, articles)
 		if err != nil {
 			panic(err)

@@ -13,7 +13,7 @@ import (
 	m "github.com/michigan-com/newsfetch/model"
 )
 
-var articleDebugger = lib.NewCondLogger("fetch-article")
+var artDebugger = lib.NewCondLogger("fetch-article")
 
 type ArticleFeedIn struct {
 	Content []*struct {
@@ -35,7 +35,7 @@ type ArticleUrlsChan struct {
 }
 
 func GetArticleUrlsFromFeed(url string, ch chan *ArticleUrlsChan) {
-	articleDebugger.Println("Fetching: ", url)
+	artDebugger.Println("Fetching: ", url)
 
 	articleChan := &ArticleUrlsChan{}
 
@@ -64,7 +64,7 @@ func GetArticleUrlsFromFeed(url string, ch chan *ArticleUrlsChan) {
 
 func ProcessSummaries(ch chan error) {
 	url := "http://brevity.detroitnow.io/newsfetch-summarize/"
-	articleDebugger.Println("Fetching: ", url)
+	artDebugger.Println("Fetching: ", url)
 
 	resp, err := http.Get(url)
 	defer resp.Body.Close()
@@ -110,8 +110,7 @@ type ArticleIn struct {
 }
 
 func NewArticleIn(url string) *ArticleIn {
-	article := &ArticleIn{Url: url}
-	return article
+	return &ArticleIn{Url: url}
 }
 
 func (a *ArticleIn) String() string {
@@ -136,7 +135,7 @@ func (a *ArticleIn) GetData() error {
 		json_url = fmt.Sprintf("%s/%s", a.Url, "json")
 	}
 
-	articleDebugger.Println("Fetching: ", json_url)
+	artDebugger.Println("Fetching: ", json_url)
 
 	resp, err := http.Get(json_url)
 	if err != nil {
@@ -165,32 +164,32 @@ func (a *ArticleIn) GetData() error {
 
 func (a *ArticleIn) IsValid() bool {
 	if a.Article == nil {
-		articleDebugger.Println("Article struct missing ...")
+		artDebugger.Println("Article struct missing ...")
 		return false
 	}
 
 	if a.Article.Id == 0 {
-		articleDebugger.Println("Article ID missing ...")
+		artDebugger.Println("Article ID missing ...")
 		return false
 	}
 
 	if isBlacklisted(a.Url) {
-		articleDebugger.Println("Article URL has been blacklisted: ", a)
+		artDebugger.Println("Article URL has been blacklisted: ", a)
 		return false
 	}
 
 	if a.Article.Photo == nil {
-		articleDebugger.Println("Failed to find photo object: ", a)
+		artDebugger.Println("Failed to find photo object: ", a)
 		return false
 	}
 
 	if a.Article.Photo.AssetMetadata == nil {
-		articleDebugger.Println("Failed to find asset_metadata object: ", a)
+		artDebugger.Println("Failed to find asset_metadata object: ", a)
 		return false
 	}
 
 	if a.Article.Photo.AssetMetadata.Attrs == nil {
-		articleDebugger.Println("Failed to find photo.attrs object: ", a)
+		artDebugger.Println("Failed to find photo.attrs object: ", a)
 		return false
 	}
 
@@ -246,9 +245,10 @@ func (a *ArticleIn) Process(article *m.Article) error {
 	timestamp, aerr := time.Parse("2006-1-2T15:04:05.0000000", art.Metadata.Dates.Timestamp)
 	if aerr != nil {
 		timestamp = time.Now()
-		articleDebugger.Println("Error parsing timestamp: ", aerr)
+		artDebugger.Println("Error parsing timestamp: ", aerr)
 	}
 
+	article.Source = a.Site
 	article.ArticleId = art.Id
 	article.Headline = a.Metadata.Headline
 	article.Subheadline = a.Metadata.Description

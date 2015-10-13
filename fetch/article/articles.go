@@ -18,10 +18,6 @@ var articleIdIndex = mgo.Index{
 	DropDups: true,
 }
 
-/*
- * DATA GOING OUT
- */
-
 func SaveArticles(mongoUri string, articles []*m.Article) error {
 	session := lib.DBConnect(mongoUri)
 	defer lib.DBClose(session)
@@ -138,14 +134,14 @@ func LoadArticleById(mongoUri string, articleId int) (*m.Article, error) {
 }
 
 func LoadRemoteArticles(url string) ([]*m.Article, error) {
-	articleDebugger.Println("Fetching ", url)
+	artDebugger.Println("Fetching ", url)
 
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err
 	}
 
-	articleDebugger.Println(fmt.Sprintf("Successfully fetched %s", url))
+	artDebugger.Println(fmt.Sprintf("Successfully fetched %s", url))
 
 	var response MapiArticlesResponse
 	decoder := json.NewDecoder(resp.Body)
