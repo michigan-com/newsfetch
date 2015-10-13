@@ -1,6 +1,12 @@
 CHANGELOG
 =========
 
+v0.2.2 2015-10-13
+-----------------
+
+* Added ProcessArticle struct to pass around Article/BodyExtracted data
+* Added tests to fetch/article/article\_process.go
+
 v0.2.1 2015-10-13
 -----------------
 
