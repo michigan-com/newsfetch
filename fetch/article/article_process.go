@@ -19,23 +19,23 @@ func ParseArticleAtURL(articleUrl string, runExtraction bool) (*m.Article, strin
 	}
 
 	if !articleIn.IsValid() {
-		articleDebugger.Println("Article is not valid: ", article)
+		artDebugger.Println("Article is not valid: ", article)
 		return nil, "", nil, errors.New("Article is not valid: " + articleUrl)
 	}
 
 	err = articleIn.Process(article)
 	if err != nil {
-		articleDebugger.Println("Article could not be processed: %s", articleIn)
+		artDebugger.Println("Article could not be processed: %s", articleIn)
 	}
 
-	html := articleIn.BodyHTML()
-
+	var html string
 	var bodyExtract *m.ExtractedBody
 	if runExtraction {
+		html = articleIn.BodyHTML()
 		bodyExtract = extraction.ExtractDataFromHTMLString(html, articleUrl, false)
 
 		if bodyExtract.Text != "" {
-			articleDebugger.Printf(
+			artDebugger.Printf(
 				"Extracted extracted contains %d characters, %d paragraphs.",
 				len(strings.Split(bodyExtract.Text, "")),
 				len(strings.Split(bodyExtract.Text, "\n\n")),
