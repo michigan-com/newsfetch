@@ -15,6 +15,9 @@ Go into the directory and build it
 * `cd github.com/michigan-com/newsfetch`
 * `make build`
 
+## Test
+* `make test`
+
 ## Version Bumping
 Increment PATCH by 1
 ```
@@ -30,7 +33,7 @@ $ make bump 0.1.0
 
 Run the executable:
 
-    export NEWSFETCH_MONGO_URL=mongodb://localhost:27017/mapi
+    export MONGO_URI=mongodb://localhost:27017/mapi
     ./newsfetch
 
 ## Usage
@@ -75,23 +78,11 @@ Just grab the article URL in the output
 $ ./newsfetch articles get -i freep.com -e sports | awk -F"\t+" '{print $4}'
 ```
 
-### Remove Articles
-
-Removes all documents within Snapshot collection, which is what stores all the articles
-```
-$ ./newsfetch articles rm -s mongodb://localhost:27017/mapi
-```
-
-Skip prompt
-```
-$ ./newsfetch articles rm -ns mongodb://localhost:27017/mapi
-```
-
 ### Copy Articles
 
 Copy articles returned by Michigan API into the local Mongo database:
 
-    export NEWSFETCH_MONGO_URL=mongodb://localhost:27017/mapi
+    export MONGO_URI=mongodb://localhost:27017/mapi
     newsfetch articles copy-from 'https://api.michigan.com/v1/news/freep/life?limit=1000'
 
 ### Generate Summary
