@@ -41,7 +41,6 @@ type ArticleIn struct {
 	Metadata *struct {
 		Headline    string `json:"headline"`
 		Description string `json:"description"`
-		Brief       string `json:"description"`
 	} `json:"metadata"`
 }
 
