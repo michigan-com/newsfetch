@@ -5,6 +5,7 @@ import (
 
 	gq "github.com/PuerkitoBio/goquery"
 	"github.com/michigan-com/newsfetch/extraction/body_parsing"
+	"github.com/michigan-com/newsfetch/extraction/link_parsing"
 	m "github.com/michigan-com/newsfetch/model"
 )
 
@@ -35,4 +36,16 @@ func ExtractDataFromHTMLAtURL(url string, includeTitle bool) *m.ExtractedBody {
 	}
 
 	return extracted
+}
+
+func ExtractArticleURLsFromSearchResults(term string, page int) ([]string, error) {
+	url := link_parsing.BuildSearchURL(term, page)
+
+	println("Downloading search results from ", url)
+	doc, err := gq.NewDocument(url)
+	if err != nil {
+		return nil, nil
+	}
+
+	return link_parsing.ExtractArticleURLsFromDocument(doc), nil
 }

@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/michigan-com/newsfetch/extraction"
 	a "github.com/michigan-com/newsfetch/fetch/article"
 	r "github.com/michigan-com/newsfetch/fetch/recipe"
 	"github.com/michigan-com/newsfetch/lib"
@@ -112,6 +113,69 @@ var cmdExtractRecipiesFromUrl = &cobra.Command{
 				panic(err)
 			}
 		}
+
+		if timeit {
+			getElapsedTime(&startTime)
+		}
+	},
+}
+
+var cmdExtractRecipiesFromSearch = &cobra.Command{
+	Use:   "process-search",
+	Short: "Extract recipes using the search API",
+	Run: func(cmd *cobra.Command, args []string) {
+		if timeit {
+			startTime = time.Now()
+		}
+
+		page := 1
+		total := 0
+		for {
+			println("Page", page)
+			urls, err := extraction.ExtractArticleURLsFromSearchResults("recipe", page)
+			if err != nil {
+				panic(err)
+			}
+
+			for _, url := range urls {
+				id := lib.GetArticleId(url)
+				println("Found article", id, "at", url)
+			}
+
+			recipes := r.DownloadRecipesFromUrls(urls)
+			fmt.Printf("Found %d recipes.\n", len(recipes))
+
+			if globalConfig.MongoUrl != "" {
+				err := r.SaveRecipes(globalConfig.MongoUrl, recipes)
+				if err != nil {
+					panic(err)
+				}
+				fmt.Printf("Saved %d recipes.\n", len(recipes))
+			}
+
+			total += len(urls)
+
+			if len(urls) == 0 {
+				break
+			}
+			page++
+		}
+
+		println("Total", total)
+
+		// recipes := r.DownloadRecipesFromUrls(args)
+
+		// fmt.Printf("Found %d recipes.\n", len(recipes))
+		// for i, recipe := range recipes {
+		// 	fmt.Printf("Recipe #%d: %s\n", i, recipe.String())
+		// }
+
+		// if globalConfig.MongoUrl != "" {
+		// 	err := r.SaveRecipes(globalConfig.MongoUrl, recipes)
+		// 	if err != nil {
+		// 		panic(err)
+		// 	}
+		// }
 
 		if timeit {
 			getElapsedTime(&startTime)
