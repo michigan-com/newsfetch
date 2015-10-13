@@ -15,70 +15,6 @@ import (
 
 var artDebugger = lib.NewCondLogger("fetch-article")
 
-type ArticleFeedIn struct {
-	Content []*struct {
-		Url string `json:"url"`
-	} `json:"content"`
-}
-
-func (a *ArticleFeedIn) Urls() []string {
-	articleUrls := make([]string, 0, len(a.Content))
-	for _, content := range a.Content {
-		articleUrls = append(articleUrls, content.Url)
-	}
-	return articleUrls
-}
-
-type ArticleUrlsChan struct {
-	Urls []string
-	Err  error
-}
-
-func GetArticleUrlsFromFeed(url string, ch chan *ArticleUrlsChan) {
-	artDebugger.Println("Fetching: ", url)
-
-	articleChan := &ArticleUrlsChan{}
-
-	resp, err := http.Get(url)
-	if err != nil {
-		articleChan.Err = err
-		ch <- articleChan
-		return
-	}
-	defer resp.Body.Close()
-
-	a := ArticleFeedIn{}
-	var jso []byte
-	decoder := json.NewDecoder(resp.Body)
-	err = decoder.Decode(&a)
-	if err != nil {
-		articleChan.Err = err
-		ch <- articleChan
-		return
-	}
-
-	json.Unmarshal(jso, a)
-	articleChan.Urls = a.Urls()
-	ch <- articleChan
-}
-
-func ProcessSummaries(ch chan error) {
-	url := "http://brevity.detroitnow.io/newsfetch-summarize/"
-	artDebugger.Println("Fetching: ", url)
-
-	resp, err := http.Get(url)
-	defer resp.Body.Close()
-	if err != nil {
-		ch <- err
-	}
-
-	ch <- nil
-}
-
-type Middleware interface {
-	Process(*m.Article) error
-}
-
 type BodyPart struct {
 	Type  string `json:"type"`
 	Value string `json:"value"`
@@ -181,14 +117,30 @@ func (a *ArticleIn) IsValid() bool {
 	return true
 }
 
-func GetSiteFromHost(host string) (string, error) {
-	replace := regexp.MustCompile("^w{3}[.](.+)[.].+$")
-	match := replace.FindStringSubmatch(host)
-	if len(match) < 2 {
-		return "", fmt.Errorf("Could not parse %s for host", host)
+func (a *ArticleIn) Process(article *m.Article) error {
+	art := a.Article
+	ssts := art.Ssts
+
+	a.ProcessPhoto(article)
+
+	timestamp, aerr := time.Parse("2006-1-2T15:04:05.0000000", art.Metadata.Dates.Timestamp)
+	if aerr != nil {
+		timestamp = time.Now()
+		artDebugger.Println("Error parsing timestamp: ", aerr)
 	}
 
-	return match[1], nil
+	article.Source = a.Site
+	article.ArticleId = art.Id
+	article.Headline = a.Metadata.Headline
+	article.Subheadline = a.Metadata.Description
+	article.Section = ssts.Section
+	article.Subsection = ssts.Subsection
+	article.Created_at = time.Now()
+	article.Updated_at = time.Now()
+	article.Timestamp = timestamp
+	article.Url = a.Url
+
+	return nil
 }
 
 func (a *ArticleIn) ProcessPhoto(article *m.Article) error {
@@ -248,26 +200,76 @@ func (a *ArticleIn) ProcessPhoto(article *m.Article) error {
 	return nil
 }
 
-func (a *ArticleIn) Process(article *m.Article) error {
-	art := a.Article
-	ssts := art.Ssts
+type ArticleFeedIn struct {
+	Content []*struct {
+		Url string `json:"url"`
+	} `json:"content"`
+}
 
-	timestamp, aerr := time.Parse("2006-1-2T15:04:05.0000000", art.Metadata.Dates.Timestamp)
-	if aerr != nil {
-		timestamp = time.Now()
-		artDebugger.Println("Error parsing timestamp: ", aerr)
+func (a *ArticleFeedIn) Urls() []string {
+	articleUrls := make([]string, 0, len(a.Content))
+	for _, content := range a.Content {
+		articleUrls = append(articleUrls, content.Url)
+	}
+	return articleUrls
+}
+
+type ArticleUrlsChan struct {
+	Urls []string
+	Err  error
+}
+
+func GetArticleUrlsFromFeed(url string, ch chan *ArticleUrlsChan) {
+	artDebugger.Println("Fetching: ", url)
+
+	articleChan := &ArticleUrlsChan{}
+
+	resp, err := http.Get(url)
+	if err != nil {
+		articleChan.Err = err
+		ch <- articleChan
+		return
+	}
+	defer resp.Body.Close()
+
+	a := ArticleFeedIn{}
+	var jso []byte
+	decoder := json.NewDecoder(resp.Body)
+	err = decoder.Decode(&a)
+	if err != nil {
+		articleChan.Err = err
+		ch <- articleChan
+		return
 	}
 
-	article.Source = a.Site
-	article.ArticleId = art.Id
-	article.Headline = a.Metadata.Headline
-	article.Subheadline = a.Metadata.Description
-	article.Section = ssts.Section
-	article.Subsection = ssts.Subsection
-	article.Created_at = time.Now()
-	article.Updated_at = time.Now()
-	article.Timestamp = timestamp
-	article.Url = a.Url
+	json.Unmarshal(jso, a)
+	articleChan.Urls = a.Urls()
+	ch <- articleChan
+}
 
-	return nil
+func ProcessSummaries(ch chan error) {
+	url := "http://brevity.detroitnow.io/newsfetch-summarize/"
+	artDebugger.Println("Fetching: ", url)
+
+	resp, err := http.Get(url)
+	defer resp.Body.Close()
+	if err != nil {
+		ch <- err
+	}
+
+	ch <- nil
+}
+
+type Middleware interface {
+	Process(*m.Article) error
+}
+
+func GetSiteFromHost(host string) (string, error) {
+	replace := regexp.MustCompile("^w{3}[.](.+)[.].+$")
+	match := replace.FindStringSubmatch(host)
+	if len(match) < 2 {
+		return "", fmt.Errorf("Could not parse %s for host", host)
+	}
+
+	return match[1], nil
 }
