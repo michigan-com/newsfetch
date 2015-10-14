@@ -75,9 +75,11 @@ func RunChartbeatCommands(beats []Beat) {
 
 		for _, beat := range beats {
 			beatWait.Add(1)
+			copy := session.Copy()
+			defer copy.Close()
 
 			go func(beat Beat) {
-				beat.Run(session)
+				beat.Run(copy)
 				beatWait.Done()
 			}(beat)
 		}
@@ -121,7 +123,8 @@ func (t *TopPages) Run(session *mgo.Session) {
 		f.CalculateTimeInterval(snapshot, session)
 
 		// Update mapi to let it know that a new snapshot has been saved
-		_, err = http.Get("https://api.michigan.com/popular/")
+		resp, err := http.Get("https://api.michigan.com/popular/")
+		defer resp.Body.Close()
 		if err != nil {
 			chartbeatDebugger.Printf("%v", err)
 		} else {
@@ -151,7 +154,8 @@ func (q *QuickStats) Run(session *mgo.Session) {
 		f.SaveQuickStats(quickStats, session)
 
 		// Update mapi
-		_, err = http.Get("https://api.michigan.com/quickstats/")
+		resp, err := http.Get("https://api.michigan.com/quickstats/")
+		defer resp.Body.Close()
 		if err != nil {
 			chartbeatDebugger.Printf("%v", err)
 		} else {
@@ -180,7 +184,8 @@ func (t *TopGeo) Run(session *mgo.Session) {
 		f.SaveTopGeo(topGeo, session)
 
 		// Update mapi
-		_, err = http.Get("https://api.michigan.com/topgeo/")
+		resp, err := http.Get("https://api.michigan.com/topgeo/")
+		defer resp.Body.Close()
 		if err != nil {
 			chartbeatDebugger.Printf("%v", err)
 		} else {

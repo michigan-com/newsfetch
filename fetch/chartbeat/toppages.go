@@ -164,6 +164,7 @@ func GetTopPages(url string) (*m.TopPages, error) {
 	chartbeatDebugger.Println("Fetching %s", url)
 
 	resp, err := http.Get(url)
+	defer resp.Body.Close()
 	if err != nil {
 		return nil, err
 	}

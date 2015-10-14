@@ -212,6 +212,7 @@ func LoadRemoteArticles(url string) ([]*m.Article, error) {
 	artDebugger.Println("Fetching ", url)
 
 	resp, err := http.Get(url)
+	defer resp.Body.Close()
 	if err != nil {
 		return nil, err
 	}

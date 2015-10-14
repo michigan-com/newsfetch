@@ -84,10 +84,10 @@ func (a *ArticleIn) GetData() error {
 	artDebugger.Println("Fetching: ", json_url)
 
 	resp, err := http.Get(json_url)
+	defer resp.Body.Close()
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
 
 	site, err := a.GetSiteFromHost(resp.Request.URL.Host)
 	if err != nil {
