@@ -1,6 +1,14 @@
 CHANGELOG
 =========
 
+v0.2.3 2015-10-14
+-----------------
+
+* Cleaned up fetch/article subpackage
+* Moved command specific functions to their respective command go files
+* Only creating one mgo session per command
+* Removed dead code
+
 v0.2.2 2015-10-13
 -----------------
 

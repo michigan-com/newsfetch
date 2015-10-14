@@ -1,6 +1,7 @@
 package commands
 
 import (
+	//"text/tabwriter"
 	"time"
 
 	"github.com/michigan-com/newsfetch/lib"
@@ -22,6 +23,7 @@ var (
 	VERSION      string
 	COMMITHASH   string
 	loop         int
+	//w            = new(tabwriter.Writer)
 )
 
 var NewsfetchCmd = &cobra.Command{
@@ -81,6 +83,14 @@ func AddCommands() {
 	cmdRecipes.AddCommand(cmdExtractRecipiesFromSearch)
 	NewsfetchCmd.AddCommand(cmdRecipes)
 }
+
+/*func printArticleBrief(w *tabwriter.Writer, article *m.Article) {
+	fmt.Fprintf(
+		w, "%s\t%s\t%s\t%s\t%s\n", article.Source, article.Section,
+		article.Headline, article.Url, article.Timestamp,
+	)
+	w.Flush()
+}*/
 
 func getElapsedTime(sTime *time.Time) {
 	endTime := time.Now()

@@ -1,29 +1,89 @@
 package commands
 
 import (
+	"encoding/json"
 	"fmt"
-	"os"
+	"net/http"
 	"strings"
 	"sync"
-	"text/tabwriter"
 	"time"
+
+	"gopkg.in/mgo.v2"
 
 	a "github.com/michigan-com/newsfetch/fetch/article"
 	"github.com/michigan-com/newsfetch/lib"
-	m "github.com/michigan-com/newsfetch/model"
 	"github.com/spf13/cobra"
 )
 
 var artDebugger = lib.NewCondLogger("command-article")
 
-var w = new(tabwriter.Writer)
+type SummaryResponse struct {
+	Skipped    int `json:"skipped"`
+	Summarized int `json:"summarized"`
+}
 
-func printArticleBrief(w *tabwriter.Writer, article *m.Article) {
-	fmt.Fprintf(
-		w, "%s\t%s\t%s\t%s\t%s\n", article.Source, article.Section,
-		article.Headline, article.Url, article.Timestamp,
-	)
-	w.Flush()
+func processSummaries() (*SummaryResponse, error) {
+	url := "http://brevity.detroitnow.io/newsfetch-summarize/"
+	artDebugger.Println("Fetching: ", url)
+
+	resp, err := http.Get(url)
+	defer resp.Body.Close()
+
+	var jso []byte
+	summResp := SummaryResponse{}
+	decoder := json.NewDecoder(resp.Body)
+	err = decoder.Decode(&summResp)
+	if err != nil {
+		return nil, err
+	}
+
+	json.Unmarshal(jso, summResp)
+
+	return &summResp, nil
+}
+
+func processArticle(articleUrl string, session *mgo.Session) bool {
+	processor := a.ParseArticleAtURL(articleUrl, body /* global flag */)
+	if processor.Err != nil {
+		artDebugger.Println("Failed to process article: ", processor.Err)
+		return false
+	}
+
+	var isNew bool
+	var err error
+	if globalConfig.MongoUrl != "" {
+		if session == nil {
+			session = lib.DBConnect(globalConfig.MongoUrl)
+			defer lib.DBClose(session)
+		}
+
+		artDebugger.Println("Attempting to save article: ", processor.Article)
+		isNew, err = processor.Article.Save(session)
+		if err != nil {
+			lib.Logger.Println(err)
+		}
+	}
+
+	artDebugger.Println(processor.Article)
+	return isNew
+}
+
+func formatFeedUrls(sites []string, sections []string) []string {
+	urls := make([]string, 0, len(sites)*len(sections))
+
+	for i := 0; i < len(sites); i++ {
+		site := sites[i]
+		for j := 0; j < len(sections); j++ {
+			section := sections[j]
+
+			if strings.Contains(site, "detroitnews") && section == "life" {
+				section += "-home"
+			}
+			url := fmt.Sprintf("http://%s/feeds/live/%s/json", site, section)
+			urls = append(urls, url)
+		}
+	}
+	return urls
 }
 
 var cmdArticles = &cobra.Command{
@@ -54,12 +114,22 @@ var cmdGetArticles = &cobra.Command{
 			sections = strings.Split(sectionStr, ",")
 		}
 
-		if output {
+		/*if output {
 			w.Init(os.Stdout, 0, 8, 0, '\t', 0)
 			fmt.Fprintln(w, "Source\tSection\tHeadline\tURL\tTimestamp")
+		}*/
+
+		feedUrls := formatFeedUrls(sites, sections)
+
+		// create one session for all saves bruh
+		var session *mgo.Session
+		if globalConfig.MongoUrl != "" {
+			session = lib.DBConnect(globalConfig.MongoUrl)
+			defer lib.DBClose(session)
 		}
 
-		feedUrls := a.FormatFeedUrls(sites, sections)
+		newArticles := 0
+		updatedArticles := 0
 
 		var wg sync.WaitGroup
 		ach := make(chan *a.ArticleUrlsChan)
@@ -71,37 +141,33 @@ var cmdGetArticles = &cobra.Command{
 				wg.Add(1)
 				go func(url string) {
 					defer wg.Done()
-					ProcessArticle(url)
+					isNew := processArticle(url, session)
+					if isNew {
+						newArticles++
+					} else {
+						updatedArticles++
+					}
 				}(fmt.Sprintf("http://%s.com%s", host, aurl))
 			}
 		}
 		close(ach)
 		wg.Wait()
 
-		artDebugger.Println("Sending request to brevity to process summaries")
-		go a.ProcessSummaries(nil)
+		lib.Logger.Println("Sending request to brevity to process summaries")
+		sumRes, err := processSummaries()
+		if err != nil {
+			lib.Logger.Println("Summarizer failed: ", err)
+		}
+
+		lib.Logger.Println("New articles: ", newArticles)
+		lib.Logger.Println("Updated articles: ", updatedArticles)
+		lib.Logger.Println("Skipped article summaries: ", sumRes.Skipped)
+		lib.Logger.Println("Summarized articles: ", sumRes.Summarized)
 
 		if timeit {
 			getElapsedTime(&startTime)
 		}
 	},
-}
-
-func ProcessArticle(articleUrl string) {
-	processor := a.ParseArticleAtURL(articleUrl, body /* global flag */)
-	if processor.Err != nil {
-		artDebugger.Println("Failed to process article: ", processor.Err)
-		return
-	}
-
-	if globalConfig.MongoUrl != "" {
-		artDebugger.Println("Attempting to save article ...")
-		session := lib.DBConnect(globalConfig.MongoUrl)
-		defer lib.DBClose(session)
-		processor.Article.Save(session)
-	}
-
-	artDebugger.Println(processor.Article)
 }
 
 var cmdCopyArticles = &cobra.Command{
@@ -117,15 +183,20 @@ var cmdCopyArticles = &cobra.Command{
 		}
 		url := args[0]
 
-		articles, err := a.LoadRemoteArticles(url)
+		articles, err := LoadRemoteArticles(url)
 		if err != nil {
 			panic(err)
 		}
 
 		artDebugger.Printf("Saving %d articles...\n", len(articles))
-		err = a.SaveArticles(globalConfig.MongoUrl, articles)
-		if err != nil {
-			panic(err)
+		session := lib.DBConnect(globalConfig.MongoUrl)
+		defer lib.DBClose(session)
+
+		for _, art := range articles {
+			_, err := art.Save(session)
+			if err != nil {
+				panic(err)
+			}
 		}
 
 		if timeit {

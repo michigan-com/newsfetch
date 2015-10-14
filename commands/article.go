@@ -1,8 +1,6 @@
 package commands
 
 import (
-	"fmt"
-	"os"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -19,12 +17,13 @@ var cmdArticle = &cobra.Command{
 			articleUrl = args[0]
 		}
 
-		if output {
+		artDebugger.Println(articleUrl)
+		/*if output {
 			w.Init(os.Stdout, 0, 8, 0, '\t', 0)
 			fmt.Fprintln(w, "Source\tSection\tHeadline\tURL\tTimestamp")
-		}
+		}*/
 
-		ProcessArticle(articleUrl)
+		processArticle(articleUrl, nil)
 
 		if timeit {
 			getElapsedTime(&startTime)

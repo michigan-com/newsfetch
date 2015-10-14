@@ -35,6 +35,9 @@ var potentialSentenceBreakRe = regexp.MustCompile(`\.(\s+\p{Lu}|$)`)
 
 func extractRecipeFragments(doc *gq.Document, msg *m.Messages) []m.RecipeFragment {
 	paragraphs := doc.Find("div[itemprop=articleBody] > p, div[itemprop=articleBody] li")
+	if paragraphs.Length() == 0 {
+		paragraphs = doc.Find("body > p")
+	}
 
 	fragments := make([]m.RecipeFragment, 0, paragraphs.Length())
 
@@ -81,7 +84,7 @@ func extractRecipeFragments(doc *gq.Document, msg *m.Messages) []m.RecipeFragmen
 		} else if text == strings.ToUpper(text) {
 			fragment = &m.ParagraphFragment{RawHtml: html, Text: text, TagF: m.PossibleIngredientSubdivisionTag}
 
-		} else if hasSingleChildMatching(paragraph, "strong") {
+		} else if hasSingleChildMatching(paragraph, "strong") || hasSingleChildMatching(paragraph, "b") {
 			fragment = &m.ParagraphFragment{RawHtml: html, Text: text, TagF: m.PossibleTitleTag}
 
 		} else if isShortParagraph(text) {

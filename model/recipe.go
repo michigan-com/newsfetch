@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -81,6 +82,9 @@ func (r Recipe) PlainLines() []string {
 	}
 	if r.PreparationTime != nil {
 		lines = append(lines, fmt.Sprintf("Prep time: %#v", r.PreparationTime.Text))
+	}
+	if r.Nutrition != nil {
+		lines = append(lines, fmt.Sprintf("Nutrition data: %#v", r.Nutrition.Text))
 	}
 	for _, item := range r.Ingredients {
 		lines = append(lines, fmt.Sprintf("I: %#v", item.Text))

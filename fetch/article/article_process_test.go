@@ -7,6 +7,26 @@ import (
 	m "github.com/michigan-com/newsfetch/model"
 )
 
+func TestArticleSubheadline(t *testing.T) {
+	url := "http://www.detroitnews.com/story/news/local/oakland-county/2015/10/13/clarkston-woman-charged-firing-gun-home-depot/73862066"
+
+	processor := ParseArticleAtURL(url, true)
+	t.Log(processor)
+
+	if processor.Err != nil {
+		t.Fatalf("Failed to process article: %s", processor.Err)
+	}
+
+	article := processor.Article
+
+	validateArticle(article, t)
+
+	if article.Subheadline == "" {
+		t.Fatal("Article subheadline should not be empty.")
+	}
+
+}
+
 func TestArticleModelWithPhoto(t *testing.T) {
 	url := "http://www.detroitnews.com/story/news/nation/2015/10/13/planned-parenthood-fetal-tissue/73861022/"
 

@@ -15,24 +15,25 @@ import (
 
 var artDebugger = lib.NewCondLogger("fetch-article")
 
-type BodyPart struct {
-	Type  string `json:"type"`
-	Value string `json:"value"`
-}
-
 type ArticleIn struct {
 	Site    string
 	Url     string
 	Article *struct {
-		Id       int `json:"id"`
-		*Ssts    `json:"ssts"`
+		Id   int `json:"id"`
+		Ssts *struct {
+			Section    string `json:"section"`
+			Subsection string `json:"subsection"`
+		} `json:"ssts"`
 		Metadata *struct {
 			Dates *struct {
 				Timestamp string `json:"lastupdated"`
 			} `json:"dates"`
 		} `json:"metadata"`
-		BodyParts []BodyPart `json:"body"`
-		Photo     *struct {
+		BodyParts []*struct {
+			Type  string `json:"type"`
+			Value string `json:"value"`
+		} `json:"body"`
+		Photo *struct {
 			AssetMetadata *struct {
 				Attrs *Attrs `json:"items"`
 			} `json:"asset_metadata"`
@@ -44,22 +45,32 @@ type ArticleIn struct {
 	} `json:"metadata"`
 }
 
+type Attrs struct {
+	Owidth        string `json:"oimagewidth"`
+	OWidth        string `json:"oimageWidth"`
+	Oheight       string `json:"oimageheight"`
+	Swidth        string `json:"simagewidth"`
+	Sheight       string `json:"simageheight"`
+	Basename      string `json:"basename"`
+	PublishUrl    string `json:"publishurl"`
+	SmallBasename string `json:"smallbasename"`
+	ThumbnailPath string `json:"thumbnailPath"`
+	Caption       string `json:"caption"`
+	Credit        string `json:"credit"`
+	Brief         string `json:"brief"`
+}
+
 func NewArticleIn(url string) *ArticleIn {
-	return &ArticleIn{Url: url}
+	article := &ArticleIn{Url: url}
+	if article.isBlacklisted() {
+		return nil
+	}
+
+	return article
 }
 
 func (a *ArticleIn) String() string {
 	return fmt.Sprintf("<ArticleIn Site: %s, Id: %d, Url: %s>", a.Site, a.Article.Id, a.Url)
-}
-
-func (a *ArticleIn) BodyHTML() string {
-	var fragments []string
-	for _, part := range a.Article.BodyParts {
-		if part.Type == "text" && part.Value != "" {
-			fragments = append(fragments, part.Value)
-		}
-	}
-	return strings.Join(fragments, "\n")
 }
 
 func (a *ArticleIn) GetData() error {
@@ -78,7 +89,7 @@ func (a *ArticleIn) GetData() error {
 	}
 	defer resp.Body.Close()
 
-	site, err := GetSiteFromHost(resp.Request.URL.Host)
+	site, err := a.GetSiteFromHost(resp.Request.URL.Host)
 	if err != nil {
 		return err
 	}
@@ -108,12 +119,23 @@ func (a *ArticleIn) IsValid() bool {
 		return false
 	}
 
-	if isBlacklisted(a.Url) {
-		artDebugger.Println("Article URL has been blacklisted: ", a)
-		return false
+	return true
+}
+
+func (a *ArticleIn) isBlacklisted() bool {
+	blacklist := []string{
+		"/videos/",
+		"/police-blotter/",
+		"facebook.com",
 	}
 
-	return true
+	for _, item := range blacklist {
+		if strings.Contains(a.Url, item) {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (a *ArticleIn) Process(article *m.Article) error {
@@ -199,71 +221,17 @@ func (a *ArticleIn) ProcessPhoto(article *m.Article) error {
 	return nil
 }
 
-type ArticleFeedIn struct {
-	Content []*struct {
-		Url string `json:"url"`
-	} `json:"content"`
-}
-
-func (a *ArticleFeedIn) Urls() []string {
-	articleUrls := make([]string, 0, len(a.Content))
-	for _, content := range a.Content {
-		articleUrls = append(articleUrls, content.Url)
+func (a *ArticleIn) BodyHTML() string {
+	var fragments []string
+	for _, part := range a.Article.BodyParts {
+		if part.Type == "text" && part.Value != "" {
+			fragments = append(fragments, part.Value)
+		}
 	}
-	return articleUrls
+	return strings.Join(fragments, "\n")
 }
 
-type ArticleUrlsChan struct {
-	Urls []string
-	Err  error
-}
-
-func GetArticleUrlsFromFeed(url string, ch chan *ArticleUrlsChan) {
-	artDebugger.Println("Fetching: ", url)
-
-	articleChan := &ArticleUrlsChan{}
-
-	resp, err := http.Get(url)
-	if err != nil {
-		articleChan.Err = err
-		ch <- articleChan
-		return
-	}
-	defer resp.Body.Close()
-
-	a := ArticleFeedIn{}
-	var jso []byte
-	decoder := json.NewDecoder(resp.Body)
-	err = decoder.Decode(&a)
-	if err != nil {
-		articleChan.Err = err
-		ch <- articleChan
-		return
-	}
-
-	json.Unmarshal(jso, a)
-	articleChan.Urls = a.Urls()
-	ch <- articleChan
-}
-
-func ProcessSummaries(ch chan error) {
-	url := "http://brevity.detroitnow.io/newsfetch-summarize/"
-	artDebugger.Println("Fetching: ", url)
-
-	resp, err := http.Get(url)
-	defer resp.Body.Close()
-	if err != nil {
-		ch <- err
-	}
-
-	ch <- nil
-}
-
-type Middleware interface {
-	Process(*m.Article) error
-}
-
-func GetSiteFromHost(host string) (string, error) {
+func (a *ArticleIn) GetSiteFromHost(host string) (string, error) {
 	replace := regexp.MustCompile("^w{3}[.](.+)[.].+$")
 	match := replace.FindStringSubmatch(host)
 	if len(match) < 2 {

@@ -24,7 +24,7 @@ type Article struct {
 	Section     string         `bson:"section" json:"section"`
 	Subsection  string         `bson:"subsection" json:"subsection"`
 	Source      string         `bson:"source" json:"source"`
-	Summary     interface{}    `bson:"summary" json:"summary"`
+	Summary     []string       `bson:"summary" json:"summary"`
 	Created_at  time.Time      `bson:"created_at" json:"created_at"`
 	Updated_at  time.Time      `bson:"updated_at" json:"updated_at"`
 	Timestamp   time.Time      `bson:"timestamp" json:"timestamp"`
@@ -56,35 +56,23 @@ func (a *Article) String() string {
 	return fmt.Sprintf("<Article Id: %d, Headline: %s, Url: %s>", a.ArticleId, a.Headline, a.Url)
 }
 
-func (article *Article) Save(session *mgo.Session) error {
+func (article *Article) Save(session *mgo.Session) (bool, error) {
+	isNew := false
 	articleCol := session.DB("").C("Article")
 	err := articleCol.EnsureIndex(articleIdIndex)
 	if err != nil {
 		lib.Logger.Println("Article ensure article_id is unique failed: ", err)
-		return err
+		return isNew, err
 	}
-
-	/*art := Article{}
-	err = articleCol.
-		Find(bson.M{"article_id": article.ArticleId}).
-		Select(bson.M{"_id": 1, "created_at": 1}).
-		One(&art)*/
 
 	info, err := articleCol.Upsert(bson.M{"article_id": article.ArticleId}, article)
 	if err != nil {
-		return err
+		return isNew, err
 	}
 
-	Debugger.Println(info)
+	if info.UpsertedId != nil {
+		isNew = true
+	}
 
-	/*if err == nil {
-		article.Created_at = art.Created_at
-		articleCol.Update(bson.M{"_id": art.Id}, article)
-		Debugger.Println("Article updated: ", article)
-	} else {
-		articleCol.Insert(article)
-		Debugger.Println("Article added: ", article)
-	}*/
-
-	return nil
+	return isNew, nil
 }
