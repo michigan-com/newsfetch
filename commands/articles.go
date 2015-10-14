@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
@@ -16,17 +17,29 @@ import (
 
 var artDebugger = lib.NewCondLogger("command-article")
 
-func processSummaries(ch chan error) {
+type SummaryResponse struct {
+	Skipped    int `json:"skipped"`
+	Summarized int `json:"summarized"`
+}
+
+func processSummaries() (*SummaryResponse, error) {
 	url := "http://brevity.detroitnow.io/newsfetch-summarize/"
 	artDebugger.Println("Fetching: ", url)
 
 	resp, err := http.Get(url)
 	defer resp.Body.Close()
+
+	var jso []byte
+	summResp := SummaryResponse{}
+	decoder := json.NewDecoder(resp.Body)
+	err = decoder.Decode(&summResp)
 	if err != nil {
-		ch <- err
+		return nil, err
 	}
 
-	ch <- nil
+	json.Unmarshal(jso, summResp)
+
+	return &summResp, nil
 }
 
 func processArticle(articleUrl string, session *mgo.Session) bool {
@@ -141,10 +154,15 @@ var cmdGetArticles = &cobra.Command{
 		wg.Wait()
 
 		lib.Logger.Println("Sending request to brevity to process summaries")
-		go processSummaries(nil)
+		sumRes, err := processSummaries()
+		if err != nil {
+			lib.Logger.Println("Summarizer failed: ", err)
+		}
 
 		lib.Logger.Println("New articles: ", newArticles)
 		lib.Logger.Println("Updated articles: ", updatedArticles)
+		lib.Logger.Println("Skipped article summaries: ", sumRes.Skipped)
+		lib.Logger.Println("Summarized articles: ", sumRes.Summarized)
 
 		if timeit {
 			getElapsedTime(&startTime)
