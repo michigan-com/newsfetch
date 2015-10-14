@@ -53,15 +53,14 @@ func TestSaveQuickStats(t *testing.T) {
 	quickStats = SortQuickStats(quickStats)
 
 	// Add it a bunch of times
-	SaveQuickStats(quickStats, mongoUri)
-	SaveQuickStats(quickStats, mongoUri)
-	SaveQuickStats(quickStats, mongoUri)
-	SaveQuickStats(quickStats, mongoUri)
-
-	// Now verify
 	session := lib.DBConnect(mongoUri)
 	defer lib.DBClose(session)
+	SaveQuickStats(quickStats, session)
+	SaveQuickStats(quickStats, session)
+	SaveQuickStats(quickStats, session)
+	SaveQuickStats(quickStats, session)
 
+	// Now verify
 	col := session.DB("").C("Quickstats")
 	count, err := col.Count()
 

@@ -104,7 +104,7 @@ func TestSaveTimeInterval(t *testing.T) {
 		visits[articleId] = numVisits
 		topPages = append(topPages, article)
 	}
-	CalculateTimeInterval(topPages, mongoUri)
+	CalculateTimeInterval(topPages, session)
 
 	// Now check the articles saved and make sure they updated the visits
 	savedArticles := make([]*m.Article, 0, numArticles)
@@ -212,15 +212,15 @@ func TestSaveSnapshot(t *testing.T) {
 	}
 
 	// Add the collection 4 times
-	SaveTopPagesSnapshot(toppages, mongoUri)
-	SaveTopPagesSnapshot(toppages, mongoUri)
-	SaveTopPagesSnapshot(toppages, mongoUri)
-	SaveTopPagesSnapshot(toppages, mongoUri)
+	session := lib.DBConnect(mongoUri)
+	defer lib.DBClose(session)
+	SaveTopPagesSnapshot(toppages, session)
+	SaveTopPagesSnapshot(toppages, session)
+	SaveTopPagesSnapshot(toppages, session)
+	SaveTopPagesSnapshot(toppages, session)
 
 	// Now verify
 	lib.Debugger.Printf("%v", mongoUri)
-	session := lib.DBConnect(mongoUri)
-	defer lib.DBClose(session)
 	col := session.DB("").C("Toppages")
 	numSnapshots, err := col.Count()
 

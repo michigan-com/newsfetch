@@ -9,8 +9,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/michigan-com/newsfetch/lib"
 	m "github.com/michigan-com/newsfetch/model"
+	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -82,11 +82,7 @@ func GetQuickStats(url string) (*m.QuickStats, error) {
 	return quickStats, err
 }
 
-func SaveQuickStats(quickStats []*m.QuickStats, mongoUri string) {
-
-	session := lib.DBConnect(mongoUri)
-	defer lib.DBClose(session)
-
+func SaveQuickStats(quickStats []*m.QuickStats, session *mgo.Session) {
 	quickStatsCol := session.DB("").C("Quickstats")
 
 	// Insert this snapshot

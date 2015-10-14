@@ -7,8 +7,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/michigan-com/newsfetch/lib"
 	m "github.com/michigan-com/newsfetch/model"
+	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -72,10 +72,7 @@ func GetTopGeo(url string) (*m.TopGeo, error) {
 	return topGeo, nil
 }
 
-func SaveTopGeo(topGeos []*m.TopGeo, mongoUri string) {
-	session := lib.DBConnect(mongoUri)
-	defer lib.DBClose(session)
-
+func SaveTopGeo(topGeos []*m.TopGeo, session *mgo.Session) {
 	topGeoCol := session.DB("").C("Topgeo")
 
 	snapshot := m.TopGeoSnapshot{}

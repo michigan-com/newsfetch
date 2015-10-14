@@ -8,11 +8,12 @@ import (
 	f "github.com/michigan-com/newsfetch/fetch/chartbeat"
 	"github.com/michigan-com/newsfetch/lib"
 	"github.com/spf13/cobra"
+	"gopkg.in/mgo.v2"
 )
 
 // Beats
 type Beat interface {
-	Run(string)
+	Run(*mgo.Session)
 }
 
 type TopPages struct{}
@@ -60,6 +61,11 @@ var cmdTopGeo = &cobra.Command{
 
 func RunChartbeatCommands(beats []Beat) {
 	// Set up environment
+	var session *mgo.Session
+	if globalConfig.MongoUrl != "" {
+		session = lib.DBConnect(globalConfig.MongoUrl)
+		defer lib.DBClose(session)
+	}
 
 	for {
 		startTime := time.Now()
@@ -71,7 +77,7 @@ func RunChartbeatCommands(beats []Beat) {
 			beatWait.Add(1)
 
 			go func(beat Beat) {
-				beat.Run(globalConfig.MongoUrl)
+				beat.Run(session)
 				beatWait.Done()
 			}(beat)
 		}
@@ -86,13 +92,14 @@ func RunChartbeatCommands(beats []Beat) {
 			chartbeatDebugger.Printf("Looping! Sleeping for %d seconds...", loop)
 			time.Sleep(time.Duration(loop) * time.Second)
 			chartbeatDebugger.Printf("...and now I'm awake!")
+			session.Refresh()
 		} else {
 			break
 		}
 	}
 }
 
-func (t *TopPages) Run(mongoUri string) {
+func (t *TopPages) Run(session *mgo.Session) {
 	chartbeatDebugger.Println("Fetching toppages")
 	urls, err := f.FormatChartbeatUrls("live/toppages/v3", lib.Sites, globalConfig.ChartbeatApiKey)
 
@@ -103,15 +110,15 @@ func (t *TopPages) Run(mongoUri string) {
 
 	snapshot := f.FetchTopPages(urls)
 
-	if globalConfig.MongoUrl != "" {
+	if session != nil {
 		chartbeatDebugger.Println("Saving toppages snapshot")
-		err := f.SaveTopPagesSnapshot(snapshot, globalConfig.MongoUrl)
+		err := f.SaveTopPagesSnapshot(snapshot, session)
 		if err != nil {
 			chartbeatDebugger.Printf("ERROR: %v", err)
 			return
 		}
 
-		f.CalculateTimeInterval(snapshot, globalConfig.MongoUrl)
+		f.CalculateTimeInterval(snapshot, session)
 
 		// Update mapi to let it know that a new snapshot has been saved
 		_, err = http.Get("https://api.michigan.com/popular/")
@@ -126,7 +133,7 @@ func (t *TopPages) Run(mongoUri string) {
 	}
 }
 
-func (q *QuickStats) Run(mongoUri string) {
+func (q *QuickStats) Run(session *mgo.Session) {
 	chartbeatDebugger.Printf("Quickstats")
 
 	urls, err := f.FormatChartbeatUrls("live/quickstats/v4", lib.Sites, globalConfig.ChartbeatApiKey)
@@ -138,10 +145,10 @@ func (q *QuickStats) Run(mongoUri string) {
 
 	quickStats := f.FetchQuickStats(urls)
 
-	if globalConfig.MongoUrl != "" {
+	if session != nil {
 		chartbeatDebugger.Printf("Saving quickstats...")
 
-		f.SaveQuickStats(quickStats, globalConfig.MongoUrl)
+		f.SaveQuickStats(quickStats, session)
 
 		// Update mapi
 		_, err = http.Get("https://api.michigan.com/quickstats/")
@@ -156,7 +163,7 @@ func (q *QuickStats) Run(mongoUri string) {
 	}
 }
 
-func (t *TopGeo) Run(mongoUri string) {
+func (t *TopGeo) Run(session *mgo.Session) {
 	chartbeatDebugger.Printf("Topgeo")
 
 	urls, err := f.FormatChartbeatUrls("live/top_geo/v1", lib.Sites, globalConfig.ChartbeatApiKey)
@@ -167,10 +174,10 @@ func (t *TopGeo) Run(mongoUri string) {
 
 	topGeo := f.FetchTopGeo(urls)
 
-	if globalConfig.MongoUrl != "" {
+	if session != nil {
 		chartbeatDebugger.Printf("Saving topgeo...")
 
-		f.SaveTopGeo(topGeo, globalConfig.MongoUrl)
+		f.SaveTopGeo(topGeo, session)
 
 		// Update mapi
 		_, err = http.Get("https://api.michigan.com/topgeo/")
