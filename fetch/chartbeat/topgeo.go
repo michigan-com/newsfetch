@@ -53,10 +53,10 @@ func GetTopGeo(url string) (*m.TopGeo, error) {
 	}
 
 	resp, err := http.Get(url)
-	defer resp.Body.Close()
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
 
 	chartbeatDebugger.Println("Successfully fetched %s", url)
 

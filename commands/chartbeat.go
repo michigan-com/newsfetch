@@ -124,10 +124,10 @@ func (t *TopPages) Run(session *mgo.Session) {
 
 		// Update mapi to let it know that a new snapshot has been saved
 		resp, err := http.Get("https://api.michigan.com/popular/")
-		defer resp.Body.Close()
 		if err != nil {
 			chartbeatDebugger.Printf("%v", err)
 		} else {
+			defer resp.Body.Close()
 			now := time.Now()
 			chartbeatDebugger.Printf("Updated toppages snapshot at Mapi at %v", now)
 		}
@@ -155,10 +155,10 @@ func (q *QuickStats) Run(session *mgo.Session) {
 
 		// Update mapi
 		resp, err := http.Get("https://api.michigan.com/quickstats/")
-		defer resp.Body.Close()
 		if err != nil {
 			chartbeatDebugger.Printf("%v", err)
 		} else {
+			defer resp.Body.Close()
 			chartbeatDebugger.Printf("Updated quickstats snapshot at Mapi at %v", time.Now())
 		}
 	} else {
@@ -185,10 +185,10 @@ func (t *TopGeo) Run(session *mgo.Session) {
 
 		// Update mapi
 		resp, err := http.Get("https://api.michigan.com/topgeo/")
-		defer resp.Body.Close()
 		if err != nil {
 			chartbeatDebugger.Printf("%v", err)
 		} else {
+			defer resp.Body.Close()
 			chartbeatDebugger.Printf("Updated topgeo snapshot at Mapi at %v", time.Now())
 		}
 	} else {

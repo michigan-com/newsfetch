@@ -30,12 +30,12 @@ func GetArticleUrlsFromFeed(url string, ch chan *ArticleUrlsChan) {
 	articleChan := &ArticleUrlsChan{}
 
 	resp, err := http.Get(url)
-	defer resp.Body.Close()
 	if err != nil {
 		articleChan.Err = err
 		ch <- articleChan
 		return
 	}
+	defer resp.Body.Close()
 
 	a := ArticleFeedIn{}
 	var jso []byte
