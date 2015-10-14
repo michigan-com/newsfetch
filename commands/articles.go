@@ -7,6 +7,8 @@ import (
 	"sync"
 	"time"
 
+	"gopkg.in/mgo.v2"
+
 	a "github.com/michigan-com/newsfetch/fetch/article"
 	"github.com/michigan-com/newsfetch/lib"
 	"github.com/spf13/cobra"
@@ -27,7 +29,7 @@ func processSummaries(ch chan error) {
 	ch <- nil
 }
 
-func processArticle(articleUrl string) {
+func processArticle(articleUrl string, session *mgo.Session) {
 	processor := a.ParseArticleAtURL(articleUrl, body /* global flag */)
 	if processor.Err != nil {
 		artDebugger.Println("Failed to process article: ", processor.Err)
@@ -35,9 +37,12 @@ func processArticle(articleUrl string) {
 	}
 
 	if globalConfig.MongoUrl != "" {
-		artDebugger.Println("Attempting to save article ...")
-		session := lib.DBConnect(globalConfig.MongoUrl)
-		defer lib.DBClose(session)
+		if session == nil {
+			session := lib.DBConnect(globalConfig.MongoUrl)
+			defer lib.DBClose(session)
+		}
+
+		artDebugger.Println("Attempting to save article: ", processor.Article)
 		processor.Article.Save(session)
 	}
 
@@ -97,6 +102,13 @@ var cmdGetArticles = &cobra.Command{
 
 		feedUrls := formatFeedUrls(sites, sections)
 
+		// create one session for all saves bruh
+		var session *mgo.Session
+		if globalConfig.MongoUrl != "" {
+			session = lib.DBConnect(globalConfig.MongoUrl)
+			defer lib.DBClose(session)
+		}
+
 		var wg sync.WaitGroup
 		ach := make(chan *a.ArticleUrlsChan)
 		for _, url := range feedUrls {
@@ -107,7 +119,7 @@ var cmdGetArticles = &cobra.Command{
 				wg.Add(1)
 				go func(url string) {
 					defer wg.Done()
-					processArticle(url)
+					processArticle(url, session)
 				}(fmt.Sprintf("http://%s.com%s", host, aurl))
 			}
 		}

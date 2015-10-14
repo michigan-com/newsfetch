@@ -22,7 +22,7 @@ var cmdArticle = &cobra.Command{
 			fmt.Fprintln(w, "Source\tSection\tHeadline\tURL\tTimestamp")
 		}*/
 
-		ProcessArticle(articleUrl)
+		processArticle(articleUrl, nil)
 
 		if timeit {
 			getElapsedTime(&startTime)
