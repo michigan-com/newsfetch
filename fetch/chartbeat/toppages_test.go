@@ -6,7 +6,6 @@ import (
 	"strings"
 	"testing"
 
-	a "github.com/michigan-com/newsfetch/fetch/article"
 	"github.com/michigan-com/newsfetch/lib"
 	m "github.com/michigan-com/newsfetch/model"
 	"gopkg.in/mgo.v2/bson"
@@ -85,10 +84,10 @@ func TestSaveTimeInterval(t *testing.T) {
 		article.ArticleId = i + 1
 		articles = append(articles, article)
 	}
-	err := a.SaveArticles(mongoUri, articles)
+	/*err := a.SaveArticles(mongoUri, articles)
 	if err != nil {
 		t.Fatalf("%v", err)
-	}
+	}*/
 
 	// Calculate a bunch of the time intervals
 	topPages := make([]*m.TopArticle, 0, numArticles)

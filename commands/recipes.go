@@ -1,12 +1,15 @@
 package commands
 
 import (
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"strconv"
 	"time"
 
+	"gopkg.in/mgo.v2/bson"
+
 	"github.com/michigan-com/newsfetch/extraction"
-	a "github.com/michigan-com/newsfetch/fetch/article"
 	r "github.com/michigan-com/newsfetch/fetch/recipe"
 	"github.com/michigan-com/newsfetch/lib"
 	m "github.com/michigan-com/newsfetch/model"
@@ -34,13 +37,13 @@ var cmdReprocessRecipies = &cobra.Command{
 			startTime = time.Now()
 		}
 
-		articles, err := a.LoadArticles(globalConfig.MongoUrl)
+		articles, err := LoadArticles(globalConfig.MongoUrl)
 		if err != nil {
 			panic(err)
 		}
 
 		beforeCount := len(articles)
-		articles = a.FilterArticlesForRecipeExtraction(articles)
+		articles = FilterArticlesForRecipeExtraction(articles)
 
 		recipeDebugger.Printf("Loaded %d articles including %d in food subsection.", beforeCount, len(articles))
 
@@ -75,7 +78,7 @@ var cmdReprocessRecipeById = &cobra.Command{
 				panic(err)
 			}
 
-			article, err := a.LoadArticleById(globalConfig.MongoUrl, articleId)
+			article, err := LoadArticleById(globalConfig.MongoUrl, articleId)
 			if err != nil {
 				panic(err)
 			}
@@ -181,4 +184,72 @@ var cmdExtractRecipiesFromSearch = &cobra.Command{
 			getElapsedTime(&startTime)
 		}
 	},
+}
+
+func LoadArticles(mongoUri string) ([]*m.Article, error) {
+	session := lib.DBConnect(mongoUri)
+	defer lib.DBClose(session)
+
+	articleCol := session.DB("").C("Article")
+
+	var result []*m.Article
+	err := articleCol.Find(nil).All(&result)
+	return result, err
+}
+
+func LoadArticleById(mongoUri string, articleId int) (*m.Article, error) {
+	session := lib.DBConnect(mongoUri)
+	defer lib.DBClose(session)
+
+	articleCol := session.DB("").C("Article")
+
+	var result *m.Article
+	err := articleCol.Find(bson.M{"article_id": articleId}).One(&result)
+	return result, err
+}
+
+func LoadRemoteArticles(url string) ([]*m.Article, error) {
+	artDebugger.Println("Fetching ", url)
+
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+
+	artDebugger.Println(fmt.Sprintf("Successfully fetched %s", url))
+
+	var response struct {
+		Articles []m.Article `json:"articles"`
+	}
+
+	decoder := json.NewDecoder(resp.Body)
+	err = decoder.Decode(&response)
+	if err != nil {
+		return nil, err
+	}
+
+	return sliceOfArticlesToSliceOfPointers(response.Articles), nil
+}
+
+func FilterArticlesBySubsection(articles []*m.Article, section string, subsection string) []*m.Article {
+	result := make([]*m.Article, 0, len(articles))
+	for _, el := range articles {
+		if (el.Section == section) && (el.Subsection == subsection) {
+			result = append(result, el)
+		}
+	}
+	return result
+}
+
+func FilterArticlesForRecipeExtraction(articles []*m.Article) []*m.Article {
+	return FilterArticlesBySubsection(articles, "life", "food")
+}
+
+func sliceOfArticlesToSliceOfPointers(articles []m.Article) []*m.Article {
+	result := make([]*m.Article, 0, len(articles))
+	for _, el := range articles {
+		copy := el
+		result = append(result, &copy)
+	}
+	return result
 }
