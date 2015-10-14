@@ -150,7 +150,6 @@ func (a *ArticleIn) Process(article *m.Article) error {
 		artDebugger.Println("Error parsing timestamp: ", aerr)
 	}
 
-	article.Summary = []string{}
 	article.Source = a.Site
 	article.ArticleId = art.Id
 	article.Headline = a.Metadata.Headline
