@@ -29,24 +29,30 @@ func processSummaries(ch chan error) {
 	ch <- nil
 }
 
-func processArticle(articleUrl string, session *mgo.Session) {
+func processArticle(articleUrl string, session *mgo.Session) bool {
 	processor := a.ParseArticleAtURL(articleUrl, body /* global flag */)
 	if processor.Err != nil {
 		artDebugger.Println("Failed to process article: ", processor.Err)
-		return
+		return false
 	}
 
+	var isNew bool
+	var err error
 	if globalConfig.MongoUrl != "" {
 		if session == nil {
-			session := lib.DBConnect(globalConfig.MongoUrl)
+			session = lib.DBConnect(globalConfig.MongoUrl)
 			defer lib.DBClose(session)
 		}
 
 		artDebugger.Println("Attempting to save article: ", processor.Article)
-		processor.Article.Save(session)
+		isNew, err = processor.Article.Save(session)
+		if err != nil {
+			lib.Logger.Println(err)
+		}
 	}
 
 	artDebugger.Println(processor.Article)
+	return isNew
 }
 
 func formatFeedUrls(sites []string, sections []string) []string {
@@ -109,6 +115,9 @@ var cmdGetArticles = &cobra.Command{
 			defer lib.DBClose(session)
 		}
 
+		newArticles := 0
+		updatedArticles := 0
+
 		var wg sync.WaitGroup
 		ach := make(chan *a.ArticleUrlsChan)
 		for _, url := range feedUrls {
@@ -119,7 +128,12 @@ var cmdGetArticles = &cobra.Command{
 				wg.Add(1)
 				go func(url string) {
 					defer wg.Done()
-					processArticle(url, session)
+					isNew := processArticle(url, session)
+					if isNew {
+						newArticles++
+					} else {
+						updatedArticles++
+					}
 				}(fmt.Sprintf("http://%s.com%s", host, aurl))
 			}
 		}
@@ -128,6 +142,9 @@ var cmdGetArticles = &cobra.Command{
 
 		lib.Logger.Println("Sending request to brevity to process summaries")
 		go processSummaries(nil)
+
+		lib.Logger.Println("New articles: ", newArticles)
+		lib.Logger.Println("Updated articles: ", updatedArticles)
 
 		if timeit {
 			getElapsedTime(&startTime)
@@ -158,7 +175,7 @@ var cmdCopyArticles = &cobra.Command{
 		defer lib.DBClose(session)
 
 		for _, art := range articles {
-			err = art.Save(session)
+			_, err := art.Save(session)
 			if err != nil {
 				panic(err)
 			}

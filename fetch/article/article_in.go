@@ -61,7 +61,12 @@ type Attrs struct {
 }
 
 func NewArticleIn(url string) *ArticleIn {
-	return &ArticleIn{Url: url}
+	article := &ArticleIn{Url: url}
+	if article.isBlacklisted() {
+		return nil
+	}
+
+	return article
 }
 
 func (a *ArticleIn) String() string {
@@ -114,22 +119,18 @@ func (a *ArticleIn) IsValid() bool {
 		return false
 	}
 
-	if a.isBlacklisted(a.Url) {
-		artDebugger.Println("Article URL has been blacklisted: ", a)
-		return false
-	}
-
 	return true
 }
 
-func (a *ArticleIn) isBlacklisted(url string) bool {
+func (a *ArticleIn) isBlacklisted() bool {
 	blacklist := []string{
 		"/videos/",
 		"/police-blotter/",
+		"facebook.com",
 	}
 
 	for _, item := range blacklist {
-		if strings.Contains(url, item) {
+		if strings.Contains(a.Url, item) {
 			return true
 		}
 	}

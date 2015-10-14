@@ -29,6 +29,11 @@ func ParseArticleAtURL(articleUrl string, runExtraction bool) *ArticleProcess {
 	article := &m.Article{}
 
 	articleIn := NewArticleIn(articleUrl)
+	if articleIn == nil {
+		processor.Err = fmt.Errorf("Article Url was blacklisted")
+		return processor
+	}
+
 	err := articleIn.GetData()
 	if err != nil {
 		processor.Err = err
