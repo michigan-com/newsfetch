@@ -24,7 +24,6 @@ type Article struct {
 	Section     string         `bson:"section" json:"section"`
 	Subsection  string         `bson:"subsection" json:"subsection"`
 	Source      string         `bson:"source" json:"source"`
-	Summary     []string       `bson:"summary" json:"summary"`
 	Created_at  time.Time      `bson:"created_at" json:"created_at"`
 	Updated_at  time.Time      `bson:"updated_at" json:"updated_at"`
 	Timestamp   time.Time      `bson:"timestamp" json:"timestamp"`
