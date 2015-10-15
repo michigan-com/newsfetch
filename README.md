@@ -33,32 +33,32 @@ $ make bump 0.1.0
 
 Run the executable:
 
-    export MONGO_URI=mongodb://localhost:27017/mapi
-    ./newsfetch
+```
+./newsfetch
+```
 
 ## Usage
 
-### Body Extractor
+### Environment Variables
 
-```
-$ ./newsfetch body -u [url]
-```
-
-Add title and make it the first line in the output
-
-```
-$ ./newsfetch body -t
-```
+* `MONGO_URI` -- Save article, chartbeat, or recipe data to mongodb.
+* `CHARTBEAT_API_KEY` -- API key for chartbeat, required for any `chartbeat` command.
+* `DEBUG` -- Conditional debugging (DEBUG=*, DEBUG=logger, DEBUG="logger,debugger").
 
 ### Fetch Articles
 
-Grab all articles with body extractor
+Grab a single article
+```
+$ ./newsfetch article -u "http://www.usatoday.com/story/news/nation/2015/10/15/baltimore-police-comissioner-protests/73973330/"
+```
+
+Grab all articles
 
 ```
 $ ./newsfetch articles get -b
 ```
 
-Specify specific site no body extractor
+Specify specific site
 ```
 $ ./newsfetch articles get -i freep.com
 ```
@@ -78,25 +78,29 @@ Just grab the article URL in the output
 $ ./newsfetch articles get -i freep.com -e sports | awk -F"\t+" '{print $4}'
 ```
 
+### Chartbeat
+
+Extract data from chartbeat to get real-time user analytics on Gannett properties
+
 ### Copy Articles
 
 Copy articles returned by Michigan API into the local Mongo database:
 
-    export MONGO_URI=mongodb://localhost:27017/mapi
-    newsfetch articles copy-from 'https://api.michigan.com/v1/news/freep/life?limit=1000'
-
-### Generate Summary
-
-Creates a summary based on the title and the article body
-
 ```
-$ ./newsfetch body -t | ./newsfetch summary
+export MONGO_URI=mongodb://localhost:27017/mapi
+newsfetch articles copy-from 'https://api.michigan.com/v1/news/freep/life?limit=1000'
 ```
 
-If you have the title, use the flag
+### Body Extractor
 
 ```
-$ ./newsfetch body | ./newsfetch summary -t "Cancer doc Farid Fata appeals 45-year prison sentence"
+$ ./newsfetch body -u [url]
+```
+
+Add title and make it the first line in the output
+
+```
+$ ./newsfetch body -t
 ```
 
 ### Logging Output
