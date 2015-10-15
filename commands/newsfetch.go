@@ -13,10 +13,6 @@ var (
 	siteStr      string
 	sectionStr   string
 	title        string
-	output       bool
-	timeit       bool
-	body         bool
-	verbose      bool
 	includeTitle bool
 	noprompt     bool
 	startTime    time.Time
@@ -43,16 +39,10 @@ func Execute(ver, commit string) {
 }
 
 func AddFlags() {
-	NewsfetchCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")
-	NewsfetchCmd.PersistentFlags().BoolVarP(&output, "output", "o", true, "Outputs results of command")
-	NewsfetchCmd.PersistentFlags().BoolVarP(&timeit, "time", "m", false, "Outputs how long a command takes to finish")
-
 	cmdArticle.Flags().StringVarP(&articleUrl, "url", "u", url, "URL of Gannett article")
-	cmdArticle.Flags().BoolVarP(&body, "body", "b", false, "Fetches the article body content")
 
 	cmdGetArticles.Flags().StringVarP(&siteStr, "sites", "i", "all", "Comma separated list of Gannett sites to fetch articles from")
 	cmdGetArticles.Flags().StringVarP(&sectionStr, "sections", "e", "all", "Comma separated list of article sections to fetch from")
-	cmdGetArticles.Flags().BoolVarP(&body, "body", "b", false, "Fetches the article body content")
 
 	cmdBody.Flags().StringVarP(&articleUrl, "url", "u", url, "URL of Gannett article")
 	cmdBody.Flags().BoolVarP(&includeTitle, "title", "t", false, "Place title of article on the first line of output")

@@ -64,7 +64,23 @@ func (article *Article) Save(session *mgo.Session) (bool, error) {
 		return isNew, err
 	}
 
-	info, err := articleCol.Upsert(bson.M{"article_id": article.ArticleId}, article)
+	update := bson.M{
+		"$set": bson.M{
+			"headline":    article.Headline,
+			"subheadline": article.Subheadline,
+			"section":     article.Section,
+			"subsection":  article.Subsection,
+			"source":      article.Source,
+			"updated_at":  article.Updated_at,
+			"timestamp":   article.Timestamp,
+			"url":         article.Url,
+			"photo":       article.Photo,
+			"body":        article.BodyText,
+		},
+		"$setOnInsert": bson.M{"created_at": article.Created_at},
+	}
+
+	info, err := articleCol.Upsert(bson.M{"article_id": article.ArticleId}, update)
 	if err != nil {
 		return isNew, err
 	}

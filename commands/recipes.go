@@ -20,7 +20,7 @@ var recipeDebugger = lib.NewCondLogger("recipes")
 
 func printRecipies(articles []*m.Article) {
 	for _, article := range articles {
-		fmt.Printf("%s/%s/%s - %s - %s\n", article.Source, article.Section, article.Subsection, article.Headline, article.Url)
+		lib.Logger.Printf("%s/%s/%s - %s - %s\n", article.Source, article.Section, article.Subsection, article.Headline, article.Url)
 	}
 }
 
@@ -33,9 +33,7 @@ var cmdReprocessRecipies = &cobra.Command{
 	Use:   "reprocess-all",
 	Short: "Re-extract recipes from all articles saved in Mongo",
 	Run: func(cmd *cobra.Command, args []string) {
-		if timeit {
-			startTime = time.Now()
-		}
+		startTime = time.Now()
 
 		articles, err := LoadArticles(globalConfig.MongoUrl)
 		if err != nil {
@@ -47,9 +45,7 @@ var cmdReprocessRecipies = &cobra.Command{
 
 		recipeDebugger.Printf("Loaded %d articles including %d in food subsection.", beforeCount, len(articles))
 
-		if output {
-			printRecipies(articles)
-		}
+		printRecipies(articles)
 
 		for _, article := range articles {
 			err := r.DownloadAndSaveRecipesForArticle(globalConfig.MongoUrl, article)
@@ -58,9 +54,7 @@ var cmdReprocessRecipies = &cobra.Command{
 			}
 		}
 
-		if timeit {
-			getElapsedTime(&startTime)
-		}
+		getElapsedTime(&startTime)
 	},
 }
 
@@ -68,9 +62,7 @@ var cmdReprocessRecipeById = &cobra.Command{
 	Use:   "reprocess-id",
 	Short: "Re-process recipes with given article IDs (8-digit ints) from Mongo",
 	Run: func(cmd *cobra.Command, args []string) {
-		if timeit {
-			startTime = time.Now()
-		}
+		startTime = time.Now()
 
 		for _, arg := range args {
 			articleId, err := strconv.Atoi(arg)
@@ -89,9 +81,7 @@ var cmdReprocessRecipeById = &cobra.Command{
 			}
 		}
 
-		if timeit {
-			getElapsedTime(&startTime)
-		}
+		getElapsedTime(&startTime)
 	},
 }
 
@@ -99,9 +89,7 @@ var cmdExtractRecipiesFromUrl = &cobra.Command{
 	Use:   "process-url",
 	Short: "Extract recipes from the given URL",
 	Run: func(cmd *cobra.Command, args []string) {
-		if timeit {
-			startTime = time.Now()
-		}
+		startTime = time.Now()
 
 		recipes := r.DownloadRecipesFromUrls(args)
 
@@ -117,9 +105,7 @@ var cmdExtractRecipiesFromUrl = &cobra.Command{
 			}
 		}
 
-		if timeit {
-			getElapsedTime(&startTime)
-		}
+		getElapsedTime(&startTime)
 	},
 }
 
@@ -127,9 +113,7 @@ var cmdExtractRecipiesFromSearch = &cobra.Command{
 	Use:   "process-search",
 	Short: "Extract recipes using the search API",
 	Run: func(cmd *cobra.Command, args []string) {
-		if timeit {
-			startTime = time.Now()
-		}
+		startTime = time.Now()
 
 		page := 1
 		total := 0
@@ -180,9 +164,7 @@ var cmdExtractRecipiesFromSearch = &cobra.Command{
 		// 	}
 		// }
 
-		if timeit {
-			getElapsedTime(&startTime)
-		}
+		getElapsedTime(&startTime)
 	},
 }
 

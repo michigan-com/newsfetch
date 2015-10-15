@@ -86,9 +86,7 @@ func RunChartbeatCommands(beats []Beat) {
 
 		beatWait.Wait()
 
-		if timeit {
-			getElapsedTime(&startTime)
-		}
+		getElapsedTime(&startTime)
 
 		if loop != -1 {
 			chartbeatDebugger.Printf("Looping! Sleeping for %d seconds...", loop)

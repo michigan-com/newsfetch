@@ -126,6 +126,7 @@ func (a *ArticleIn) isBlacklisted() bool {
 	blacklist := []string{
 		"/videos/",
 		"/police-blotter/",
+		"/interactives/",
 		"facebook.com",
 	}
 

@@ -9,9 +9,7 @@ import (
 var cmdArticle = &cobra.Command{
 	Use:   "article",
 	Short: "Command to process a single article", Run: func(cmd *cobra.Command, args []string) {
-		if timeit {
-			startTime = time.Now()
-		}
+		startTime = time.Now()
 
 		if len(args) > 0 && args[0] != "" {
 			articleUrl = args[0]
@@ -25,8 +23,6 @@ var cmdArticle = &cobra.Command{
 
 		processArticle(articleUrl, nil)
 
-		if timeit {
-			getElapsedTime(&startTime)
-		}
+		getElapsedTime(&startTime)
 	},
 }

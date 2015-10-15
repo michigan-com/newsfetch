@@ -43,7 +43,7 @@ func processSummaries() (*SummaryResponse, error) {
 }
 
 func processArticle(articleUrl string, session *mgo.Session) bool {
-	processor := a.ParseArticleAtURL(articleUrl, body /* global flag */)
+	processor := a.ParseArticleAtURL(articleUrl, true)
 	if processor.Err != nil {
 		artDebugger.Println("Failed to process article: ", processor.Err)
 		return false
@@ -95,9 +95,7 @@ var cmdGetArticles = &cobra.Command{
 	Use:   "get",
 	Short: "Fetches, parses, and saves news articles",
 	Run: func(cmd *cobra.Command, args []string) {
-		if timeit {
-			startTime = time.Now()
-		}
+		startTime = time.Now()
 
 		var sites []string
 		var sections []string
@@ -168,9 +166,7 @@ var cmdGetArticles = &cobra.Command{
 		lib.Logger.Println("Skipped article summaries: ", sumRes.Skipped)
 		lib.Logger.Println("Summarized articles: ", sumRes.Summarized)
 
-		if timeit {
-			getElapsedTime(&startTime)
-		}
+		getElapsedTime(&startTime)
 	},
 }
 
@@ -178,9 +174,7 @@ var cmdCopyArticles = &cobra.Command{
 	Use:   "copy-from",
 	Short: "Copies articles from a mapi JSON URL",
 	Run: func(cmd *cobra.Command, args []string) {
-		if timeit {
-			startTime = time.Now()
-		}
+		startTime = time.Now()
 
 		if len(args) != 1 {
 			panic("Required argument: URL")
@@ -203,8 +197,6 @@ var cmdCopyArticles = &cobra.Command{
 			}
 		}
 
-		if timeit {
-			getElapsedTime(&startTime)
-		}
+		getElapsedTime(&startTime)
 	},
 }
