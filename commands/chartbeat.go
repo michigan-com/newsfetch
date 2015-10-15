@@ -139,7 +139,7 @@ func (q *QuickStats) Run(session *mgo.Session) {
 	chartbeatDebugger.Printf("Quickstats")
 
 	urls, err := f.FormatChartbeatUrls("live/quickstats/v4", lib.Sites, globalConfig.ChartbeatApiKey)
-	urls = f.AddUrlParams(urls, "all_platforms=1")
+	urls = f.AddUrlParams(urls, "all_platforms=1&loyalty=1")
 	if err != nil {
 		chartbeatDebugger.Println("ERROR: %v", err)
 		return

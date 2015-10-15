@@ -27,6 +27,7 @@ type QuickStats struct {
 	Search   int           `bson:"search"`
 	Social   int           `bson:"social"`
 	Platform PlatformStats `bson:"platform"`
+	Loyalty  LoyaltyStats  `bson:"loyalty"`
 }
 
 type PlatformStats struct {
@@ -34,4 +35,10 @@ type PlatformStats struct {
 	T int `bson:"t"`
 	D int `bson:"d"`
 	A int `bson:"a"`
+}
+
+type LoyaltyStats struct {
+	New       int `bson:"new"`
+	Loyal     int `bson:"loyal"`
+	Returning int `bson:"returning"`
 }
