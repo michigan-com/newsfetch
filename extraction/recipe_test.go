@@ -65,13 +65,11 @@ func TestRecipeIntegration1(t *testing.T) {
 		D: "Gather up the half of the dough without the filling and fold it over the filling to create a half-moon shape. Pinch the edges together. Place the calzone on the baking sheet. Repeat with remaining dough and filling."
 		D: "Brush the tops with olive oil if desired."
 		D: "Bake calzones until they are golden brown on the outside, about 6 to 8 minutes. Remove from oven and serve."
+		D: "Cook’s note: If you have Italian sausage in your fridge, crumble it into the pan with the broccoli rabe and cook until it’s cooked through."
 	`)
 }
 
 func TestRecipeIntegration2(t *testing.T) {
-	if skipFailingRecipes {
-		t.SkipNow()
-	}
 	testRecipes(t, "http://www.freep.com/story/life/food/recipes/2015/10/03/salty-broccoli-toast-recipes/73310358/", `
 		<p><strong>Salty Broccoli on Toast</strong></p>
 		<p><strong>Makes:</strong> 4 toasts / <strong>Preparation time: </strong>10 minutes / <strong>Total time: </strong>10 minutes</p>
@@ -142,9 +140,6 @@ func TestRecipeIntegrationLinks2(t *testing.T) {
 }
 
 func TestRecipeIntegration3(t *testing.T) {
-	if skipFailingRecipes {
-		t.SkipNow()
-	}
 	testRecipes(t, "http://www.freep.com/story/life/food/recipes/2015/07/01/herb-potato-salad/29524785/", `
 		<p><b>Dorothy Sheets, 57, Farmington Hills</b></p>
 		<p><b>Recipe:</b> Fresh Herb Potato Salad</p>
@@ -192,9 +187,6 @@ func TestRecipeIntegration3(t *testing.T) {
 }
 
 func TestRecipeIntegration4(t *testing.T) {
-	if skipFailingRecipes {
-		t.SkipNow()
-	}
 	testRecipes(t, "http://www.freep.com/story/life/food/recipes/2015/07/01/baked-potato-salad/29517797/", `
 		<p><b>Theresa Makowski, 54, Canton </b></p>
 		<p><b>Recipe:</b> Baked Potato Salad</p>
@@ -236,9 +228,6 @@ func TestRecipeIntegration4(t *testing.T) {
 }
 
 func TestRecipeIntegration5(t *testing.T) {
-	if skipFailingRecipes {
-		t.SkipNow()
-	}
 	testRecipes(t, "http://www.freep.com/story/life/food/recipes/2015/07/01/icebox-potato-salad-recipe/29515873/", `
 		<p><b>Diana Balint, 60, Dearborn </b></p>
 		<p><b>Recipe:</b> Icebox Potato Salad</p>
@@ -279,7 +268,7 @@ func TestRecipeIntegration5(t *testing.T) {
 		I: "1/3 cup hot dog relish (mustard and relish combined) or favorite relish"
 		I: "6 hard-boiled eggs, 4 to chop and add to salad and 2 for decoration"
 		I: "Salt to taste"
-		I: "1/2  cup of chopped Spanish onion if more onion taste is desired."
+		I: "1/2 cup of chopped Spanish onion if more onion taste is desired."
 		D: "Scrub the potatoes and then boil in salted water just until tender. Cool the potatoes in the refrigerator for 24 hours."
 		D: "Peel and slice cooked potatoes and add sour cream and mayonnaise as you are slicing potatoes or they will turn brown. Stir in the celery, green onion, relish, 4 chopped eggs, salt to taste, and, if using, chopped Spanish onion. Save two hard-boiled eggs to slice and place on top in a design. Cover with plastic wrap and place in refrigerator for 6-24 hours."
 	`)
@@ -350,9 +339,6 @@ func TestRecipeIntegration6(t *testing.T) {
 }
 
 func TestRecipeIntegration7(t *testing.T) {
-	if skipFailingRecipes {
-		t.SkipNow()
-	}
 	testRecipes(t, "http://www.freep.com/story/life/food/recipes/2014/11/20/cheese-soup-test-kitchen-recipe/19324313/", `
 		<p>Since our flashback recipes from the 1930s "Home Makers' Handibook" by the Women's Service Bureau of the Detroit Free Press have been such a hit, we decided to offer recipes from another gem.</p>
 		<p>The "Detroit Free Press Cookbook: A Collection of the Best Loved Recipes from the Free Press Tower Kitchen, " by Jeremy Iggers and the late Nettie Duffield, was published in 1984 and includes recipes for local favorites, staff favorites, lots of ethnic options and recipes featuring locally made products such as Vernors.</p>
@@ -406,9 +392,6 @@ func TestRecipeIntegration7(t *testing.T) {
 }
 
 func TestRecipeIntegration8(t *testing.T) {
-	if skipFailingRecipes {
-		t.SkipNow()
-	}
 	testRecipes(t, "http://www.freep.com/story/life/food/recipes/2014/09/25/wolfgang-puck-recipe/16157775/", `
 		<p>If you try to cook fresh seasonal produce as much as possible, you might be puzzled to see artichokes in your market at this time of year. Aren’t they a spring vegetable?</p>
 		<p>Well, yes, to give you the shortest answer. Springtime is when the biggest crops usually fill produce departments.</p>
@@ -478,7 +461,7 @@ func TestRecipeIntegration8(t *testing.T) {
 		I: "2 tablespoons packed chopped fresh chives"
 		I: "2 tablespoons packed chopped fresh chervil leaves"
 		I: "2 tablespoons fresh lemon juice"
-		I: "½ ripe  avocado, pitted"
+		I: "½ ripe avocado, pitted"
 		I: "1 garlic clove, coarsely chopped"
 		I: "Kosher salt"
 		I: "Freshly ground white pepper"
@@ -489,9 +472,6 @@ func TestRecipeIntegration8(t *testing.T) {
 }
 
 func TestRecipeIntegration9(t *testing.T) {
-	if skipFailingRecipes {
-		t.SkipNow()
-	}
 	testRecipes(t, "http://www.freep.com/story/life/food/recipes/2015/06/25/let-others-worry-about-the-burgers-you-focus-on-the-sangria/29161075/", `
 		<p>Want to be the hero of your Fourth of July gathering? Leave the burgers and dogs to somebody else. Ditto for the potato and pasta salads. What you want to bring is the sangria. Because it's hard to go wrong at an outdoor summer party when you're the one toting the pitcher cocktail.</p>
 		<p>Still, I'm not a big believer in working hard for my cocktail. So this recipe is a breeze to assemble. Just dump and stir in the morning, then let it chill for a few hours before serving. Whatever you do, don't add ice until it's in the glass, and even then keep it to one or two cubes at most. Nobody wants a watered-down cocktail.</p>
@@ -520,11 +500,11 @@ func TestRecipeIntegration9(t *testing.T) {
 		I: "1 cup brandy"
 		I: "1 cup peach juice"
 		I: "1/2 cup simple syrup or agave syrup"
-		I: "1 bottle, 750-milliliters  dry red wine (such as rioja)"
+		I: "1 bottle, 750-milliliters dry red wine (such as rioja)"
 		I: "6 ounces fresh raspberries"
 		I: "2 oranges, thinly sliced"
 		I: "2 limes, thinly sliced"
-		I: "1 bag, (16-ounces)  frozen strawberries"
+		I: "1 bag, (16-ounces) frozen strawberries"
 		I: "3/4 cup orange juice"
 		I: "1/4 cup sugar"
 		I: "1 bottle, (750-milliliter bottle) cava (or other sparkling wine)"
@@ -535,9 +515,6 @@ func TestRecipeIntegration9(t *testing.T) {
 }
 
 func TestRecipeIntegration10(t *testing.T) {
-	if skipFailingRecipes {
-		t.SkipNow()
-	}
 	// +intro
 	testRecipes(t, "http://www.freep.com/story/life/food/recipes/2015/08/28/slow-cooker-sriracha-beans/71353992/", `
 		<p><span class="-newsgate-macro-cci-drop-initial-"></span>Eating a healthy diet that includes tomato products is one step men can take to reduce prostate cancer, according to the American Institute for Cancer Research. That’s good news, since prostate cancer is the second most common cancer among American men.</p>
@@ -571,9 +548,9 @@ func TestRecipeIntegration10(t *testing.T) {
 		<p><span class="-newsgate-element-cci-howto--end"></span></p>
 	`, `
 		Title: "Slow-Cooker Sriracha Beans"
-		Serving size: "11 servings (½ cup each)"
+		Serving size: "11 servings (1/2 cup each)"
 		Total time: "5 hours, 30 minutes using a slow-cooker"
-		Prep time: "20 minutes  (plus overnight soaking of beans"
+		Prep time: "20 minutes (plus overnight soaking of beans"
 		Nutrition data: "217 calories (9% from fat), 2 grams fat (0 grams sat. fat, 0 grams trans fat), 40 grams carbohydrates, 9 grams protein, 266 mg sodium, 2 mg cholesterol, 70 mg calcium, 8 grams fiber. Food exchanges: 2 starch, 2 vegetable."
 		I: "2 cups dry white beans (Great Northern or navy)"
 		I: "2 cups chopped onion"
@@ -587,11 +564,11 @@ func TestRecipeIntegration10(t *testing.T) {
 		I: "3 tablespoons Worcestershire sauce, divided"
 		I: "2 teaspoons dry mustard"
 		I: "3 tablespoons cider vinegar"
-		I: "11/2 teaspoons sriracha  sauce"
+		I: "1 1/2 teaspoons sriracha sauce"
 		D: "For best results it’s best to soak dry beans in water overnight according to package directions before simmering and then adding them to the slow cooker."
 		D: "After soaking beans overnight, drain liquid. Return beans to pot, add enough water to cover beans by an inch. Simmer 30 minutes."
 		D: "While beans are cooking, sauté onion and bacon bits in oil, in a skillet, over medium heat. Drain beans and add to a 5-quart slow cooker along with onion mixture, water, ketchup, tomato paste, brown sugar, maple syrup, 2 tablespoons Worcestershire sauce and dry mustard. Cover and cook on high for 4 to 5 hours."
-		D: "When cooking is complete, stir in remaining Worcestershire sauce, vinegar and sriracha sauce.
+		D: "When cooking is complete, stir in remaining Worcestershire sauce, vinegar and sriracha sauce."
 	`)
 }
 
@@ -637,7 +614,9 @@ func testRecipes(t *testing.T, url string, html string, expected string) {
 	expected = strings.TrimSpace(strings.Join(trimLines(strings.Split(expected, "\n")), "\n"))
 
 	if actual != expected {
-		t.Errorf("Got (diff'd against expected value):\n%s", diff(expected, actual))
+		ds := diff(expected, actual)
+		ds = strings.Join(addPrefixToLines(fixLineColons(strings.Split(ds, "\n")), "> "), "\n")
+		t.Errorf("Got (diff'd against expected value):\n%s", ds)
 	}
 }
 
@@ -645,6 +624,23 @@ func trimLines(input []string) []string {
 	result := make([]string, 0, len(input))
 	for _, el := range input {
 		result = append(result, strings.TrimSpace(el))
+	}
+	return result
+}
+
+func addPrefixToLines(input []string, prefix string) []string {
+	result := make([]string, 0, len(input))
+	for _, el := range input {
+		result = append(result, prefix+el)
+	}
+	return result
+}
+
+func fixLineColons(input []string) []string {
+	result := make([]string, 0, len(input))
+	for _, el := range input {
+		el = strings.Replace(el, ":", " →", 1)
+		result = append(result, el)
 	}
 	return result
 }

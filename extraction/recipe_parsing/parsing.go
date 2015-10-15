@@ -60,10 +60,19 @@ func ExtractRecipes(doc *gq.Document) (m.RecipeExtractionResult, *m.Messages) {
 
 	fragments := extractRecipeFragments(doc, msg)
 
+	markDefiniteRecipeTitles(fragments)
+	if hasFragmentWithTag(fragments, m.TitleTag) {
+		fragments = omitFragmentsBeforeFirstTitleTag(fragments)
+	}
+
+	fixupParagraphTexts(fragments)
+	fragments = skipEmptyParagraphFragments(fragments)
+
 	recipes := make([]*m.Recipe, 0)
 
 	state := none
 	var recipeFragments []m.RecipeFragment
+	var nextRecipeFragments []m.RecipeFragment
 	var unused []m.RecipeFragment
 
 	setState := func(newState recipeState) {
@@ -79,10 +88,14 @@ func ExtractRecipes(doc *gq.Document) (m.RecipeExtractionResult, *m.Messages) {
 				recipe := m.NewRecipe()
 				recipe.Photo = photo
 				walkFragments(recipeFragments)
+				for _, fragment := range nextRecipeFragments {
+					fragment.AddToRecipe(recipe)
+				}
 				for _, fragment := range recipeFragments {
 					fragment.AddToRecipe(recipe)
 				}
 				recipes = append(recipes, recipe)
+				nextRecipeFragments = nil
 			}
 			recipeFragments = nil
 		}
@@ -106,6 +119,11 @@ func ExtractRecipes(doc *gq.Document) (m.RecipeExtractionResult, *m.Messages) {
 		case m.TimingTag, m.NutritionDataTag, m.SignatureTag, m.IngredientsSubtitleTag, m.DirectionsSubtitleTag:
 			if state == unconfirmed {
 				setState(confirmed)
+			}
+
+		case m.ServingSizeAltTimingTag:
+			if state == none {
+				nextRecipeFragments = append(nextRecipeFragments, fragment)
 			}
 
 		case m.PossibleIngredientTag:
@@ -173,6 +191,72 @@ func walkFragments(fragments []m.RecipeFragment) {
 
 		if !changed {
 			break
+		}
+	}
+}
+
+func markDefiniteRecipeTitles(fragments []m.RecipeFragment) {
+	walkFragmentsBackward(fragments, func(cur m.RecipeFragment, curTag m.RecipeFragmentTag, nextTag m.RecipeFragmentTag) {
+		switch curTag {
+		case m.PossibleTitleTag:
+			switch nextTag {
+			case m.TimingTag:
+				cur.Mark(m.TitleTag)
+			}
+		}
+	})
+}
+
+func hasFragmentWithTag(fragments []m.RecipeFragment, tag m.RecipeFragmentTag) bool {
+	for _, frag := range fragments {
+		if frag.Tag() == tag {
+			return true
+		}
+	}
+	return false
+}
+
+func omitFragmentsBeforeFirstTitleTag(fragments []m.RecipeFragment) []m.RecipeFragment {
+	result := make([]m.RecipeFragment, 0, len(fragments))
+	found := false
+	for _, frag := range fragments {
+		if frag.Tag() == m.TitleTag {
+			found = true
+		}
+		if found {
+			result = append(result, frag)
+		}
+	}
+	return result
+}
+
+func skipEmptyParagraphFragments(fragments []m.RecipeFragment) []m.RecipeFragment {
+	result := make([]m.RecipeFragment, 0, len(fragments))
+	for _, frag := range fragments {
+		if frag, ok := frag.(*m.ParagraphFragment); ok {
+			if len(frag.Text) == 0 {
+				continue
+			}
+		}
+		result = append(result, frag)
+	}
+	return result
+}
+
+func fixupParagraphTexts(fragments []m.RecipeFragment) {
+	for _, frag := range fragments {
+		if frag, ok := frag.(*m.ParagraphFragment); ok {
+			frag.Text = strings.TrimSpace(frag.Text)
+			oldText := frag.Text
+			frag.Text = strings.Trim(frag.Text, "■ ")
+
+			switch frag.Tag() {
+			case m.IngredientTag, m.PossibleIngredientTag:
+			case m.ParagraphTag, m.ShortParagraphTag:
+				if oldText != frag.Text {
+					frag.Mark(m.IngredientTag)
+				}
+			}
 		}
 	}
 }

@@ -16,6 +16,7 @@ const (
 	PossibleIngredientSubdivisionTag // normal paragraph unless proven otherwise
 
 	TimingTag
+	ServingSizeAltTimingTag // “This recipe serves ...”, found in the body of the article
 	IngredientTag
 	IngredientSubdivisionTag
 	PossibleIngredientTag
@@ -53,35 +54,29 @@ func (f RecipeMarkerFragment) AddToRecipe(recipe *Recipe) {
 ///////////////////////////////////////////////////////////////////////////////
 
 type RecipeTimingFragment struct {
+	TagF            RecipeFragmentTag
 	ServingSize     string
 	PreparationTime *RecipeDuration
 	TotalTime       *RecipeDuration
 }
 
 func (f RecipeTimingFragment) Tag() RecipeFragmentTag {
-	return TimingTag
+	return f.TagF
 }
 func (f RecipeTimingFragment) Mark(tag RecipeFragmentTag) {
 	panic("Unsupported")
 }
 
 func (f RecipeTimingFragment) AddToRecipe(r *Recipe) {
-	r.ServingSize = f.ServingSize
-	r.PreparationTime = f.PreparationTime
-	r.TotalTime = f.TotalTime
-}
-
-///////////////////////////////////////////////////////////////////////////////
-
-func (f RecipeIngredient) Tag() RecipeFragmentTag {
-	return IngredientTag
-}
-func (f RecipeIngredient) Mark(tag RecipeFragmentTag) {
-	panic("Unsupported")
-}
-
-func (f RecipeIngredient) AddToRecipe(r *Recipe) {
-	r.Ingredients = append(r.Ingredients, f)
+	if f.ServingSize != "" {
+		r.ServingSize = f.ServingSize
+	}
+	if f.PreparationTime != nil {
+		r.PreparationTime = f.PreparationTime
+	}
+	if f.TotalTime != nil {
+		r.TotalTime = f.TotalTime
+	}
 }
 
 ///////////////////////////////////////////////////////////////////////////////
