@@ -19,14 +19,11 @@ var (
 	VERSION      string
 	COMMITHASH   string
 	loop         int
+	timeLogger   = lib.NewCondLogger("timer")
+	NewsfetchCmd = &cobra.Command{Use: "newsfetch"}
+	url          = "http://www.freep.com/story/news/local/michigan/2015/08/06/farid-fata-cancer-sentencing/31213475/"
 	//w            = new(tabwriter.Writer)
 )
-
-var NewsfetchCmd = &cobra.Command{
-	Use: "newsfetch",
-}
-
-var url = "http://www.freep.com/story/news/local/michigan/2015/08/06/farid-fata-cancer-sentencing/31213475/"
 
 func Execute(ver, commit string) {
 	VERSION = ver
@@ -84,5 +81,5 @@ func AddCommands() {
 
 func getElapsedTime(sTime *time.Time) {
 	endTime := time.Now()
-	lib.Logger.Println("Total time to run: ", endTime.Sub(*sTime))
+	timeLogger.Println("Total time to run: ", endTime.Sub(*sTime))
 }
