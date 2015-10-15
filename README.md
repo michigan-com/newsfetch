@@ -80,7 +80,28 @@ $ ./newsfetch articles get -i freep.com -e sports | awk -F"\t+" '{print $4}'
 
 ### Chartbeat
 
-Extract data from chartbeat to get real-time user analytics on Gannett properties
+Available APIs
+
+### [Toppages](https://chartbeat.com/docs/api/explore/#endpoint=live/toppages/v3/+host=gizmodo.com)
+Hit the Toppages API
+```
+$ ./newsfetch chartbeat toppages
+```
+
+### [Quickstats](https://chartbeat.com/docs/api/explore/#endpoint=live/quickstats/v4/+host=gizmodo.com)
+Hit the quickstats API
+```
+$ ./newsfetch chartbeat quickstats
+```
+
+### [Topgeo](https://chartbeat.com/docs/api/explore/#endpoint=live/top_geo/v1/+host=gizmodo.com)
+Hit the Topgeo API
+```
+$ ./newsfetch chartbeat topgeo
+```
+
+### All
+Grab from all above APIs at once
 
 ```
 $ ./newsfetch chartbeat all
@@ -89,7 +110,7 @@ $ ./newsfetch chartbeat all
 Keep it running on loop every 30 seconds
 
 ```
-$ ./newsfetch chartbeat -l 30
+$ ./newsfetch chartbeat all -l 30
 ```
 
 ### Copy Articles
