@@ -82,6 +82,16 @@ $ ./newsfetch articles get -i freep.com -e sports | awk -F"\t+" '{print $4}'
 
 Extract data from chartbeat to get real-time user analytics on Gannett properties
 
+```
+$ ./newsfetch chartbeat all
+```
+
+Keep it running on loop every 30 seconds
+
+```
+$ ./newsfetch chartbeat -l 30
+```
+
 ### Copy Articles
 
 Copy articles returned by Michigan API into the local Mongo database:
