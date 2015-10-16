@@ -102,6 +102,7 @@ func RunChartbeatCommands(beats []Beat) {
 func (t *TopPages) Run(session *mgo.Session) {
 	chartbeatDebugger.Println("Fetching toppages")
 	urls, err := f.FormatChartbeatUrls("live/toppages/v3", lib.Sites, globalConfig.ChartbeatApiKey)
+	urls = f.AddUrlParams(urls, "loyalty=1")
 
 	if err != nil {
 		chartbeatDebugger.Printf("ERROR: %v", err)

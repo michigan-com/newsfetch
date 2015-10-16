@@ -18,6 +18,7 @@ type TopArticle struct {
 	Source    string        `bson:"source"`
 	Sections  []string      `bson:"sections"`
 	Visits    int           `bson:"visits"`
+	Loyalty   LoyaltyStats  `json:"loyalty"`
 }
 
 type TopPages struct {
@@ -33,5 +34,6 @@ type ArticleContent struct {
 }
 
 type ArticleStats struct {
-	Visits int `json:"visits"`
+	Visits  int          `json:"visits"`
+	Loyalty LoyaltyStats `json:"loyalty"`
 }
