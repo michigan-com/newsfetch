@@ -1,8 +1,9 @@
 package model
 
 import (
-	"gopkg.in/mgo.v2/bson"
 	"time"
+
+	"gopkg.in/mgo.v2/bson"
 )
 
 type TopPagesSnapshot struct {
@@ -31,6 +32,7 @@ type ArticleContent struct {
 	Sections []string      `json:"sections"`
 	Stats    *ArticleStats `json: "stats"`
 	Title    string        `json:"title"`
+	Authors  []string      `json:"authors"`
 }
 
 type ArticleStats struct {
