@@ -20,14 +20,14 @@ type QuickStatsRespStats struct {
 }
 
 type QuickStats struct {
-	Source   string        `bson:source`
-	Visits   int           `bson:"visits"`
-	Links    int           `bson:"links"`
-	Direct   int           `bson:"direct"`
-	Search   int           `bson:"search"`
-	Social   int           `bson:"social"`
-	Platform PlatformStats `bson:"platform"`
-	Loyalty  LoyaltyStats  `bson:"loyalty"`
+	Source          string        `bson:source`
+	Visits          int           `bson:"visits"`
+	Links           int           `bson:"links"`
+	Direct          int           `bson:"direct"`
+	Search          int           `bson:"search"`
+	Social          int           `bson:"social"`
+	PlatformEngaged PlatformStats `json:"platform_engaged"bson:"platform_engaged"`
+	Loyalty         LoyaltyStats  `bson:"loyalty"`
 }
 
 type PlatformStats struct {
