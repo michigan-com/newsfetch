@@ -1,6 +1,11 @@
 CHANGELOG
 =========
 
+v0.2.4 2015-10-19
+-----------------
+
+* Added command for ./newsfetch chartbeat referrers
+
 v0.2.3 2015-10-14
 -----------------
 
