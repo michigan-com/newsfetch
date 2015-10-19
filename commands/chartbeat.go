@@ -126,11 +126,10 @@ func (t *TopPages) Run(session *mgo.Session) {
 		if err != nil {
 			chartbeatDebugger.Printf("%v", err)
 		} else {
+			defer resp.Body.Close()
 			now := time.Now()
 			chartbeatDebugger.Printf("Updated toppages snapshot at Mapi at %v", now)
 		}
-
-		defer resp.Body.Close()
 	} else {
 		chartbeatDebugger.Printf("Variable 'mongoUri' not specified, no data will be saved")
 	}
