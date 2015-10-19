@@ -3,6 +3,7 @@ package fetch
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -32,6 +33,8 @@ func FetchReferrers(urls []string) []*m.Referrers {
 	}
 
 	wait.Wait()
+	close(statQueue)
+
 	referrers := make([]*m.Referrers, 0, len(urls))
 	for ref := range statQueue {
 		referrers = append(referrers, ref)
@@ -42,7 +45,7 @@ func FetchReferrers(urls []string) []*m.Referrers {
 func getReferrers(url string) (*m.Referrers, error) {
 	chartbeatDebugger.Printf("Fetching %s", url)
 
-	resp, err := http.Get("url")
+	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +64,7 @@ func getReferrers(url string) (*m.Referrers, error) {
 		return nil, err
 	}
 
-	referrers.Source = host
+	referrers.Source = strings.Replace(host, ".com", "", -1)
 
 	return referrers, nil
 }

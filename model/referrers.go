@@ -7,7 +7,7 @@ import (
 )
 
 type ReferrersSnapshot struct {
-	Id         bson.ObjectId `bson:"_id"`
+	Id         bson.ObjectId `bson:"_id,omitempty"`
 	Created_at time.Time     `bson:"created_at"`
 	Referrers  []*Referrers  `bson:"referrers"`
 }
