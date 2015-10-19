@@ -19,6 +19,7 @@ type Beat interface {
 type TopPages struct{}
 type QuickStats struct{}
 type TopGeo struct{}
+type Referrers struct{}
 
 var chartbeatDebugger = lib.NewCondLogger("chartbeat")
 
@@ -31,7 +32,7 @@ var cmdAllBeats = &cobra.Command{
 	Use:   "all",
 	Short: "Fetch all Chartbeat Beats (toppages, quickstats)",
 	Run: func(cmd *cobra.Command, argv []string) {
-		RunChartbeatCommands([]Beat{&TopPages{}, &QuickStats{}, &TopGeo{}})
+		RunChartbeatCommands([]Beat{&TopPages{}, &QuickStats{}, &TopGeo{}, &Referrers{}})
 	},
 }
 
@@ -56,6 +57,14 @@ var cmdTopGeo = &cobra.Command{
 	Short: "Fetch topgeo snapshot for Chartbeat",
 	Run: func(cmd *cobra.Command, argv []string) {
 		RunChartbeatCommands([]Beat{&TopGeo{}})
+	},
+}
+
+var cmdReferrers = &cobra.Command{
+	Use:   "referrers",
+	Short: "Fetch referrers snapshot for Chartbeat",
+	Run: func(cmd *cobra.Command, arg []string) {
+		RunChartbeatCommands([]Beat{&Referrers{}})
 	},
 }
 
@@ -126,11 +135,10 @@ func (t *TopPages) Run(session *mgo.Session) {
 		if err != nil {
 			chartbeatDebugger.Printf("%v", err)
 		} else {
+			defer resp.Body.Close()
 			now := time.Now()
 			chartbeatDebugger.Printf("Updated toppages snapshot at Mapi at %v", now)
 		}
-
-		defer resp.Body.Close()
 	} else {
 		chartbeatDebugger.Printf("Variable 'mongoUri' not specified, no data will be saved")
 	}
@@ -194,5 +202,34 @@ func (t *TopGeo) Run(session *mgo.Session) {
 	} else {
 		chartbeatDebugger.Printf("Variable 'mongoUri' not specified, no data will be saved")
 		chartbeatDebugger.Printf("%v", topGeo)
+	}
+}
+
+func (r *Referrers) Run(session *mgo.Session) {
+	chartbeatDebugger.Printf("Referrers")
+
+	urls, err := f.FormatChartbeatUrls("live/referrers/v3", lib.Sites, globalConfig.ChartbeatApiKey)
+	if err != nil {
+		chartbeatDebugger.Println("%v", err)
+		return
+	}
+
+	referrers := f.FetchReferrers(urls)
+
+	if session != nil {
+		chartbeatDebugger.Printf("Saving referrers...")
+
+		f.SaveReferrers(referrers, session)
+
+		// Update mapi
+		resp, err := http.Get("https://api.michigan.com/referrers/")
+		if err != nil {
+			chartbeatDebugger.Printf("%v", err)
+		} else {
+			defer resp.Body.Close()
+			chartbeatDebugger.Printf("Updated referrers snapshot at Mapi at %v", time.Now())
+		}
+	} else {
+		chartbeatDebugger.Printf("Variable 'mongoUri' not specified, no data will be saved")
 	}
 }
