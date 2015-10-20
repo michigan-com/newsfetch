@@ -41,7 +41,7 @@ func FetchTopPages(urls []string) []*m.TopArticle {
 			host, _ := GetHostFromParams(url)
 
 			if err != nil {
-				chartbeatDebugger.Println("%v", err)
+				chartbeatError.Println("Failed to json parse url %s: %v", url, err)
 				wg.Done()
 				return
 			}
@@ -167,6 +167,7 @@ func GetTopPages(url string) (*m.TopPages, error) {
 
 	resp, err := http.Get(url)
 	if err != nil {
+		chartbeatError.Printf("Failed to get url %s: %v", url, err)
 		return nil, err
 	}
 	defer resp.Body.Close()

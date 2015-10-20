@@ -6,7 +6,8 @@ import (
 	"github.com/michigan-com/newsfetch/lib"
 )
 
-var chartbeatDebugger = lib.NewCondLogger("fetch-chartbeat")
+var chartbeatDebugger = lib.NewCondLogger("fetch:chartbeat")
+var chartbeatError = lib.NewCondLogger("fetch:chartbeat:error")
 
 const chartbeatApiUrlFormat = "http://api.chartbeat.com/%s/?apikey=%s&host=%s&limit=100"
 

@@ -54,6 +54,7 @@ func GetTopGeo(url string) (*m.TopGeo, error) {
 
 	resp, err := http.Get(url)
 	if err != nil {
+		chartbeatError.Printf("Failed to fetch url %s: %v", url, err)
 		return nil, err
 	}
 	defer resp.Body.Close()
@@ -66,6 +67,7 @@ func GetTopGeo(url string) (*m.TopGeo, error) {
 	topGeo := &topGeoResp.Geo
 
 	if err != nil {
+		chartbeatError.Printf("Failed to parse json body from url %s: %v", url, err)
 		return nil, err
 	}
 

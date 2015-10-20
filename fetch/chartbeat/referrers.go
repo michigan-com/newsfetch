@@ -47,6 +47,7 @@ func getReferrers(url string) (*m.Referrers, error) {
 
 	resp, err := http.Get(url)
 	if err != nil {
+		chartbeatError.Printf("Failed to get url %s: %v", url, err)
 		return nil, err
 	}
 	defer resp.Body.Close()
@@ -61,6 +62,7 @@ func getReferrers(url string) (*m.Referrers, error) {
 	decoder := json.NewDecoder(resp.Body)
 	err = decoder.Decode(&referrers)
 	if err != nil {
+		chartbeatError.Printf("Failed to json parse json body from url %s: %v", url, err)
 		return nil, err
 	}
 

@@ -63,6 +63,7 @@ func GetQuickStats(url string) (*m.QuickStats, error) {
 
 	resp, err := http.Get(url)
 	if err != nil {
+		chartbeatError.Printf("Failed to fetch url %s: %v", url, err)
 		return nil, err
 	}
 	defer resp.Body.Close()
@@ -74,6 +75,7 @@ func GetQuickStats(url string) (*m.QuickStats, error) {
 	err = decoder.Decode(&quickStatsResp)
 
 	if err != nil {
+		chartbeatError.Printf("Failed to parse json body from url %s: %v", url, err)
 		return nil, err
 	}
 

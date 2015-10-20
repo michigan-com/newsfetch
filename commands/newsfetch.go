@@ -19,6 +19,7 @@ var (
 	VERSION      string
 	COMMITHASH   string
 	loop         int
+	noUpdate     bool
 	timeLogger   = lib.NewCondLogger("timer")
 	NewsfetchCmd = &cobra.Command{Use: "newsfetch"}
 	url          = "http://www.freep.com/story/news/local/michigan/2015/08/06/farid-fata-cancer-sentencing/31213475/"
@@ -45,6 +46,7 @@ func AddFlags() {
 	cmdBody.Flags().BoolVarP(&includeTitle, "title", "t", false, "Place title of article on the first line of output")
 
 	cmdChartbeat.PersistentFlags().IntVarP(&loop, "loop", "l", -1, "Specify the internval in seconds to loop the fetching of the toppages api")
+	cmdChartbeat.PersistentFlags().BoolVarP(&noUpdate, "no-update", "n", false, "If present, mapi will not be updated")
 }
 
 func AddCommands() {

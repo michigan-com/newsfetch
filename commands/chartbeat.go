@@ -84,10 +84,13 @@ func RunChartbeatCommands(beats []Beat) {
 
 		for _, beat := range beats {
 			beatWait.Add(1)
-			copy := session.Copy()
-			defer copy.Close()
 
 			go func(beat Beat) {
+				var copy *mgo.Session
+				if session != nil {
+					copy = session.Copy()
+					defer copy.Close()
+				}
 				beat.Run(copy)
 				beatWait.Done()
 			}(beat)
@@ -101,7 +104,9 @@ func RunChartbeatCommands(beats []Beat) {
 			chartbeatDebugger.Printf("Looping! Sleeping for %d seconds...", loop)
 			time.Sleep(time.Duration(loop) * time.Second)
 			chartbeatDebugger.Printf("...and now I'm awake!")
-			session.Refresh()
+			if session != nil {
+				session.Refresh()
+			}
 		} else {
 			break
 		}
@@ -131,13 +136,15 @@ func (t *TopPages) Run(session *mgo.Session) {
 		f.CalculateTimeInterval(snapshot, session)
 
 		// Update mapi to let it know that a new snapshot has been saved
-		resp, err := http.Get("https://api.michigan.com/popular/")
-		if err != nil {
-			chartbeatDebugger.Printf("%v", err)
-		} else {
-			defer resp.Body.Close()
-			now := time.Now()
-			chartbeatDebugger.Printf("Updated toppages snapshot at Mapi at %v", now)
+		if !noUpdate {
+			resp, err := http.Get("https://api.michigan.com/popular/")
+			if err != nil {
+				chartbeatDebugger.Printf("%v", err)
+			} else {
+				defer resp.Body.Close()
+				now := time.Now()
+				chartbeatDebugger.Printf("Updated toppages snapshot at Mapi at %v", now)
+			}
 		}
 	} else {
 		chartbeatDebugger.Printf("Variable 'mongoUri' not specified, no data will be saved")
@@ -162,12 +169,14 @@ func (q *QuickStats) Run(session *mgo.Session) {
 		f.SaveQuickStats(quickStats, session)
 
 		// Update mapi
-		resp, err := http.Get("https://api.michigan.com/quickstats/")
-		if err != nil {
-			chartbeatDebugger.Printf("%v", err)
-		} else {
-			defer resp.Body.Close()
-			chartbeatDebugger.Printf("Updated quickstats snapshot at Mapi at %v", time.Now())
+		if !noUpdate {
+			resp, err := http.Get("https://api.michigan.com/quickstats/")
+			if err != nil {
+				chartbeatDebugger.Printf("%v", err)
+			} else {
+				defer resp.Body.Close()
+				chartbeatDebugger.Printf("Updated quickstats snapshot at Mapi at %v", time.Now())
+			}
 		}
 	} else {
 		chartbeatDebugger.Printf("Variable 'mongoUri' not specified, no data will be saved")
@@ -192,12 +201,14 @@ func (t *TopGeo) Run(session *mgo.Session) {
 		f.SaveTopGeo(topGeo, session)
 
 		// Update mapi
-		resp, err := http.Get("https://api.michigan.com/topgeo/")
-		if err != nil {
-			chartbeatDebugger.Printf("%v", err)
-		} else {
-			defer resp.Body.Close()
-			chartbeatDebugger.Printf("Updated topgeo snapshot at Mapi at %v", time.Now())
+		if !noUpdate {
+			resp, err := http.Get("https://api.michigan.com/topgeo/")
+			if err != nil {
+				chartbeatDebugger.Printf("%v", err)
+			} else {
+				defer resp.Body.Close()
+				chartbeatDebugger.Printf("Updated topgeo snapshot at Mapi at %v", time.Now())
+			}
 		}
 	} else {
 		chartbeatDebugger.Printf("Variable 'mongoUri' not specified, no data will be saved")
@@ -222,12 +233,14 @@ func (r *Referrers) Run(session *mgo.Session) {
 		f.SaveReferrers(referrers, session)
 
 		// Update mapi
-		resp, err := http.Get("https://api.michigan.com/referrers/")
-		if err != nil {
-			chartbeatDebugger.Printf("%v", err)
-		} else {
-			defer resp.Body.Close()
-			chartbeatDebugger.Printf("Updated referrers snapshot at Mapi at %v", time.Now())
+		if !noUpdate {
+			resp, err := http.Get("https://api.michigan.com/referrers/")
+			if err != nil {
+				chartbeatDebugger.Printf("%v", err)
+			} else {
+				defer resp.Body.Close()
+				chartbeatDebugger.Printf("Updated referrers snapshot at Mapi at %v", time.Now())
+			}
 		}
 	} else {
 		chartbeatDebugger.Printf("Variable 'mongoUri' not specified, no data will be saved")
