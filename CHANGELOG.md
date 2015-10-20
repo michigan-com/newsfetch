@@ -1,6 +1,11 @@
 CHANGELOG
 =========
 
+v0.2.5 2015-10-20
+-----------------
+
+* Added `authors` key to toppages snapshot
+
 v0.2.4 2015-10-19
 -----------------
 
