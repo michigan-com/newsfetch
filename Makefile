@@ -17,3 +17,6 @@ bump:
 
 test:
 	go test ./...
+
+get:
+	go get -t ./...

@@ -13,7 +13,7 @@ printer "Updating newsfetch golang src ..."
 git pull deploy live
 
 printer "Download any required third part libraries ..."
-go get
+go get -t ./...
 
 printer "Removing old binary ..."
 go clean -i
