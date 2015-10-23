@@ -64,7 +64,7 @@ func FetchTopPages(urls []string) []*m.TopArticle {
 				article.Sections = page.Sections
 				article.Visits = page.Stats.Visits
 				article.Loyalty = page.Stats.Loyalty
-				article.Authors = page.Authors
+				article.Authors = e.ParseAuthors(page.Authors)
 				article.Source = strings.Replace(host, ".com", "", -1)
 
 				articleQueue <- article
