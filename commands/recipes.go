@@ -145,7 +145,11 @@ var cmdExtractRecipiesFromSearch = &cobra.Command{
 			if len(urls) == 0 {
 				break
 			}
+
 			page++
+			if page > searchOpts.pages {
+				break
+			}
 		}
 
 		println("Total", total)
