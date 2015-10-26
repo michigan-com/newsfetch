@@ -117,6 +117,7 @@ var cmdExtractRecipiesFromSearch = &cobra.Command{
 
 		page := 1
 		total := 0
+		processedURLsTable := make(map[string]bool, searchOpts.pages*10)
 		for {
 			println("Page", page)
 			urls, err := extraction.ExtractArticleURLsFromSearchResults("recipe", page)
@@ -124,13 +125,23 @@ var cmdExtractRecipiesFromSearch = &cobra.Command{
 				panic(err)
 			}
 
-			for _, url := range urls {
-				id := lib.GetArticleId(url)
-				println("Found article", id, "at", url)
+			filteredURLs := m.FilterArticleURLsBySection(urls, "life")
+			unprocessedFilteredURLs := filterUnprocessed(filteredURLs, processedURLsTable)
+
+			if searchOpts.onlyNew {
+				if globalConfig.MongoUrl == "" {
+					panic("Need a MongoDB URI to run with --only-new")
+				}
+				// TODO
 			}
 
-			recipes := r.DownloadRecipesFromUrls(urls)
-			fmt.Printf("Found %d recipes.\n", len(recipes))
+			recipes := r.DownloadRecipesFromUrls(unprocessedFilteredURLs)
+
+			fmt.Printf("\nFound %d recipes in %d articles (plus ignored %d existing, %d duplicates, %d in wrong section).\n", len(recipes), len(unprocessedFilteredURLs), 0, len(filteredURLs)-len(unprocessedFilteredURLs), len(urls)-len(filteredURLs))
+
+			for _, url := range unprocessedFilteredURLs {
+				processedURLsTable[url] = true
+			}
 
 			if globalConfig.MongoUrl != "" {
 				err := r.SaveRecipes(globalConfig.MongoUrl, recipes)
@@ -237,6 +248,16 @@ func sliceOfArticlesToSliceOfPointers(articles []m.Article) []*m.Article {
 	for _, el := range articles {
 		copy := el
 		result = append(result, &copy)
+	}
+	return result
+}
+
+func filterUnprocessed(urls []string, table map[string]bool) []string {
+	result := make([]string, 0, len(urls))
+	for _, el := range urls {
+		if !table[el] {
+			result = append(result, el)
+		}
 	}
 	return result
 }
