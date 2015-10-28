@@ -26,11 +26,6 @@ var (
 	//w            = new(tabwriter.Writer)
 )
 
-var searchOpts struct {
-	pages   int
-	onlyNew bool
-}
-
 func Execute(ver, commit string) {
 	VERSION = ver
 	COMMITHASH = commit
@@ -52,9 +47,6 @@ func AddFlags() {
 
 	cmdChartbeat.PersistentFlags().IntVarP(&loop, "loop", "l", -1, "Specify the internval in seconds to loop the fetching of the toppages api")
 	cmdChartbeat.PersistentFlags().BoolVarP(&noUpdate, "no-update", "n", false, "If present, mapi will not be updated")
-
-	cmdExtractRecipiesFromSearch.Flags().IntVarP(&searchOpts.pages, "pages", "n", -1, "Specify the number of pages to process")
-	cmdExtractRecipiesFromSearch.Flags().BoolVarP(&searchOpts.onlyNew, "only-new", "O", false, "Only process articles not already in the database")
 }
 
 func AddCommands() {

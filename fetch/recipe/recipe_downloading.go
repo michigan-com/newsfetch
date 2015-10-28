@@ -1,6 +1,8 @@
 package fetch
 
 import (
+	"fmt"
+
 	"github.com/michigan-com/newsfetch/extraction"
 	"github.com/michigan-com/newsfetch/lib"
 	m "github.com/michigan-com/newsfetch/model"
@@ -29,12 +31,20 @@ func DownloadAndSaveRecipesForArticle(mongoUrl string, article *m.Article) error
 	}
 }
 
-func DownloadRecipesForArticle(article *m.Article) []*m.Recipe {
-	return DownloadRecipesFromUrls([]string{article.Url})
+type DownloadRecipesResult struct {
+	Recipes            []*m.Recipe
+	URLs               []string
+	URLsWithoutRecipes []string
 }
 
-func DownloadRecipesFromUrls(urls []string) []*m.Recipe {
-	recipes := make([]*m.Recipe, 0)
+func DownloadRecipesForArticle(article *m.Article) []*m.Recipe {
+	return DownloadRecipesFromUrls([]string{article.Url}).Recipes
+}
+
+func DownloadRecipesFromUrls(urls []string) DownloadRecipesResult {
+	result := DownloadRecipesResult{}
+	result.URLs = make([]string, 0)
+	result.URLsWithoutRecipes = make([]string, 0)
 
 	visited := make(map[string]bool)
 	for len(urls) > 0 {
@@ -46,8 +56,6 @@ func DownloadRecipesFromUrls(urls []string) []*m.Recipe {
 		}
 		visited[url] = true
 
-		recipeDebugger.Println("Recipe extraction for URL", url)
-
 		articleId := lib.GetArticleId(url)
 		if articleId < 1 {
 			recipeDebugger.Println("Skipped, cannot determine article ID")
@@ -56,23 +64,32 @@ func DownloadRecipesFromUrls(urls []string) []*m.Recipe {
 
 		extracted := extraction.ExtractDataFromHTMLAtURL(url, false)
 
-		for _, recipe := range extracted.RecipeData.Recipes {
+		recipesInArticle := extracted.RecipeData.Recipes
+
+		for _, recipe := range recipesInArticle {
 			recipe.ArticleId = articleId
 		}
 
-		recipeDebugger.Println("  found", len(extracted.RecipeData.Recipes), "recipes")
+		if recipeDebugger.IsEnabled() {
+			fmt.Printf("Found %d recipes + %d links in %s\n", len(recipesInArticle), len(extracted.RecipeData.EmbeddedArticleUrls), url)
+		}
+
+		if len(recipesInArticle) == 0 && len(extracted.RecipeData.EmbeddedArticleUrls) == 0 {
+			result.URLsWithoutRecipes = append(result.URLsWithoutRecipes, url)
+		}
+		result.URLs = append(result.URLs, url)
 
 		if false {
-			for i, recipe := range recipes {
+			for i, recipe := range result.Recipes {
 				recipeDebugger.Println()
 				recipeDebugger.Println("Recipe ", i, "=", recipe.String())
 				recipeDebugger.Println()
 			}
 		}
 
-		recipes = append(recipes, extracted.RecipeData.Recipes...)
+		result.Recipes = append(result.Recipes, extracted.RecipeData.Recipes...)
 		urls = append(urls, extracted.RecipeData.EmbeddedArticleUrls...)
 	}
 
-	return recipes
+	return result
 }

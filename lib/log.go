@@ -12,21 +12,28 @@ var Debug string = strings.ToLower(os.Getenv("DEBUG"))
 var debuggers = strings.Split(Debug, ",")
 
 type CondLogger struct {
-	name string
+	name    string
+	enabled bool
 	*log.Logger
 }
 
 func (c *CondLogger) Enable() {
+	c.enabled = true
 	c.Logger.SetOutput(os.Stdout)
 }
 
 func (c *CondLogger) Disable() {
+	c.enabled = false
 	c.Logger.SetOutput(ioutil.Discard)
+}
+
+func (c *CondLogger) IsEnabled() bool {
+	return c.enabled
 }
 
 func NewCondLogger(name string) *CondLogger {
 	prefix := fmt.Sprintf("(newsfetch:%s) ", name)
-	logger := &CondLogger{name, log.New(ioutil.Discard, prefix, log.Lshortfile)}
+	logger := &CondLogger{name, false, log.New(ioutil.Discard, prefix, log.Lshortfile)}
 
 	if shouldEnableDebugger(name) {
 		logger.Enable()

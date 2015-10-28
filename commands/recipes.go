@@ -9,7 +9,6 @@ import (
 
 	"gopkg.in/mgo.v2/bson"
 
-	"github.com/michigan-com/newsfetch/extraction"
 	r "github.com/michigan-com/newsfetch/fetch/recipe"
 	"github.com/michigan-com/newsfetch/lib"
 	m "github.com/michigan-com/newsfetch/model"
@@ -91,7 +90,7 @@ var cmdExtractRecipiesFromUrl = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		startTime = time.Now()
 
-		recipes := r.DownloadRecipesFromUrls(args)
+		recipes := r.DownloadRecipesFromUrls(args).Recipes
 
 		fmt.Printf("Found %d recipes.\n", len(recipes))
 		for i, recipe := range recipes {
@@ -104,80 +103,6 @@ var cmdExtractRecipiesFromUrl = &cobra.Command{
 				panic(err)
 			}
 		}
-
-		getElapsedTime(&startTime)
-	},
-}
-
-var cmdExtractRecipiesFromSearch = &cobra.Command{
-	Use:   "process-search",
-	Short: "Extract recipes using the search API",
-	Run: func(cmd *cobra.Command, args []string) {
-		startTime = time.Now()
-
-		page := 1
-		total := 0
-		processedURLsTable := make(map[string]bool, searchOpts.pages*10)
-		for {
-			println("Page", page)
-			urls, err := extraction.ExtractArticleURLsFromSearchResults("recipe", page)
-			if err != nil {
-				panic(err)
-			}
-
-			filteredURLs := m.FilterArticleURLsBySection(urls, "life")
-			unprocessedFilteredURLs := filterUnprocessed(filteredURLs, processedURLsTable)
-
-			if searchOpts.onlyNew {
-				if globalConfig.MongoUrl == "" {
-					panic("Need a MongoDB URI to run with --only-new")
-				}
-				// TODO
-			}
-
-			recipes := r.DownloadRecipesFromUrls(unprocessedFilteredURLs)
-
-			fmt.Printf("\nFound %d recipes in %d articles (plus ignored %d existing, %d duplicates, %d in wrong section).\n", len(recipes), len(unprocessedFilteredURLs), 0, len(filteredURLs)-len(unprocessedFilteredURLs), len(urls)-len(filteredURLs))
-
-			for _, url := range unprocessedFilteredURLs {
-				processedURLsTable[url] = true
-			}
-
-			if globalConfig.MongoUrl != "" {
-				err := r.SaveRecipes(globalConfig.MongoUrl, recipes)
-				if err != nil {
-					panic(err)
-				}
-				fmt.Printf("Saved %d recipes.\n", len(recipes))
-			}
-
-			total += len(urls)
-
-			if len(urls) == 0 {
-				break
-			}
-
-			page++
-			if page > searchOpts.pages {
-				break
-			}
-		}
-
-		println("Total", total)
-
-		// recipes := r.DownloadRecipesFromUrls(args)
-
-		// fmt.Printf("Found %d recipes.\n", len(recipes))
-		// for i, recipe := range recipes {
-		// 	fmt.Printf("Recipe #%d: %s\n", i, recipe.String())
-		// }
-
-		// if globalConfig.MongoUrl != "" {
-		// 	err := r.SaveRecipes(globalConfig.MongoUrl, recipes)
-		// 	if err != nil {
-		// 		panic(err)
-		// 	}
-		// }
 
 		getElapsedTime(&startTime)
 	},
@@ -203,6 +128,25 @@ func LoadArticleById(mongoUri string, articleId int) (*m.Article, error) {
 	var result *m.Article
 	err := articleCol.Find(bson.M{"article_id": articleId}).One(&result)
 	return result, err
+}
+
+func CheckRecipeURLs(mongoUri string, urls []string) ([]string, error) {
+	session := lib.DBConnect(mongoUri)
+	defer lib.DBClose(session)
+
+	articleCol := session.DB("").C("Recipe")
+
+	var rows []*struct {
+		Url string `bson:"url"`
+	}
+	err := articleCol.Find(bson.M{"url": bson.M{"$in": urls}}).Select(bson.M{"url": 1}).All(&rows)
+
+	foundURLs := make([]string, 0, len(rows))
+	for _, row := range rows {
+		foundURLs = append(foundURLs, row.Url)
+	}
+
+	return foundURLs, err
 }
 
 func LoadRemoteArticles(url string) ([]*m.Article, error) {

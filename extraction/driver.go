@@ -2,6 +2,7 @@ package extraction
 
 import (
 	"bytes"
+	"fmt"
 
 	gq "github.com/PuerkitoBio/goquery"
 	"github.com/michigan-com/newsfetch/extraction/body_parsing"
@@ -41,7 +42,7 @@ func ExtractDataFromHTMLAtURL(url string, includeTitle bool) *m.ExtractedBody {
 func ExtractArticleURLsFromSearchResults(term string, page int) ([]string, error) {
 	url := link_parsing.BuildSearchURL(term, page)
 
-	println("Downloading search results from ", url)
+	fmt.Printf("Downloading page %d of search results from %s\n", page, url)
 	doc, err := gq.NewDocument(url)
 	if err != nil {
 		return nil, nil
