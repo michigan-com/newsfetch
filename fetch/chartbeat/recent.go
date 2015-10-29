@@ -10,6 +10,7 @@ import (
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 
+	"github.com/michigan-com/newsfetch/lib"
 	m "github.com/michigan-com/newsfetch/model"
 )
 
@@ -26,6 +27,16 @@ func FetchRecent(urls []string) []*m.RecentResp {
 			if err != nil {
 				chartbeatDebugger.Printf("Failed to get %s: %v", url, err)
 			} else {
+				parsed_articles := make([]m.Recent, 0, 100)
+				for _, article := range recent.Recents {
+					articleId := lib.GetArticleId(article.Url)
+
+					if articleId > 0 {
+						parsed_articles = append(parsed_articles, article)
+					}
+				}
+
+				recent.Recents = parsed_articles
 				queue <- recent
 			}
 			wait.Done()
