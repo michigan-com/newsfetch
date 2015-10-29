@@ -8,7 +8,7 @@ import (
 type RecentSnapshot struct {
 	Id         bson.ObjectId `bson:"_id,omitempty"`
 	Created_at time.Time     `bson:"created_at"`
-	Recents    []*RecentResp `bson"recents"`
+	Recents    []*RecentResp `bson:"recents"`
 }
 
 type RecentResp struct {
