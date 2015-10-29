@@ -20,6 +20,7 @@ type TopPages struct{}
 type QuickStats struct{}
 type TopGeo struct{}
 type Referrers struct{}
+type Recent struct{}
 
 var chartbeatDebugger = lib.NewCondLogger("chartbeat")
 
@@ -32,7 +33,8 @@ var cmdAllBeats = &cobra.Command{
 	Use:   "all",
 	Short: "Fetch all Chartbeat Beats (toppages, quickstats)",
 	Run: func(cmd *cobra.Command, argv []string) {
-		RunChartbeatCommands([]Beat{&TopPages{}, &QuickStats{}, &TopGeo{}, &Referrers{}})
+		RunChartbeatCommands([]Beat{&TopPages{}, &QuickStats{}, &TopGeo{}, &Referrers{},
+			&Recent{}})
 	},
 }
 
@@ -65,6 +67,14 @@ var cmdReferrers = &cobra.Command{
 	Short: "Fetch referrers snapshot for Chartbeat",
 	Run: func(cmd *cobra.Command, arg []string) {
 		RunChartbeatCommands([]Beat{&Referrers{}})
+	},
+}
+
+var cmdRecent = &cobra.Command{
+	Use:   "recent",
+	Short: "Fetch recent snapshot for Chartbeat",
+	Run: func(cmd *cobra.Command, arg []string) {
+		RunChartbeatCommands([]Beat{&Recent{}})
 	},
 }
 
@@ -240,6 +250,37 @@ func (r *Referrers) Run(session *mgo.Session) {
 			} else {
 				defer resp.Body.Close()
 				chartbeatDebugger.Printf("Updated referrers snapshot at Mapi at %v", time.Now())
+			}
+		}
+	} else {
+		chartbeatDebugger.Printf("Variable 'mongoUri' not specified, no data will be saved")
+	}
+}
+
+func (r *Recent) Run(session *mgo.Session) {
+	chartbeatDebugger.Printf("Recent")
+
+	urls, err := f.FormatChartbeatUrls("live/recent/v3", lib.Sites, globalConfig.ChartbeatApiKey)
+	if err != nil {
+		chartbeatDebugger.Println("%v", err)
+		return
+	}
+
+	recents := f.FetchRecent(urls)
+
+	if session != nil {
+		chartbeatDebugger.Printf("Saving recents...")
+
+		f.SaveRecents(recents, session)
+
+		// Update mapi
+		if !noUpdate {
+			resp, err := http.Get("https://api.michigan.com/recents/")
+			if err != nil {
+				chartbeatDebugger.Printf("%v", err)
+			} else {
+				defer resp.Body.Close()
+				chartbeatDebugger.Printf("Updated recent snapshot at %v", time.Now())
 			}
 		}
 	} else {

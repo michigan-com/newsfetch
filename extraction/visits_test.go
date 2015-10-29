@@ -12,7 +12,7 @@ import (
 // Test the adding of an hour interval to an article.Visits array
 func TestAddHourInterval(t *testing.T) {
 	article := &m.Article{}
-	timeVal := time.Now()
+	timeVal := getStartTime()
 	numToAdd := 20
 
 	for i := 0; i < numToAdd; i++ {
@@ -46,7 +46,7 @@ func TestAddHourInterval(t *testing.T) {
 // Tests CheckHourlyMax when len(article.Visits) == 0
 func TestHourlyMaxAdd(t *testing.T) {
 	article := &m.Article{}
-	timeVal := time.Now()
+	timeVal := getStartTime()
 	visits := 100
 
 	CheckHourlyMax(article, timeVal, visits)
@@ -66,7 +66,7 @@ func TestHourlyMaxAdd(t *testing.T) {
 // Test a simple maximum comparison: given two values within a given hour range
 // make sure the max is chosen
 func TestSimpleHourlyMaxReplace(t *testing.T) {
-	startTime := time.Now()
+	startTime := getStartTime()
 	article := &m.Article{}
 	article.Visits = []m.TimeInterval{
 		m.TimeInterval{
@@ -94,7 +94,7 @@ func TestSimpleHourlyMaxReplace(t *testing.T) {
 
 func TestHourlyMaxNextHour(t *testing.T) {
 	article := &m.Article{}
-	timeVal := time.Now()
+	timeVal := getStartTime()
 	visits := 100
 	numToAdd := 100
 
@@ -113,12 +113,12 @@ func TestHourlyMaxNextHour(t *testing.T) {
 		}
 
 		// + 1 hour, should add another interval
-		timeVal = timeVal.Add(1 * time.Hour)
+		timeVal = timeVal.Add(60 * time.Minute)
 	}
 }
 
 func TestRoundHourDown(t *testing.T) {
-	timeVal := time.Now()
+	timeVal := getStartTime()
 	numChanges := 100
 
 	// Different intervals that will be randomly added to the value
@@ -149,7 +149,7 @@ func TestRoundHourDown(t *testing.T) {
 }
 
 func TestIsSameDay(t *testing.T) {
-	today := time.Now()
+	today := getStartTime()
 
 	if !IsSameDay(today, today) {
 		t.Fatalf(fmt.Sprintf("Days %v and %v should be same day", today, today))
@@ -166,4 +166,8 @@ func TestIsSameDay(t *testing.T) {
 	if !IsSameDay(today, tomorrow) {
 		t.Fatalf(fmt.Sprintf("Days %v and %v should be on the same day", today, tomorrow))
 	}
+}
+
+func getStartTime() time.Time {
+	return time.Date(2015, 1, 1, 10, 0, 0, 0, time.UTC)
 }

@@ -1,6 +1,12 @@
 CHANGELOG
 =========
 
+v0.2.6 2015-10-29
+-----------------
+
+* Added Chartbeat recent API call
+* Removed time.Now() from some tests as a result of daylight savings time derps
+
 v0.2.5 2015-10-20
 -----------------
 

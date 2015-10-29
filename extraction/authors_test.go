@@ -63,8 +63,6 @@ func TestParseAuthors(t *testing.T) {
 
 func checkAuthorTestCase(expected []string, result []string) string {
 
-	fmt.Printf("%v vs %v\n\n", expected, result)
-
 	if len(result) != len(expected) {
 		return fmt.Sprintf("Expected %v, got %v", expected, result)
 	}
