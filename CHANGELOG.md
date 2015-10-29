@@ -1,7 +1,7 @@
 CHANGELOG
 =========
 
-v0.2.6 2015-10-29
+v0.2.7 2015-10-29
 -----------------
 
 * Added Chartbeat recent API call
