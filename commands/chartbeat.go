@@ -275,7 +275,7 @@ func (r *Recent) Run(session *mgo.Session) {
 
 		// Update mapi
 		if !noUpdate {
-			resp, err := http.Get("https://api.michigan.com/recents/")
+			resp, err := http.Get("https://api.michigan.com/recent/")
 			if err != nil {
 				chartbeatDebugger.Printf("%v", err)
 			} else {
