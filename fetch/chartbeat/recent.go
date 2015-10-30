@@ -32,6 +32,7 @@ func FetchRecent(urls []string) []*m.RecentResp {
 					articleId := lib.GetArticleId(article.Url)
 
 					if articleId > 0 {
+						article.Host = strings.Replace(article.Host, ".com", "", -1)
 						parsed_articles = append(parsed_articles, article)
 					}
 				}

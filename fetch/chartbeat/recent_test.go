@@ -23,6 +23,12 @@ func TestFetchRecents(t *testing.T) {
 	if len(recents) != 1 {
 		t.Fatalf("Should be 1 recent, there are %d", len(recents))
 	}
+
+	for _, recent := range recents[0].Recents {
+		if recent.Host != "gizmodo" {
+			t.Fatalf("Host should be gizmodo, it is %s", recent.Host)
+		}
+	}
 }
 
 func TestGetRecents(t *testing.T) {
