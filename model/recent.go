@@ -17,9 +17,10 @@ type RecentResp struct {
 }
 
 type Recent struct {
-	Lat   float32 `json:"lat" bson:"lat"`
-	Lng   float32 `json:"lng" bson:"lng"`
-	Title string  `json:"title" bson:"title"`
-	Url   string  `json:"path" bson"url"`
-	Host  string  `json:"domain" bson:"host"`
+	Lat      float32 `json:"lat" bson:"lat"`
+	Lng      float32 `json:"lng" bson:"lng"`
+	Title    string  `json:"title" bson:"title"`
+	Url      string  `json:"path" bson"url"`
+	Host     string  `json:"domain" bson:"host"`
+	Platform string
 }
