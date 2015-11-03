@@ -26,6 +26,7 @@ type QuickStats struct {
 	Direct          int           `bson:"direct"`
 	Search          int           `bson:"search"`
 	Social          int           `bson:"social"`
+	Recirc          int           `bson:"recirc"`
 	PlatformEngaged PlatformStats `json:"platform_engaged"bson:"platform_engaged"`
 	Loyalty         LoyaltyStats  `bson:"loyalty"`
 }

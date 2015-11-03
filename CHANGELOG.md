@@ -1,6 +1,11 @@
 CHANGELOG
 =========
 
+v0.2.8 2015-11-03
+-----------------
+
+* Added 'recirc' key to chartbeat quickstats
+
 v0.2.7 2015-10-29
 -----------------
 
