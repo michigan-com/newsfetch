@@ -13,7 +13,7 @@ import (
 
 // Beats
 type Beat interface {
-	Run(*mgo.Session)
+	Run(*mgo.Session, string)
 }
 
 type TopPages struct{}
@@ -78,6 +78,14 @@ var cmdRecent = &cobra.Command{
 	},
 }
 
+var cmdHistorical = &cobra.Command{
+	Use:   "historical",
+	Short: "Fetch recent snapshot for Chartbeat",
+	Run: func(cmd *cobra.Command, arg []string) {
+		RunChartbeatCommands([]Beat{f.NewHistoricalIn()})
+	},
+}
+
 func RunChartbeatCommands(beats []Beat) {
 	// Set up environment
 	var session *mgo.Session
@@ -96,12 +104,12 @@ func RunChartbeatCommands(beats []Beat) {
 			beatWait.Add(1)
 
 			go func(beat Beat) {
-				var copy *mgo.Session
+				var _copy *mgo.Session
 				if session != nil {
-					copy = session.Copy()
-					defer copy.Close()
+					_copy = session.Copy()
+					defer _copy.Close()
 				}
-				beat.Run(copy)
+				beat.Run(_copy, globalConfig.ChartbeatApiKey)
 				beatWait.Done()
 			}(beat)
 		}
@@ -123,9 +131,9 @@ func RunChartbeatCommands(beats []Beat) {
 	}
 }
 
-func (t *TopPages) Run(session *mgo.Session) {
+func (t *TopPages) Run(session *mgo.Session, apiKey string) {
 	chartbeatDebugger.Println("Fetching toppages")
-	urls, err := f.FormatChartbeatUrls("live/toppages/v3", lib.Sites, globalConfig.ChartbeatApiKey)
+	urls, err := f.FormatChartbeatUrls("live/toppages/v3", lib.Sites, apiKey)
 	urls = f.AddUrlParams(urls, "loyalty=1")
 
 	if err != nil {
@@ -161,10 +169,10 @@ func (t *TopPages) Run(session *mgo.Session) {
 	}
 }
 
-func (q *QuickStats) Run(session *mgo.Session) {
+func (q *QuickStats) Run(session *mgo.Session, apiKey string) {
 	chartbeatDebugger.Printf("Quickstats")
 
-	urls, err := f.FormatChartbeatUrls("live/quickstats/v4", lib.Sites, globalConfig.ChartbeatApiKey)
+	urls, err := f.FormatChartbeatUrls("live/quickstats/v4", lib.Sites, apiKey)
 	urls = f.AddUrlParams(urls, "all_platforms=1&loyalty=1")
 	if err != nil {
 		chartbeatDebugger.Println("ERROR: %v", err)
@@ -194,10 +202,10 @@ func (q *QuickStats) Run(session *mgo.Session) {
 	}
 }
 
-func (t *TopGeo) Run(session *mgo.Session) {
+func (t *TopGeo) Run(session *mgo.Session, apiKey string) {
 	chartbeatDebugger.Printf("Topgeo")
 
-	urls, err := f.FormatChartbeatUrls("live/top_geo/v1", lib.Sites, globalConfig.ChartbeatApiKey)
+	urls, err := f.FormatChartbeatUrls("live/top_geo/v1", lib.Sites, apiKey)
 	if err != nil {
 		chartbeatDebugger.Println("ERROR: %v", err)
 		return
@@ -226,10 +234,10 @@ func (t *TopGeo) Run(session *mgo.Session) {
 	}
 }
 
-func (r *Referrers) Run(session *mgo.Session) {
+func (r *Referrers) Run(session *mgo.Session, apiKey string) {
 	chartbeatDebugger.Printf("Referrers")
 
-	urls, err := f.FormatChartbeatUrls("live/referrers/v3", lib.Sites, globalConfig.ChartbeatApiKey)
+	urls, err := f.FormatChartbeatUrls("live/referrers/v3", lib.Sites, apiKey)
 	if err != nil {
 		chartbeatDebugger.Println("%v", err)
 		return
@@ -257,10 +265,10 @@ func (r *Referrers) Run(session *mgo.Session) {
 	}
 }
 
-func (r *Recent) Run(session *mgo.Session) {
+func (r *Recent) Run(session *mgo.Session, apiKey string) {
 	chartbeatDebugger.Printf("Recent")
 
-	urls, err := f.FormatChartbeatUrls("live/recent/v3", lib.Sites, globalConfig.ChartbeatApiKey)
+	urls, err := f.FormatChartbeatUrls("live/recent/v3", lib.Sites, apiKey)
 	if err != nil {
 		chartbeatDebugger.Println("%v", err)
 		return
