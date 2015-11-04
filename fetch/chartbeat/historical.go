@@ -36,7 +36,18 @@ func NewHistoricalIn() *HistoricalIn {
 }
 
 func (h *HistoricalIn) String() string {
-	return fmt.Sprintf("<HistoricalIn %d:%d>", h.Data.Start, h.Data.End)
+	return fmt.Sprintf("<HistoricalIn %d-%d>", h.Data.Start, h.Data.End)
+}
+
+func (h *HistoricalIn) SignalMapi() {
+	resp, err := http.Get("https://api.michigan.com/historical-traffic/")
+	if err != nil {
+		debugger.Println(err)
+	} else {
+		defer resp.Body.Close()
+		now := time.Now()
+		debugger.Printf("Updated snapshot at Mapi at %s", now)
+	}
 }
 
 func (h *HistoricalIn) Run(session *mgo.Session, apiKey string) {
@@ -47,8 +58,6 @@ func (h *HistoricalIn) Run(session *mgo.Session, apiKey string) {
 		debugger.Println(err)
 		return
 	}
-
-	debugger.Println(urls)
 
 	var rWait sync.WaitGroup
 	for _, url := range urls {
@@ -72,6 +81,24 @@ func (h *HistoricalIn) Run(session *mgo.Session, apiKey string) {
 
 	rWait.Wait()
 	debugger.Println(h)
+
+	if session == nil {
+		debugger.Println("No mongo session found, skipping save")
+		return
+	}
+
+	snapshot := &HistoricalSnapshot{
+		Start:     h.Data.Start,
+		End:       h.Data.End,
+		Frequency: h.Data.Frequency,
+	}
+
+	// merge all data into mongo model
+	snapshot.Merge(h)
+	// save snapshot data to mongo
+	snapshot.Save(session)
+	// send signal to mapi that there's new data
+	h.SignalMapi()
 }
 
 type HistoricalInSeries struct {
@@ -80,16 +107,51 @@ type HistoricalInSeries struct {
 	} `json:"series"`
 }
 
+func (his *HistoricalInSeries) Visits() []int {
+	return his.Series.People
+}
+
 type HistoricalSnapshot struct {
 	Id         bson.ObjectId `bson:"_id,omitempty"`
 	Created_at time.Time     `bson:"created_at"`
 	Start      int           `bson:"start"`
 	End        int           `bson:"end"`
 	Frequency  int           `bson:"frequency"`
-	Traffic    []*struct {
-		Site   string `bson:"site"`
-		Visits []int  `bson:"visits"`
-	} `bson:"sites"`
+	Traffic    []*Traffic    `bson:"sites"`
 }
 
-func (h *HistoricalSnapshot) Save(session *mgo.Session) {}
+type Traffic struct {
+	Site   string `bson:"site"`
+	Visits []int  `bson:"visits"`
+}
+
+func (h *HistoricalSnapshot) Merge(hi *HistoricalIn) {
+	h.Traffic = []*Traffic{
+		&Traffic{"freep", hi.Data.Freep.Visits()},
+		&Traffic{"detroitnews", hi.Data.DetroitNews.Visits()},
+		&Traffic{"battlecreekenquirer", hi.Data.BattleCreek.Visits()},
+		&Traffic{"hometownlife", hi.Data.Hometown.Visits()},
+		&Traffic{"lansingstatejournal", hi.Data.Lansing.Visits()},
+		&Traffic{"livingstondaily", hi.Data.Livingston.Visits()},
+		&Traffic{"thetimesherald", hi.Data.Herald.Visits()},
+	}
+}
+
+func (h *HistoricalSnapshot) Save(session *mgo.Session) {
+	if session == nil {
+		return
+	}
+
+	collection := session.DB("").C("HistoricalTraffic")
+	_, err := collection.RemoveAll(bson.M{})
+	if err != nil {
+		debugger.Println(err)
+	}
+
+	h.Created_at = time.Now()
+
+	err = collection.Insert(h)
+	if err != nil {
+		debugger.Println(err)
+	}
+}
