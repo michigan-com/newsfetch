@@ -6,7 +6,7 @@ import (
 	m "github.com/michigan-com/newsfetch/model"
 )
 
-var recipeDebugger = lib.NewCondLogger("fetch-recipe")
+var recipeDebugger = lib.NewCondLogger("newsfetch:fetch:recipe")
 
 func DownloadAndSaveRecipesForArticles(mongoUrl string, articles []*m.Article) error {
 	for _, article := range articles {

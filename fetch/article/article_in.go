@@ -13,7 +13,7 @@ import (
 	m "github.com/michigan-com/newsfetch/model"
 )
 
-var artDebugger = lib.NewCondLogger("fetch-article")
+var artDebugger = lib.NewCondLogger("newsfetch:fetch:article")
 
 type ArticleIn struct {
 	Site    string

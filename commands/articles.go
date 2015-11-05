@@ -15,7 +15,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var artDebugger = lib.NewCondLogger("command-article")
+var artDebugger = lib.NewCondLogger("newsfetch:commands:article")
 
 type SummaryResponse struct {
 	Skipped    int `json:"skipped"`

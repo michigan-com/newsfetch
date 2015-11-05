@@ -7,12 +7,12 @@ import (
 	"sync"
 	"time"
 
-	m "github.com/michigan-com/newsfetch/model"
-	"gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
+	m "github.com/michigan-com/newsfetch/model/chartbeat"
 )
 
-func FetchTopGeo(urls []string) []*m.TopGeo {
+type TopGeo struct{}
+
+func (t TopGeo) Fetch(urls []string) m.Snapshot {
 	var urlWait sync.WaitGroup
 	geoQueue := make(chan *m.TopGeo, len(urls))
 
@@ -40,7 +40,10 @@ func FetchTopGeo(urls []string) []*m.TopGeo {
 		topGeos = append(topGeos, geo)
 	}
 
-	return topGeos
+	snapshot := m.TopGeoSnapshot{}
+	snapshot.Created_at = time.Now()
+	snapshot.Cities = topGeos
+	return snapshot
 }
 
 func GetTopGeo(url string) (*m.TopGeo, error) {
@@ -73,32 +76,4 @@ func GetTopGeo(url string) (*m.TopGeo, error) {
 
 	topGeo.Source = strings.Replace(host, ".com", "", -1)
 	return topGeo, nil
-}
-
-func SaveTopGeo(topGeos []*m.TopGeo, session *mgo.Session) {
-	topGeoCol := session.DB("").C("Topgeo")
-
-	snapshot := m.TopGeoSnapshot{}
-	snapshot.Created_at = time.Now()
-	snapshot.Cities = topGeos
-	err := topGeoCol.Insert(snapshot)
-
-	if err != nil {
-		chartbeatDebugger.Printf("ERROR: %v", err)
-	}
-
-	topGeoCol.Find(bson.M{}).
-		Select(bson.M{"_id": 1}).
-		Sort("-_id").
-		One(&snapshot)
-
-	_, err = topGeoCol.RemoveAll(bson.M{
-		"_id": bson.M{
-			"$ne": snapshot.Id,
-		},
-	})
-
-	if err != nil {
-		chartbeatDebugger.Printf("Error while removing old topgeo snapshots: %v", err)
-	}
 }

@@ -9,7 +9,7 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
-var Debugger = lib.NewCondLogger("article-model")
+var Debugger = lib.NewCondLogger("newsfetch:model:article")
 
 var articleIdIndex = mgo.Index{
 	Key:    []string{"article_id"},

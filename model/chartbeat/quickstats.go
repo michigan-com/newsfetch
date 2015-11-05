@@ -1,14 +1,28 @@
 package model
 
 import (
-	"gopkg.in/mgo.v2/bson"
 	"time"
+
+	"gopkg.in/mgo.v2/bson"
+	"gopkg.in/mgo.v2"
 )
 
 type QuickStatsSnapshot struct {
 	Id         bson.ObjectId `bson:"_id,omitempty"`
 	Created_at time.Time     `bson:"created_at"`
 	Stats      []*QuickStats `bson:"stats"`
+}
+
+// Snapshot interface
+func (q QuickStatsSnapshot) Save(session *mgo.Session) {
+	quickStatsCol := session.DB("").C("Quickstats")
+	err := quickStatsCol.Insert(q)
+
+	if err != nil {
+		debugger.Printf("ERROR: %v", err)
+		return
+	}
+	removeOldSnapshots(quickStatsCol)
 }
 
 type QuickStatsResp struct {

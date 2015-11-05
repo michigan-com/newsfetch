@@ -1,9 +1,7 @@
 package model
 
 import (
-	"gopkg.in/mgo.v2"
+  "github.com/michigan-com/newsfetch/lib"
 )
 
-type Document interface {
-	Save(session *mgo.Session) error
-}
+var debugger = lib.NewCondLogger("newsfetch:model")

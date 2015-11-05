@@ -1,14 +1,26 @@
 package model
 
 import (
-	"gopkg.in/mgo.v2/bson"
 	"time"
+
+	"gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/bson"
 )
 
 type RecentSnapshot struct {
 	Id         bson.ObjectId `bson:"_id,omitempty"`
 	Created_at time.Time     `bson:"created_at"`
 	Recents    []*RecentResp `bson:"recents"`
+}
+
+func (r RecentSnapshot) Save(session *mgo.Session) {
+	col := session.DB("").C("Recent")
+	err := col.Insert(r)
+
+	if err != nil {
+		debugger.Printf("Failed to insert Recent Snapshot: %v", err)
+	}
+	removeOldSnapshots(col)
 }
 
 type RecentResp struct {

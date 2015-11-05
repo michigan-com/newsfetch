@@ -1,39 +1,18 @@
 package fetch
 
 import (
-	"errors"
 	"fmt"
+	"net/url"
+
 	"github.com/michigan-com/newsfetch/lib"
+	m "github.com/michigan-com/newsfetch/model/chartbeat"
 )
 
-var chartbeatDebugger = lib.NewCondLogger("fetch:chartbeat")
-var chartbeatError = lib.NewCondLogger("fetch:chartbeat:error")
+var chartbeatDebugger = lib.NewCondLogger("newsfetch:fetch:chartbeat")
+var chartbeatError = lib.NewCondLogger("newsfetch:fetch:chartbeat:error")
 
-const chartbeatApiUrlFormat = "http://api.chartbeat.com/%s/?apikey=%s&host=%s&limit=100"
-
-/*
-	Format chartbeat URLs based on a chartbeat API endpoint
-
-	Format: http://api.chartbeat.com/<endPoint>/?apikey=<key>&host=<site[i]>
-
-	Example endPoint (NOTE no starting or ending slashes): live/toppages/v3
-*/
-func FormatChartbeatUrls(endPoint string, sites []string, apiKey string) ([]string, error) {
-	urls := make([]string, 0, len(sites))
-
-	if apiKey == "" {
-		return urls, errors.New(fmt.Sprintf("No API key specified. Use the -k flag to specify (Run ./newsfetch chartbeat --help for more info)"))
-	}
-
-	for i := 0; i < len(sites); i++ {
-		site := sites[i]
-
-		url := fmt.Sprintf(chartbeatApiUrlFormat, endPoint, apiKey, site)
-
-		urls = append(urls, url)
-	}
-
-	return urls, nil
+type ChartbeatFetch interface {
+	Fetch([]string) m.Snapshot
 }
 
 /*
@@ -51,4 +30,25 @@ func AddUrlParams(urls []string, queryString string) []string {
 		urls[i] = fmt.Sprintf("%s&%s", urls[i], queryString)
 	}
 	return urls
+}
+
+// Chartbeat queries have a GET parameter "host", which represents the host
+// we're getting data on. Pull the host from the url and return it.
+// Return host (e.g. freep.com)
+// Return "" if we don't find one
+func GetHostFromParams(inputUrl string) (string, error) {
+	var host string
+	var err error
+
+	parsed, err := url.Parse(inputUrl)
+	if err != nil {
+		return host, err
+	}
+
+	hosts := parsed.Query()["host"]
+	if len(hosts) > 0 {
+		host = hosts[0]
+	}
+
+	return host, err
 }

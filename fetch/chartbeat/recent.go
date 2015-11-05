@@ -7,14 +7,13 @@ import (
 	"sync"
 	"time"
 
-	"gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
-
 	"github.com/michigan-com/newsfetch/lib"
-	m "github.com/michigan-com/newsfetch/model"
+	m "github.com/michigan-com/newsfetch/model/chartbeat"
 )
 
-func FetchRecent(urls []string) []*m.RecentResp {
+type Recent struct {}
+
+func (r Recent) Fetch(urls []string) m.Snapshot {
 	var wait sync.WaitGroup
 	queue := make(chan *m.RecentResp, len(urls))
 
@@ -51,7 +50,11 @@ func FetchRecent(urls []string) []*m.RecentResp {
 	for recent := range queue {
 		recents = append(recents, recent)
 	}
-	return recents
+
+	snapshot := m.RecentSnapshot{}
+	snapshot.Created_at = time.Now()
+	snapshot.Recents = recents
+	return snapshot
 }
 
 func GetRecents(url string) (*m.RecentResp, error) {
@@ -77,34 +80,4 @@ func GetRecents(url string) (*m.RecentResp, error) {
 	recent.Source = strings.Replace(host, ".com", "", -1)
 
 	return recent, nil
-}
-
-func SaveRecents(recents []*m.RecentResp, session *mgo.Session) {
-
-	snapshot := &m.RecentSnapshot{}
-	snapshot.Created_at = time.Now()
-	snapshot.Recents = recents
-
-	collection := session.DB("").C("Recent")
-	err := collection.Insert(snapshot)
-
-	if err != nil {
-		chartbeatDebugger.Printf("Error inserting snapshot: %v", err)
-	}
-
-	// Remove old ones
-	collection.Find(bson.M{}).
-		Select(bson.M{"_id": 1}).
-		Sort("-_id").
-		One(&snapshot)
-
-	_, err = collection.RemoveAll(bson.M{
-		"_id": bson.M{
-			"$ne": snapshot.Id,
-		},
-	})
-
-	if err != nil {
-		chartbeatDebugger.Printf("Failed to remove old snapshots: %v", err)
-	}
 }

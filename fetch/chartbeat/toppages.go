@@ -11,12 +11,15 @@ import (
 	e "github.com/michigan-com/newsfetch/extraction"
 	"github.com/michigan-com/newsfetch/lib"
 	m "github.com/michigan-com/newsfetch/model"
+	mc "github.com/michigan-com/newsfetch/model/chartbeat"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 
+type TopPages struct{}
+
 /** Sorting stuff */
-type ByVisits []*m.TopArticle
+type ByVisits []*mc.TopArticle
 
 func (a ByVisits) Len() int           { return len(a) }
 func (a ByVisits) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
@@ -26,10 +29,10 @@ func (a ByVisits) Less(i, j int) bool { return a[i].Visits > a[j].Visits }
 	Fetch the top pages data for each url in the urls parameter. Url expected
 	to be http://api.chartbeat.com/live/toppages/v3
 */
-func FetchTopPages(urls []string) []*m.TopArticle {
+func (t TopPages) Fetch(urls []string) mc.Snapshot {
 	chartbeatDebugger.Println("Fetching chartbeat top pages")
-	topArticles := make([]*m.TopArticle, 0, 100*len(urls))
-	articleQueue := make(chan *m.TopArticle, 100*len(urls))
+	topArticles := make([]*mc.TopArticle, 0, 100*len(urls))
+	articleQueue := make(chan *mc.TopArticle, 100*len(urls))
 
 	var wg sync.WaitGroup
 
@@ -50,7 +53,7 @@ func FetchTopPages(urls []string) []*m.TopArticle {
 				page := pages.Pages[i]
 				articleUrl := page.Path
 				articleId := lib.GetArticleId(articleUrl)
-				article := &m.TopArticle{}
+				article := &mc.TopArticle{}
 
 				// this means we can't find an article ID. It's probably a section front,
 				// so ignore
@@ -86,10 +89,13 @@ func FetchTopPages(urls []string) []*m.TopArticle {
 
 	chartbeatDebugger.Println("Done fetching and parsing URLs...")
 
-	return SortTopArticles(topArticles)
+	snapshot := mc.TopPagesSnapshot{}
+	snapshot.Articles = SortTopArticles(topArticles)
+	snapshot.Created_at = time.Now()
+	return snapshot
 }
 
-func CalculateTimeInterval(articles []*m.TopArticle, session *mgo.Session) {
+func CalculateTimeInterval(articles []*mc.TopArticle, session *mgo.Session) {
 	if session == nil {
 		chartbeatDebugger.Printf("No session, cannot calculate time intervals")
 		return
@@ -162,7 +168,7 @@ func saveTimeInterval(articles []*m.Article, session *mgo.Session) {
 	Given a URL for the api.chartbeat.com/live/toppages/v3 API, get the data and
 	read the response
 */
-func GetTopPages(url string) (*m.TopPages, error) {
+func GetTopPages(url string) (*mc.TopPages, error) {
 	chartbeatDebugger.Println("Fetching %s", url)
 
 	resp, err := http.Get(url)
@@ -174,7 +180,7 @@ func GetTopPages(url string) (*m.TopPages, error) {
 
 	chartbeatDebugger.Println("Successfully fetched %s", url)
 
-	topPages := &m.TopPages{}
+	topPages := &mc.TopPages{}
 
 	decoder := json.NewDecoder(resp.Body)
 	err = decoder.Decode(&topPages)
@@ -182,42 +188,7 @@ func GetTopPages(url string) (*m.TopPages, error) {
 	return topPages, err
 }
 
-/*
-	Save the toppages snapshot
-
-	mongoUri - connection string to Mongodb
-	toppages - Sorted array of top articles
-*/
-func SaveTopPagesSnapshot(toppages []*m.TopArticle, session *mgo.Session) error {
-	chartbeatDebugger.Println("Saving snapshot ...")
-
-	// Save the current snapshot
-	snapshotCollection := session.DB("").C("Toppages")
-	snapshot := m.TopPagesSnapshot{}
-	snapshot.Articles = toppages
-	snapshot.Created_at = time.Now()
-	snapshotCollection.Insert(snapshot)
-
-	// remove all the other snapshots
-	snapshotCollection.Find(bson.M{}).
-		Select(bson.M{"_id": 1}).
-		Sort("-_id").
-		One(&snapshot)
-
-	_, err := snapshotCollection.RemoveAll(bson.M{
-		"_id": bson.M{
-			"$ne": snapshot.Id,
-		},
-	})
-
-	if err != nil {
-		chartbeatDebugger.Println("Error when removing older snapshots: %v", err)
-	}
-
-	return nil
-}
-
-func SortTopArticles(articles []*m.TopArticle) []*m.TopArticle {
+func SortTopArticles(articles []*mc.TopArticle) []*mc.TopArticle {
 	chartbeatDebugger.Println("Sorting articles ...")
 	sort.Sort(ByVisits(articles))
 	return articles

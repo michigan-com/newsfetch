@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"gopkg.in/mgo.v2/bson"
+	"gopkg.in/mgo.v2"
 )
 
 /*
@@ -13,6 +14,18 @@ type TopPagesSnapshot struct {
 	Id         bson.ObjectId `bson:"_id,omitempty"`
 	Created_at time.Time     `bson:"created_at"`
 	Articles   []*TopArticle `bson:"articles"`
+}
+
+func (t TopPagesSnapshot) Save(session *mgo.Session) {
+	snapshotCollection := session.DB("").C("Toppages")
+	err := snapshotCollection.Insert(t)
+
+	if err != nil {
+		debugger.Printf("Failed to insert TopPages snapshot: %v", err)
+		return
+	}
+
+	removeOldSnapshots(snapshotCollection)
 }
 
 type TopArticle struct {

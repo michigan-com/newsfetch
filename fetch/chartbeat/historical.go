@@ -4,102 +4,132 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"sync"
 	"time"
 
-	"github.com/michigan-com/newsfetch/lib"
-
-	"gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
+	m "github.com/michigan-com/newsfetch/model/chartbeat"
 )
 
-var debugger = lib.NewCondLogger("HistoricalTraffic")
-
-type HistoricalIn struct {
+type Historical struct {
 	Data struct {
 		Start int `json:"start"`
 		End   int `json:"end"`
 		// frequency is the data sample interval in minutes
-		Frequency   int                 `json:"frequency"`
-		Freep       *HistoricalInSeries `json:"freep.com"`
-		DetroitNews *HistoricalInSeries `json:"detroitnews.com"`
-		BattleCreek *HistoricalInSeries `json:"battlecreekenquirer.com"`
-		Hometown    *HistoricalInSeries `json:"hometownlife.com"`
-		Lansing     *HistoricalInSeries `json:"lansingstatejournal.com"`
-		Livingston  *HistoricalInSeries `json:"livingstondaily.com"`
-		Herald      *HistoricalInSeries `json:"thetimesherald.com"`
+		Frequency   int                   `json:"frequency"`
+		Freep       *m.HistoricalInSeries `json:"freep.com"`
+		DetroitNews *m.HistoricalInSeries `json:"detroitnews.com"`
+		BattleCreek *m.HistoricalInSeries `json:"battlecreekenquirer.com"`
+		Hometown    *m.HistoricalInSeries `json:"hometownlife.com"`
+		Lansing     *m.HistoricalInSeries `json:"lansingstatejournal.com"`
+		Livingston  *m.HistoricalInSeries `json:"livingstondaily.com"`
+		Herald      *m.HistoricalInSeries `json:"thetimesherald.com"`
 	} `json:"data"`
 }
 
-func NewHistoricalIn() *HistoricalIn {
-	return &HistoricalIn{}
+func (h *Historical) String() string {
+	return fmt.Sprintf("<Historical %d-%d>", h.Data.Start, h.Data.End)
 }
 
-func (h *HistoricalIn) String() string {
-	return fmt.Sprintf("<HistoricalIn %d-%d>", h.Data.Start, h.Data.End)
-}
-
-func (h *HistoricalIn) SignalMapi() {
+func (h *Historical) SignalMapi() {
 	resp, err := http.Get("https://api.michigan.com/historical-traffic/")
 	if err != nil {
-		debugger.Println(err)
+		chartbeatDebugger.Println(err)
 	} else {
 		defer resp.Body.Close()
 		now := time.Now()
-		debugger.Printf("Updated snapshot at Mapi at %s", now)
+		chartbeatDebugger.Printf("Updated snapshot at Mapi at %s", now)
 	}
 }
 
-func (h *HistoricalIn) Run(session *mgo.Session, apiKey string) {
-	debugger.Println("RUNNING HISTORICAL TRAFFIC")
-
-	urls, err := FormatChartbeatUrls("historical/traffic/series", lib.Sites, apiKey)
-	if err != nil {
-		debugger.Println(err)
-		return
-	}
+func (h Historical) Fetch(urls []string) m.Snapshot {
+	var wait sync.WaitGroup
+	var start int
+	var end int
+	var freq int
+	queue := make(chan *m.Traffic, len(urls))
 
 	for _, url := range urls {
-		resp, err := http.Get(url)
-		if err != nil {
-			debugger.Printf("Failed to fetch url: %s: %s", url, err.Error())
-		}
+		wait.Add(1)
 
-		tmpHI := &HistoricalIn{}
-		decoder := json.NewDecoder(resp.Body)
-		err = decoder.Decode(tmpHI)
+		go func(url string) {
+			chartbeatDebugger.Printf("Fetching %s", url)
+			resp, err := http.Get(url)
+			if err != nil {
+				chartbeatDebugger.Printf("Failed to fetch url: %s: %s", url, err.Error())
+				wait.Done()
+				return
+			}
+			defer resp.Body.Close()
 
-		if err != nil {
-			debugger.Printf("Failed to parse json body: %s", err.Error())
-		}
+			tmpHI := &Historical{}
+			decoder := json.NewDecoder(resp.Body)
+			err = decoder.Decode(tmpHI)
 
-		h.Data.Start = tmpHI.Data.Start
-		h.Data.End = tmpHI.Data.End
-		h.Data.Frequency = tmpHI.Data.Frequency
-		h.CombineSeries(tmpHI)
+			if err != nil {
+				chartbeatDebugger.Printf("Failed to parse json body: %s", err.Error())
+				wait.Done()
+				return
+			}
+
+			visits := GetSeries(tmpHI)
+			if visits == nil {
+				chartbeatDebugger.Printf("Failed to pull a visits from response")
+				wait.Done()
+				return
+			}
+
+			series := &m.Traffic{}
+			series.Source, _ = GetHostFromParams(url)
+			series.Visits = visits.Visits()
+			queue <- series
+
+			start = tmpHI.Data.Start
+			end = tmpHI.Data.End
+			freq = tmpHI.Data.Frequency
+
+		}(url)
 	}
 
-	debugger.Println(h)
+	wait.Wait()
+	close(queue)
 
-	if session == nil {
-		debugger.Println("No mongo session found, skipping save")
-		return
+	// Get the values out of the queue
+	trafficSlice := make([]*m.Traffic, 0, len(urls))
+	for traffic := range queue {
+		trafficSlice = append(trafficSlice, traffic)
 	}
 
-	snapshot := &HistoricalSnapshot{
-		Start:     h.Data.Start,
-		End:       h.Data.End,
-		Frequency: h.Data.Frequency,
+	snapshot := m.HistoricalSnapshot{
+		Start:     start,
+		End:       end,
+		Frequency: freq,
+		Traffic:   trafficSlice,
 	}
 
-	// merge all data into mongo model
-	snapshot.Merge(h)
-	// save snapshot data to mongo
-	snapshot.Save(session)
-	// send signal to mapi that there's new data
-	h.SignalMapi()
+	return snapshot
 }
 
-func (h *HistoricalIn) CombineSeries(hi *HistoricalIn) {
+func GetSeries(h *Historical) *m.HistoricalInSeries {
+	if h.Data.Freep != nil {
+		return h.Data.Freep
+	} else if h.Data.DetroitNews != nil {
+		return h.Data.DetroitNews
+	} else if h.Data.BattleCreek != nil {
+		return h.Data.BattleCreek
+	} else if h.Data.Hometown != nil {
+		return h.Data.Hometown
+	} else if h.Data.Lansing != nil {
+		return h.Data.Lansing
+	} else if h.Data.Livingston != nil {
+		return h.Data.Livingston
+	} else if h.Data.Herald != nil {
+		return h.Data.Herald
+	}
+
+	return nil
+}
+
+func (h *Historical) CombineSeries(hi *Historical) {
 	if hi.Data.Freep != nil {
 		h.Data.Freep = hi.Data.Freep
 	} else if hi.Data.DetroitNews != nil {
@@ -114,60 +144,5 @@ func (h *HistoricalIn) CombineSeries(hi *HistoricalIn) {
 		h.Data.Livingston = hi.Data.Livingston
 	} else if hi.Data.Herald != nil {
 		h.Data.Herald = hi.Data.Herald
-	}
-}
-
-type HistoricalInSeries struct {
-	Series *struct {
-		People []int `json:"people"`
-	} `json:"series"`
-}
-
-func (his *HistoricalInSeries) Visits() []int {
-	return his.Series.People
-}
-
-type HistoricalSnapshot struct {
-	Id         bson.ObjectId `bson:"_id,omitempty"`
-	Created_at time.Time     `bson:"created_at"`
-	Start      int           `bson:"start"`
-	End        int           `bson:"end"`
-	Frequency  int           `bson:"frequency"`
-	Traffic    []*Traffic    `bson:"sites"`
-}
-
-type Traffic struct {
-	Site   string `bson:"site"`
-	Visits []int  `bson:"visits"`
-}
-
-func (h *HistoricalSnapshot) Merge(hi *HistoricalIn) {
-	h.Traffic = []*Traffic{
-		&Traffic{"freep", hi.Data.Freep.Visits()},
-		&Traffic{"detroitnews", hi.Data.DetroitNews.Visits()},
-		&Traffic{"battlecreekenquirer", hi.Data.BattleCreek.Visits()},
-		&Traffic{"hometownlife", hi.Data.Hometown.Visits()},
-		&Traffic{"lansingstatejournal", hi.Data.Lansing.Visits()},
-		&Traffic{"livingstondaily", hi.Data.Livingston.Visits()},
-		&Traffic{"thetimesherald", hi.Data.Herald.Visits()},
-	}
-}
-
-func (h *HistoricalSnapshot) Save(session *mgo.Session) {
-	if session == nil {
-		return
-	}
-
-	collection := session.DB("").C("HistoricalTraffic")
-	_, err := collection.RemoveAll(bson.M{})
-	if err != nil {
-		debugger.Println(err)
-	}
-
-	h.Created_at = time.Now()
-
-	err = collection.Insert(h)
-	if err != nil {
-		debugger.Println(err)
 	}
 }

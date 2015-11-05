@@ -16,7 +16,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var recipeDebugger = lib.NewCondLogger("recipes")
+var recipeDebugger = lib.NewCondLogger("newsfetch:commands:recipes")
 
 func printRecipies(articles []*m.Article) {
 	for _, article := range articles {

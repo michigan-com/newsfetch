@@ -7,13 +7,12 @@ import (
 	"sync"
 	"time"
 
-	"gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
-
-	m "github.com/michigan-com/newsfetch/model"
+	m "github.com/michigan-com/newsfetch/model/chartbeat"
 )
 
-func FetchReferrers(urls []string) []*m.Referrers {
+type Referrers struct {}
+
+func (r Referrers) Fetch(urls []string) m.Snapshot {
 	var wait sync.WaitGroup
 	statQueue := make(chan *m.Referrers, len(urls))
 
@@ -39,7 +38,11 @@ func FetchReferrers(urls []string) []*m.Referrers {
 	for ref := range statQueue {
 		referrers = append(referrers, ref)
 	}
-	return referrers
+
+	snapshot := m.ReferrersSnapshot{}
+	snapshot.Created_at = time.Now()
+	snapshot.Referrers = referrers
+	return snapshot
 }
 
 func getReferrers(url string) (*m.Referrers, error) {
@@ -69,31 +72,4 @@ func getReferrers(url string) (*m.Referrers, error) {
 	referrers.Source = strings.Replace(host, ".com", "", -1)
 
 	return referrers, nil
-}
-
-func SaveReferrers(referrers []*m.Referrers, session *mgo.Session) {
-	col := session.DB("").C("Referrers")
-
-	snapshot := &m.ReferrersSnapshot{}
-	snapshot.Created_at = time.Now()
-	snapshot.Referrers = referrers
-	err := col.Insert(snapshot)
-	if err != nil {
-		chartbeatDebugger.Printf("ERROR: %v", err)
-	}
-
-	col.Find(bson.M{}).
-		Select(bson.M{"_id": 1}).
-		Sort("-_id").
-		One(&snapshot)
-
-	_, err = col.RemoveAll(bson.M{
-		"_id": bson.M{
-			"$ne": snapshot.Id,
-		},
-	})
-
-	if err != nil {
-		chartbeatDebugger.Printf("Problem removing referrers snapshot: %v", err)
-	}
 }
