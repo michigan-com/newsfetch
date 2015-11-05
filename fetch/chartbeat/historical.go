@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"sync"
 	"time"
 
 	"github.com/michigan-com/newsfetch/lib"
@@ -16,7 +15,7 @@ import (
 var debugger = lib.NewCondLogger("HistoricalTraffic")
 
 type HistoricalIn struct {
-	Data *struct {
+	Data struct {
 		Start int `json:"start"`
 		End   int `json:"end"`
 		// frequency is the data sample interval in minutes
@@ -59,27 +58,26 @@ func (h *HistoricalIn) Run(session *mgo.Session, apiKey string) {
 		return
 	}
 
-	var rWait sync.WaitGroup
 	for _, url := range urls {
-		rWait.Add(1)
+		resp, err := http.Get(url)
+		if err != nil {
+			debugger.Printf("Failed to fetch url: %s: %s", url, err.Error())
+		}
 
-		go func() {
-			defer rWait.Done()
-			resp, err := http.Get(url)
-			if err != nil {
-				debugger.Printf("Failed to fetch url: %s: %s", url, err.Error())
-			}
+		tmpHI := &HistoricalIn{}
+		decoder := json.NewDecoder(resp.Body)
+		err = decoder.Decode(tmpHI)
 
-			decoder := json.NewDecoder(resp.Body)
-			err = decoder.Decode(h)
+		if err != nil {
+			debugger.Printf("Failed to parse json body: %s", err.Error())
+		}
 
-			if err != nil {
-				debugger.Printf("Failed to parse json body: %s", err.Error())
-			}
-		}()
+		h.Data.Start = tmpHI.Data.Start
+		h.Data.End = tmpHI.Data.End
+		h.Data.Frequency = tmpHI.Data.Frequency
+		h.CombineSeries(tmpHI)
 	}
 
-	rWait.Wait()
 	debugger.Println(h)
 
 	if session == nil {
@@ -99,6 +97,24 @@ func (h *HistoricalIn) Run(session *mgo.Session, apiKey string) {
 	snapshot.Save(session)
 	// send signal to mapi that there's new data
 	h.SignalMapi()
+}
+
+func (h *HistoricalIn) CombineSeries(hi *HistoricalIn) {
+	if hi.Data.Freep != nil {
+		h.Data.Freep = hi.Data.Freep
+	} else if hi.Data.DetroitNews != nil {
+		h.Data.DetroitNews = hi.Data.DetroitNews
+	} else if hi.Data.BattleCreek != nil {
+		h.Data.BattleCreek = hi.Data.BattleCreek
+	} else if hi.Data.Hometown != nil {
+		h.Data.Hometown = hi.Data.Hometown
+	} else if hi.Data.Lansing != nil {
+		h.Data.Lansing = hi.Data.Lansing
+	} else if hi.Data.Livingston != nil {
+		h.Data.Livingston = hi.Data.Livingston
+	} else if hi.Data.Herald != nil {
+		h.Data.Herald = hi.Data.Herald
+	}
 }
 
 type HistoricalInSeries struct {
