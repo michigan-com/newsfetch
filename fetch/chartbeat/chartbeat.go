@@ -1,10 +1,10 @@
 package fetch
 
 import (
-	"net/url"
-	"net/http"
-	"fmt"
 	"errors"
+	"fmt"
+	"net/http"
+	"net/url"
 
 	"gopkg.in/mgo.v2"
 
@@ -56,16 +56,18 @@ func (c ChartbeatApi) Run(session *mgo.Session, apiKey string) {
 	}
 
 	// TODO hit mapi
-	_, err := http.Get(fmt.Sprintf("https://api.michigan.com/%s/", c.MapiEndpoint))
+	resp, err := http.Get(fmt.Sprintf("https://api.michigan.com/%s/", c.MapiEndpoint))
 	if err != nil {
 		chartbeatDebugger.Println("Failed to update mapi")
+		return
 	}
+	defer resp.Body.Close()
 }
 
 /** The beats */
 var TrafficSeriesApi = ChartbeatApi{
 	ChartbeatUrl{"historical/traffic/series", ""},
-	"historical-traffic",
+	"traffic-series",
 	TrafficSeries{},
 }
 var QuickStatsApi = ChartbeatApi{
