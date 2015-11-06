@@ -27,7 +27,7 @@ var cmdAllBeats = &cobra.Command{
 			f.TopGeoApi,
 			f.ReferrersApi,
 			f.RecentApi,
-			f.HistoricalApi,
+			f.TrafficSeriesApi,
 		})
 	},
 }
@@ -72,11 +72,11 @@ var cmdRecent = &cobra.Command{
 	},
 }
 
-var cmdHistorical = &cobra.Command{
-	Use:   "historical-traffic",
+var cmdTrafficSeries = &cobra.Command{
+	Use:   "traffic-series",
 	Short: "Fetch recent snapshot for Chartbeat",
 	Run: func(cmd *cobra.Command, arg []string) {
-		RunChartbeatCommands([]f.Beat{&f.HistoricalApi})
+		RunChartbeatCommands([]f.Beat{&f.TrafficSeriesApi})
 	},
 }
 

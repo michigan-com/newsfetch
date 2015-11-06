@@ -63,10 +63,10 @@ func (c ChartbeatApi) Run(session *mgo.Session, apiKey string) {
 }
 
 /** The beats */
-var HistoricalApi = ChartbeatApi{
+var TrafficSeriesApi = ChartbeatApi{
 	ChartbeatUrl{"historical/traffic/series", ""},
 	"historical-traffic",
-	Historical{},
+	TrafficSeries{},
 }
 var QuickStatsApi = ChartbeatApi{
 	ChartbeatUrl{"live/quickstats/v4", "all_platforms=1&loyalty=1"},

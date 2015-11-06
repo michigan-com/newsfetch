@@ -58,7 +58,7 @@ func AddCommands() {
 	cmdChartbeat.AddCommand(cmdTopGeo)
 	cmdChartbeat.AddCommand(cmdReferrers)
 	cmdChartbeat.AddCommand(cmdRecent)
-	cmdChartbeat.AddCommand(cmdHistorical)
+	cmdChartbeat.AddCommand(cmdTrafficSeries)
 	cmdChartbeat.AddCommand(cmdAllBeats)
 
 	NewsfetchCmd.AddCommand(

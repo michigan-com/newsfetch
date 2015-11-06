@@ -7,7 +7,7 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
-type HistoricalSnapshot struct {
+type TrafficSeriesSnapshot struct {
 	Id         bson.ObjectId `bson:"_id,omitempty"`
 	Created_at time.Time     `bson:"created_at"`
 	Start      int           `bson:"start"`
@@ -16,8 +16,8 @@ type HistoricalSnapshot struct {
 	Traffic    []*Traffic    `bson:"sites"`
 }
 
-func (h HistoricalSnapshot) Save(session *mgo.Session) {
-	collection := session.DB("").C("HistoricalTraffic")
+func (h TrafficSeriesSnapshot) Save(session *mgo.Session) {
+	collection := session.DB("").C("TrafficSeries")
 	err := collection.Insert(h)
 
 	debugger.Printf("Saving %v", h)
@@ -34,12 +34,12 @@ type Traffic struct {
 	Visits []int  `bson:"visits"`
 }
 
-type HistoricalInSeries struct {
+type TrafficSeriesIn struct {
 	Series *struct {
 		People []int `json:"people"`
 	} `json:"series"`
 }
 
-func (his *HistoricalInSeries) Visits() []int {
+func (his *TrafficSeriesIn) Visits() []int {
 	return his.Series.People
 }
