@@ -4,7 +4,7 @@ import (
 	"sync"
 	"time"
 
-	c "github.com/michigan-com/newsfetch/chartbeat"
+	f "github.com/michigan-com/newsfetch/fetch/chartbeat"
 	"github.com/michigan-com/newsfetch/lib"
 	"github.com/spf13/cobra"
 	"gopkg.in/mgo.v2"
@@ -21,13 +21,13 @@ var cmdAllBeats = &cobra.Command{
 	Use:   "all",
 	Short: "Fetch all Chartbeat Beats (toppages, quickstats)",
 	Run: func(cmd *cobra.Command, argv []string) {
-		RunChartbeatCommands([]c.Beat{
-			c.TopPages,
-			c.QuickStats,
-			c.TopGeo,
-			c.Referrers,
-			c.Recent,
-			c.Historical,
+		RunChartbeatCommands([]f.Beat{
+			f.TopPagesApi,
+			f.QuickStatsApi,
+			f.TopGeoApi,
+			f.ReferrersApi,
+			f.RecentApi,
+			f.HistoricalApi,
 		})
 	},
 }
@@ -36,7 +36,7 @@ var cmdTopPages = &cobra.Command{
 	Use:   "toppages",
 	Short: "Fetch toppages snapshot for Chartbeat",
 	Run: func(cmd *cobra.Command, argv []string) {
-		RunChartbeatCommands([]c.Beat{&c.TopPages})
+		RunChartbeatCommands([]f.Beat{&f.TopPagesApi})
 	},
 }
 
@@ -44,7 +44,7 @@ var cmdQuickStats = &cobra.Command{
 	Use:   "quickstats",
 	Short: "Fetch quickstats snapshot for Chartbeat",
 	Run: func(cmd *cobra.Command, argv []string) {
-		RunChartbeatCommands([]c.Beat{&c.QuickStats})
+		RunChartbeatCommands([]f.Beat{&f.QuickStatsApi})
 	},
 }
 
@@ -52,7 +52,7 @@ var cmdTopGeo = &cobra.Command{
 	Use:   "topgeo",
 	Short: "Fetch topgeo snapshot for Chartbeat",
 	Run: func(cmd *cobra.Command, argv []string) {
-		RunChartbeatCommands([]c.Beat{&c.TopGeo})
+		RunChartbeatCommands([]f.Beat{&f.TopGeoApi})
 	},
 }
 
@@ -60,7 +60,7 @@ var cmdReferrers = &cobra.Command{
 	Use:   "referrers",
 	Short: "Fetch referrers snapshot for Chartbeat",
 	Run: func(cmd *cobra.Command, arg []string) {
-		RunChartbeatCommands([]c.Beat{&c.Referrers})
+		RunChartbeatCommands([]f.Beat{&f.ReferrersApi})
 	},
 }
 
@@ -68,7 +68,7 @@ var cmdRecent = &cobra.Command{
 	Use:   "recent",
 	Short: "Fetch recent snapshot for Chartbeat",
 	Run: func(cmd *cobra.Command, arg []string) {
-		RunChartbeatCommands([]c.Beat{&c.Recent})
+		RunChartbeatCommands([]f.Beat{&f.RecentApi})
 	},
 }
 
@@ -76,11 +76,11 @@ var cmdHistorical = &cobra.Command{
 	Use:   "historical-traffic",
 	Short: "Fetch recent snapshot for Chartbeat",
 	Run: func(cmd *cobra.Command, arg []string) {
-		RunChartbeatCommands([]c.Beat{&c.Historical})
+		RunChartbeatCommands([]f.Beat{&f.HistoricalApi})
 	},
 }
 
-func RunChartbeatCommands(beats []c.Beat) {
+func RunChartbeatCommands(beats []f.Beat) {
 	// Set up environment
 	var session *mgo.Session
 	if globalConfig.MongoUrl != "" {
@@ -97,7 +97,7 @@ func RunChartbeatCommands(beats []c.Beat) {
 		for _, beat := range beats {
 			beatWait.Add(1)
 
-			go func(beat c.Beat) {
+			go func(beat f.Beat) {
 				var _copy *mgo.Session
 				if session != nil {
 					_copy = session.Copy()

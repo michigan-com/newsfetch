@@ -1,4 +1,4 @@
-package chartbeat
+package fetch
 
 import (
 	"fmt"
