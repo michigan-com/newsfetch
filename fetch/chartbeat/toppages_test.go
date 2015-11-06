@@ -3,68 +3,13 @@ package fetch
 import (
 	"fmt"
 	"os"
-	"strings"
 	"testing"
 
 	"github.com/michigan-com/newsfetch/lib"
 	m "github.com/michigan-com/newsfetch/model"
+	mc "github.com/michigan-com/newsfetch/model/chartbeat"
 	"gopkg.in/mgo.v2/bson"
 )
-
-func TestFormatChartbeatUrls(t *testing.T) {
-	t.Log("Testing the formatting of Chartbeat URLs")
-
-	apiKey := "asdf"
-
-	// Test the toppages api
-	endPoint := "live/toppages/v3"
-	formattedUrls, err := FormatChartbeatUrls(endPoint, lib.Sites, apiKey)
-
-	if err != nil {
-		t.Fatalf("%v", err)
-	}
-
-	// Check to make sure we have the right numnber of urls
-	if len(formattedUrls) != len(lib.Sites) {
-		t.Fatalf("Expected %d urls, got %d", len(lib.Sites), len(formattedUrls))
-	}
-
-	// Test to make sure the URLs formatted correctly
-	for i := 0; i < len(formattedUrls); i++ {
-		url := formattedUrls[i]
-		site := lib.Sites[i]
-		if !strings.Contains(url, endPoint) {
-			t.Fatalf(fmt.Sprintf("Url %s does not contain endPoint %s", url, endPoint))
-		} else if !strings.Contains(url, apiKey) {
-			t.Fatalf(fmt.Sprintf("Url %s does not contain the apiKey %s", url, apiKey))
-		} else if !strings.Contains(url, site) {
-			t.Fatalf(fmt.Sprintf("Url %s should have site %s as a parameter", url, site))
-		}
-	}
-
-	// Add some url params
-	urlString := "this=1234&that=abcd&other=what"
-	formattedUrls = AddUrlParams(formattedUrls, urlString)
-	for _, url := range formattedUrls {
-		if !strings.HasSuffix(url, urlString) {
-			t.Fatalf("Url %s should end with %s", url, urlString)
-		}
-		t.Log("Url %s checks out", url)
-	}
-
-	// Test with no sites
-	endPoint = "blah"
-	formattedUrls, err = FormatChartbeatUrls(endPoint, []string{}, apiKey)
-	if len(formattedUrls) != 0 {
-		t.Fatalf(fmt.Sprintf("%d urls created, should have been 0", len(formattedUrls)))
-	}
-
-	// Test and make sure that no api key returns an error
-	_, err = FormatChartbeatUrls(endPoint, lib.Sites, "")
-	if err == nil {
-		t.Fatalf("Should have thrown an error when no API key was set")
-	}
-}
 
 func TestSaveTimeInterval(t *testing.T) {
 	t.Skip("No Mongo tests allowed")
@@ -90,10 +35,10 @@ func TestSaveTimeInterval(t *testing.T) {
 	}*/
 
 	// Calculate a bunch of the time intervals
-	topPages := make([]*m.TopArticle, 0, numArticles)
+	topPages := make([]*mc.TopArticle, 0, numArticles)
 	visits := map[int]int{}
 	for i := 0; i < numArticles; i++ {
-		article := &m.TopArticle{}
+		article := &mc.TopArticle{}
 		articleId := i + 1
 		numVisits := lib.RandomInt(500)
 
@@ -191,63 +136,16 @@ func TestGetTopPages(t *testing.T) {
 	}
 }
 
-func TestSaveSnapshot(t *testing.T) {
-	t.Skip("No Mongo tests")
-	mongoUri := os.Getenv("MONGO_URI")
-	if mongoUri == "" {
-		t.Fatalf("%v", "No mongo URI specified, failing test")
-	}
-
-	// Make an article snapshot and save it
-	numArticles := 20
-	toppages := make([]*m.TopArticle, 0, numArticles)
-	for i := 0; i < numArticles; i++ {
-		article := &m.TopArticle{}
-		article.ArticleId = i
-		article.Headline = fmt.Sprintf("Article %d", i)
-		article.Visits = 100
-
-		toppages = append(toppages, article)
-	}
-
-	// Add the collection 4 times
-	session := lib.DBConnect(mongoUri)
-	defer lib.DBClose(session)
-	SaveTopPagesSnapshot(toppages, session)
-	SaveTopPagesSnapshot(toppages, session)
-	SaveTopPagesSnapshot(toppages, session)
-	SaveTopPagesSnapshot(toppages, session)
-
-	// Now verify
-	lib.Debugger.Printf("%v", mongoUri)
-	col := session.DB("").C("Toppages")
-	numSnapshots, err := col.Count()
-
-	if err != nil {
-		t.Fatalf("%v", err)
-	}
-	if numSnapshots != 1 {
-		t.Fatalf("Should only be one collection")
-	}
-
-	snapshot := &m.TopPagesSnapshot{}
-	err = col.Find(bson.M{}).One(&snapshot)
-
-	if len(snapshot.Articles) != numArticles {
-		t.Fatalf("Should be %d values in the snapshot, but there are %d", numArticles, len(snapshot.Articles))
-	}
-}
-
 func TestSortTopArticles(t *testing.T) {
 	// This is a test URL provided by chartbeat
 	testUrl := "http://api.chartbeat.com/live/toppages/v3/?apikey=317a25eccba186e0f6b558f45214c0e7&host=gizmodo.com"
 	topPages, _ := GetTopPages(testUrl)
 
 	// Compile the top articles together
-	topArticles := make([]*m.TopArticle, 0, len(topPages.Pages))
+	topArticles := make([]*mc.TopArticle, 0, len(topPages.Pages))
 	for i := 0; i < len(topPages.Pages); i++ {
 		page := topPages.Pages[i]
-		article := &m.TopArticle{}
+		article := &mc.TopArticle{}
 		article.Visits = page.Stats.Visits
 		article.Url = page.Path
 		article.Headline = page.Title

@@ -61,9 +61,13 @@ func (h Historical) Fetch(urls []string) m.Snapshot {
 			}
 			defer resp.Body.Close()
 
+			chartbeatDebugger.Printf("DOne fetching %s", url)
+
 			tmpHI := &Historical{}
 			decoder := json.NewDecoder(resp.Body)
 			err = decoder.Decode(tmpHI)
+
+			chartbeatDebugger.Printf("JSON decoded")
 
 			if err != nil {
 				chartbeatDebugger.Printf("Failed to parse json body: %s", err.Error())
@@ -86,6 +90,7 @@ func (h Historical) Fetch(urls []string) m.Snapshot {
 			start = tmpHI.Data.Start
 			end = tmpHI.Data.End
 			freq = tmpHI.Data.Frequency
+			wait.Done()
 
 		}(url)
 	}

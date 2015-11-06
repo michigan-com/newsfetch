@@ -3,8 +3,8 @@ package model
 import (
 	"time"
 
-	"gopkg.in/mgo.v2/bson"
 	"gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/bson"
 )
 
 type HistoricalSnapshot struct {
@@ -19,6 +19,8 @@ type HistoricalSnapshot struct {
 func (h HistoricalSnapshot) Save(session *mgo.Session) {
 	collection := session.DB("").C("HistoricalTraffic")
 	err := collection.Insert(h)
+
+	debugger.Printf("Saving %v", h)
 
 	if err != nil {
 		debugger.Printf("Failed to insert Historical snapshot: %v", err)

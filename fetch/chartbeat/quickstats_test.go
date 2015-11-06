@@ -1,12 +1,10 @@
 package fetch
 
 import (
-	"os"
 	"testing"
 
 	"github.com/michigan-com/newsfetch/lib"
-	m "github.com/michigan-com/newsfetch/model"
-	"gopkg.in/mgo.v2/bson"
+	m "github.com/michigan-com/newsfetch/model/chartbeat"
 )
 
 func TestGetQuickStats(t *testing.T) {
@@ -31,59 +29,6 @@ func TestGetQuickStats(t *testing.T) {
 	_, err = GetQuickStats(url)
 	if err == nil {
 		t.Fatalf("Error should have been thrown for url '%s'", url)
-	}
-}
-
-func TestSaveQuickStats(t *testing.T) {
-	t.Skip("No mongo tests allowed MIKE")
-	mongoUri := os.Getenv("MONGO_URI")
-	if mongoUri == "" {
-		t.Fatalf("%v", "No mongo URI specified, failing test")
-	}
-
-	numStats := 20
-	quickStats := make([]*m.QuickStats, 0, numStats)
-	for i := 0; i < numStats; i++ {
-		stat := &m.QuickStats{}
-		stat.Visits = lib.RandomInt(100)
-
-		quickStats = append(quickStats, stat)
-	}
-
-	quickStats = SortQuickStats(quickStats)
-
-	// Add it a bunch of times
-	session := lib.DBConnect(mongoUri)
-	defer lib.DBClose(session)
-	SaveQuickStats(quickStats, session)
-	SaveQuickStats(quickStats, session)
-	SaveQuickStats(quickStats, session)
-	SaveQuickStats(quickStats, session)
-
-	// Now verify
-	col := session.DB("").C("Quickstats")
-	count, err := col.Count()
-
-	if err != nil {
-		t.Fatalf("%v", err)
-	}
-	if count != 1 {
-		t.Fatalf("Should be 1 Quickstats snapshot, there are %d", count)
-	}
-
-	snapshot := &m.QuickStatsSnapshot{}
-	col.Find(bson.M{}).One(&snapshot)
-	expectedLen, actualLen := len(quickStats), len(snapshot.Stats)
-
-	if expectedLen != actualLen {
-		t.Fatalf("Epected %d, actual %d", expectedLen, actualLen)
-	}
-
-	for i := 0; i < len(quickStats); i++ {
-		val1, val2 := quickStats[i].Visits, snapshot.Stats[i].Visits
-		if val1 != val2 {
-			t.Fatalf("quickstats[%d].Visits == %d, snapshot[i].Visits == %d. They should be equal", i, val1, i, val2)
-		}
 	}
 }
 

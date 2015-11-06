@@ -4,33 +4,6 @@ import (
 	"testing"
 )
 
-func TestFetchRecents(t *testing.T) {
-	url := "http://api.chartbeat.com/live/recent/v3/?apikey=317a25eccba186e0f6b558f45214c0e7&host=gizmodo.com"
-
-	recents := FetchRecent([]string{url})
-	if len(recents) != 1 {
-		t.Fatalf("should be 1 recent, there are %d", len(recents))
-	}
-
-	// Now try with some bad urls
-	urls := []string{
-		url,
-		"http://google.com",
-		"asdfasdf asdfasdf",
-	}
-
-	recents = FetchRecent(urls)
-	if len(recents) != 1 {
-		t.Fatalf("Should be 1 recent, there are %d", len(recents))
-	}
-
-	for _, recent := range recents[0].Recents {
-		if recent.Host != "gizmodo" {
-			t.Fatalf("Host should be gizmodo, it is %s", recent.Host)
-		}
-	}
-}
-
 func TestGetRecents(t *testing.T) {
 	url := "http://api.chartbeat.com/live/recent/v3/?apikey=317a25eccba186e0f6b558f45214c0e7&host=gizmodo.com&limit=100"
 	resp, err := GetRecents(url)
