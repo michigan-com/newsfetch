@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -103,7 +104,9 @@ func (h TrafficSeries) Fetch(urls []string) m.Snapshot {
 			}
 
 			series := &m.Traffic{}
-			series.Source, _ = GetHostFromParams(url)
+			source, _ := GetHostFromParams(url)
+
+			series.Source = strings.Replace(source, ".com", "", -1)
 			series.Visits = visits.Visits()
 			queue <- series
 

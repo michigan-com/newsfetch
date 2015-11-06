@@ -30,7 +30,7 @@ func (h TrafficSeriesSnapshot) Save(session *mgo.Session) {
 }
 
 type Traffic struct {
-	Source string `bson:"site"`
+	Source string `bson:"source"`
 	Visits []int  `bson:"visits"`
 }
 
