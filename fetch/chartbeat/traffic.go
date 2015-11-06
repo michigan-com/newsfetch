@@ -15,7 +15,7 @@ type TrafficSeries struct {
 		Start int `json:"start"`
 		End   int `json:"end"`
 		// frequency is the data sample interval in minutes
-		Frequency   int                   `json:"frequency"`
+		Frequency   int                `json:"frequency"`
 		Freep       *m.TrafficSeriesIn `json:"freep.com"`
 		DetroitNews *m.TrafficSeriesIn `json:"detroitnews.com"`
 		BattleCreek *m.TrafficSeriesIn `json:"battlecreekenquirer.com"`
@@ -45,7 +45,6 @@ func (h *TrafficSeries) GetSeries() *m.TrafficSeriesIn {
 
 	return nil
 }
-
 
 func (h *TrafficSeries) String() string {
 	return fmt.Sprintf("<TrafficSeries %d-%d>", h.Data.Start, h.Data.End)
@@ -126,10 +125,11 @@ func (h TrafficSeries) Fetch(urls []string) m.Snapshot {
 	}
 
 	snapshot := m.TrafficSeriesSnapshot{
-		Start:     start,
-		End:       end,
-		Frequency: freq,
-		Traffic:   trafficSlice,
+		Start:      start,
+		End:        end,
+		Frequency:  freq,
+		Traffic:    trafficSlice,
+		Created_at: time.Now(),
 	}
 
 	return snapshot
