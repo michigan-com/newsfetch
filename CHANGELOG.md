@@ -4,6 +4,11 @@ CHANGELOG
 v0.2.9 2015-11-06
 -----------------
 
+* Added MobileSeries collection
+
+v0.2.9 2015-11-06
+-----------------
+
 * Added traffic-series command
 * Reog slightly, abstracted Chartbeat APIs more
 
