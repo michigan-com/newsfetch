@@ -3,8 +3,8 @@ package model
 import (
 	"time"
 
-	"gopkg.in/mgo.v2/bson"
 	"gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/bson"
 )
 
 type QuickStatsSnapshot struct {
@@ -23,6 +23,52 @@ func (q QuickStatsSnapshot) Save(session *mgo.Session) {
 		return
 	}
 	removeOldSnapshots(quickStatsCol)
+
+	q.saveMobileSeries(session)
+}
+
+func (q QuickStatsSnapshot) saveMobileSeries(session *mgo.Session) {
+	// These times are right now
+	_today := time.Now()
+	_tomorrow := _today.Add(24 * time.Hour)
+	estLocation, _ := time.LoadLocation("EST")
+
+	// These times are at midnight
+	today := time.Date(_today.Year(), _today.Month(), _today.Day(), 0, 0, 0, 0, estLocation)
+	tomorrow := time.Date(_tomorrow.Year(), _tomorrow.Month(), _tomorrow.Day(), 0, 0, 0, 0, estLocation)
+
+	debugger.Printf("today: %v, tomorrow: %v", today, tomorrow)
+	mobileSeriesCol := session.DB("").C("MobileSeries")
+	mobileSeries := &MobileSeries{}
+
+	// Find one if it exists
+	query := mobileSeriesCol.Find(bson.M{
+		"date": bson.M{
+			"$gte": today,
+			"$lt":  tomorrow,
+		},
+	}).
+		Sort("-_id")
+
+	debugger.Printf("%v", query)
+	query.One(&mobileSeries)
+
+	debugger.Printf("Mobile series: %v", mobileSeries)
+
+	if !mobileSeries.Id.Valid() {
+		// This means there's no mobile series for today
+		mobileSeries.Date = today
+		mobileSeries.StartTime = _today
+	}
+
+	// Compile the mobile's total
+	mobileTotal := 0
+	for _, stat := range q.Stats {
+		mobileTotal += stat.PlatformEngaged.M
+	}
+	mobileSeries.AddSeriesValue(mobileTotal)
+	debugger.Printf("mobileSeries.Series = %v", mobileSeries.Series)
+	mobileSeries.Save(session)
 }
 
 type QuickStatsResp struct {

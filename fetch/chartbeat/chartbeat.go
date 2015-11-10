@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"gopkg.in/mgo.v2"
 
@@ -29,9 +30,9 @@ type Beat interface {
 
 // ChartbeatApi to be used in the chartbeat package
 type ChartbeatApi struct {
-	Url          ChartbeatUrl
-	MapiEndpoint string         // https://api.michigan.com/<MapiEndpoint> API endpointto update the sockets
-	Fetch        ChartbeatFetch // Interface in fetch/ that will fetch the chartbeat info
+	Url           ChartbeatUrl
+	MapiEndpoints string         // comma-separated list of mapi endpoints to hit e.g. "quickstats,toppages,traffic-series"
+	Fetch         ChartbeatFetch // Interface in fetch/ that will fetch the chartbeat info
 }
 
 type ChartbeatUrl struct {
@@ -56,12 +57,16 @@ func (c ChartbeatApi) Run(session *mgo.Session, apiKey string) {
 	}
 
 	// TODO hit mapi
-	resp, err := http.Get(fmt.Sprintf("https://api.michigan.com/%s/", c.MapiEndpoint))
-	if err != nil {
-		chartbeatDebugger.Println("Failed to update mapi")
-		return
+	endpoints := strings.Split(c.MapiEndpoints, ",")
+	for _, endpoint := range endpoints {
+		url := fmt.Sprintf("https://api.michigan.com/%s/", endpoint)
+		resp, err := http.Get(url)
+		if err != nil {
+			chartbeatDebugger.Printf("Failed to update mapi url %s", url)
+			return
+		}
+		resp.Body.Close()
 	}
-	defer resp.Body.Close()
 }
 
 /** The beats */
@@ -72,7 +77,7 @@ var TrafficSeriesApi = ChartbeatApi{
 }
 var QuickStatsApi = ChartbeatApi{
 	ChartbeatUrl{"live/quickstats/v4", "all_platforms=1&loyalty=1"},
-	"quickstats",
+	"quickstats,mobile-series",
 	Quickstats{},
 }
 

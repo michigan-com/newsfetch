@@ -11,7 +11,7 @@ import (
 	m "github.com/michigan-com/newsfetch/model/chartbeat"
 )
 
-type Quickstats struct {}
+type Quickstats struct{}
 
 type QuickStatsSort []*m.QuickStats
 
@@ -86,7 +86,6 @@ func GetQuickStats(url string) (*m.QuickStats, error) {
 
 	return quickStats, err
 }
-
 
 func SortQuickStats(quickStats []*m.QuickStats) []*m.QuickStats {
 	sort.Sort(QuickStatsSort(quickStats))
