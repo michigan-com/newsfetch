@@ -10,7 +10,7 @@ func SplitWords(text string) []string {
 
 	words := make([]string, 0, len(runs))
 	for _, run := range runs {
-		trimmed := strings.TrimFunc(run, isTrimmable)
+		trimmed := strings.TrimFunc(run, IsTrimmableRune)
 		if len(trimmed) > 0 {
 			words = append(words, trimmed)
 		}
@@ -22,7 +22,16 @@ func IsRegularWord(word string) bool {
 	return strings.IndexFunc(word, isIrregularRune) < 0
 }
 
-func isTrimmable(r rune) bool {
+func IsCapitalizedWord(word string) bool {
+	if len(word) == 0 {
+		return false
+	}
+
+	runes := []rune(word)
+	return unicode.IsUpper(runes[0]) && strings.IndexFunc(word, unicode.IsLower) >= 1
+}
+
+func IsTrimmableRune(r rune) bool {
 	return !unicode.IsLetter(r) && !isSpecialCharacter(r)
 }
 

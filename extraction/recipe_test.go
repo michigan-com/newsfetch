@@ -572,9 +572,154 @@ func TestRecipeIntegration10(t *testing.T) {
 	`)
 }
 
+func TestRecipeIntegration11_MultipleRecipes(t *testing.T) {
+	if skipFailingRecipes {
+		t.SkipNow()
+	}
+	testRecipes(t, "http://www.freep.com/story/life/food/recipes/2015/08/25/ways-avoid-recipe-pitfalls/32364781/", `
+		<p>Recipes hold such delicious promise. Just follow along, the instructions whisper seductively, and you will wow your family and dazzle your friends. Or not. The cruel reality is — and we all encounter this — some recipes just don’t deliver.</p>
+		<p>How can you tell, preferably before you buy the ingredients, invite people over and start cooking, whether a recipe is “good” or “bad”? Here are 10 steps six cookbook pros say you should follow to get the most from a recipe.</p>
+		<p>1. Cook! The more you cook, the more you will learn and the easier it will be to spot a recipe that’s “worthwhile or intriguing,” says Dianne Jacob, an Oakland, Calif.-based author and cookbook coach. Experience in the kitchen has given her “a general idea of how long to cook things, which spices to use and … techniques such as ‘fold,’ ” she wrote in an e-mail.</p>
+		<p>2. Be flexible! Cooking well depends on so many things: ingredients, equipment, a cook’s skill. It’s all very individual. Jenny Wapner, executive editor of Ten Speed Press in Emeryville, Calif., says “a good recipe succinctly, and not four pages later, gives you the variables and tells you what the dish should look like.” So, for Rick Bayless, the Chicago restaurateur, TV cooking show host and author of nine cookbooks, including the new “More Mexican Everyday” (Norton, $35), a “rough time estimate” for cooking is good, but what’s more important is “what does it smell like or taste like when it’s done?”</p>
+		<p>3. Listen! You want to hear the recipe’s “voice.” Judith Jones, the cookbook editor behind Julia Child and other cooking legends, says she wants the recipe to tell her “whoever wrote it had really done it and makes me feel the taste and texture just by reading it.”</p>
+		<p>4. Read carefully! “Cooks typically forget to read the entire recipe before they start,” says Wapner, and thus can overlook the little things that might be missing from a recipe. Also, make the recipe as written at least once to get an idea of what it’s about before making modifications, she says.</p>
+		<p>5. Double-check! When in doubt about a recipe direction or ingredient amount, turn to other sources. “Recently I made a pound cake which said to bake for 39 minutes, and I knew it should be at least 1 hour,” Jacob says. “I checked a few similar recipes online to be sure.” Wapner also goes online or to other cookbooks to “see what else exists in the world” if she’s worried a recipe looks funny, contains strange ingredients or is missing needed detail.</p>
+		<p>6. Gauge! Is the recipe complete and balanced? Speaking from her Vermont home, Jones says the biggest mistake a recipe can make is not to give cooks the necessary tools to do the job. One possible sign? A recipe with a list of ingredients far longer than the instructions. Lorena Jones, publishing director, Food &amp; Drink and Lifestyle, for Chronicle Books in San Francisco, takes this a step further. Check the quantity of each ingredient and its ratio to other ingredients. “If something is calling for 4 cups of butter instead of 1/4 cup of butter, there’s something off-base,” she says.</p>
+		<p>7. Trust! But verify the expertise of your recipe source. Beware the “flimsies,” to quote Jones, who merely borrow from one another. Jacob writes that she basically trusts recipes from websites with test kitchens and newspapers with test kitchens.</p>
+		<p>8. Be careful! Use caution with old recipes. “Recipe writing has come a long way,” says Wapner, adding that she will never attempt an older recipe without looking at other versions and checking various cooking methods.</p>
+		<p>9. Be kind! Some recipes are written for quasi-professional or highly experienced recreational cooks while others are written for the weekend or beginner cook, says Lorena Jones. Think of what level, and recipe, is right for you. Nathalie Dupree, a Charleston, S.C.-based cookbook author and TV cooking show host, looks for recipes that are doable for the home cook. “I’m totally uninterested in recipes for restaurants,” she says, defining those as recipes with multiple steps that are easy for a kitchen crew to do but more challenging for home cooks to accomplish.</p>
+		<p>10. Work it! There’s nothing wrong with a recipe that’s challenging or requires some effort to pull off, says Judith Jones. “What art form doesn’t require a little bit of work?” she asks.</p>
+		<p><strong>Mexican Tomato-colored Rice (with Fresh Vegetables)</strong></p>
+		<p><strong>Makes:</strong> About 31/2 cups (4 servings) / <strong>Preparation time:</strong> 20 minutes / <strong>Total time:</strong> 45 minutes</p>
+		<p>Lorena Jones, Chronicle Books publishing director for Food &amp; Drink and Lifestyle, praises Rick Bayless for the context he provides not only in recipe headnotes but ingredient lists. This recipe from Bayless’ “Authentic Mexican: Regional Cooking From the Heart of Mexico,” published in 1987 by William Morrow, is one of her favorites. “If Americans make this unassuming but delicious rice dish instead of buying boxed pilaf, they would take a big step toward bringing true flavor and healthfulness to their weeknight meals,” she wrote in an e-mail.</p>
+		<p>11/2 tablespoons vegetable oil</p>
+		<p>1 cup long- or medium-grain rice</p>
+		<p>1 small onion, finely chopped</p>
+		<p>1 large clove garlic, peeled, finely diced</p>
+		<p>1 ripe, medium-small tomato, roasted or boiled, cored and peeled, or half of a 15-ounce can tomatoes, drained</p>
+		<p>11/2 cups broth (preferably poultry) or water</p>
+		<p>Salt, about 1/2 teaspoon if using salted broth, 1 teaspoon if using unsalted broth or water</p>
+		<p>1 cup fresh or (defrosted) frozen peas, optional</p>
+		<p>1 large carrot, peeled, chopped into 1/4-inch dice, optional</p>
+		<p>Several sprigs fresh cilantro or flat-leaf parsley</p>
+		<p>About 40 minutes before serving, measure the oil into a 11/2- to 2-quart saucepan set over medium heat. Add the rice and onion; cook, stirring regularly, until both are lightly browned, 7-10 minutes. Mix in the garlic; cook a minute longer.</p>
+		<p>While the rice is frying, prepare the tomato: Seed it, if you like, by cutting it in half width-wise and squeezing out the seeds, then puree it in a blender or food processor. Pour the broth or water into a small saucepan, add the salt and bring just to a simmer.</p>
+		<p>Add the pureed tomato to the browned rice and cook for a minute, stirring several times. Add the simmering broth, stir the rice, scrape down the sides of the pot, cover and reduce the heat to medium-low. Cook, 15 minutes; turn off the heat, and let the rice stand, covered, until the grains are tender (but not splayed), 5-10 minutes.</p>
+		<p>While the rice is cooking, simmer the fresh peas until tender (4 to 20 minutes, depending on size and freshness), then drain and set aside; frozen peas only need to be defrosted. Separately, simmer the carrot 5 to 8 minutes, drain and add to the fresh or defrosted peas.</p>
+		<p>When the rice is tender, add the optional vegetables and fluff with a fork to separate the grains and stop the cooking. Scoop the rice into a warm serving dish, decorate it with fresh coriander or parsley, and it is ready to serve.</p>
+		<p>From “Authentic Mexican: Regional Cooking From the Heart of Mexico” by Rick Bayless (William Morrow). Tested by the Chicago Tribune.</p>
+		<p>294<strong> calories (</strong>18% from<strong> fat)</strong>, 6 grams <strong>fat</strong> (1 gram <strong>sat</strong>. <strong>fat</strong>), 52 grams <strong>carbohydrates</strong>, 7 grams <strong>protein</strong>, 662 mg <strong>sodium</strong>, 0 mg <strong>cholesterol</strong>, 4 grams <strong>fiber</strong>.</p>
+		<p><strong>Angel No-fool Cake</strong></p>
+		<p><strong>Makes: </strong>10 servings / <strong>Preparation time:</strong> 40 minutes / <strong>Total time:</strong> 1 hour, 10 minutes</p>
+		<p>And what about angel food cake? This recipe resulted from a quest by the Tribune’s Renee Enna to find a foolproof cake. After years of looking and trying different recipes, she combined the best of a recipe from Betty Crocker and a recipe found online and attributed only to Charlotte J. That cake, with adjustments by Enna, was featured four years ago with her Good Eating story about her quest. It still holds up as a foolproof recipe.</p>
+		<p>1 cup cake flour</p>
+		<p>7/8 cup sugar plus 3/4 cup sugar, divided</p>
+		<p>12 egg whites</p>
+		<p>11/2 teaspoons cream of tartar</p>
+		<p>1/4 teaspoon salt</p>
+		<p>11/2 teaspoons vanilla</p>
+		<p>1/2 teaspoon almond extract</p>
+		<p>Fortified whipped frosting (see cook’s note)</p>
+		<p>Preheat the oven to 375 degrees. Measure the cake flour and 7/8 cup sugar into a bowl (for 7/8 cup, measure a cup, then remove 2 tablespoons); sift together. Set aside.</p>
+		<p>Combine the egg whites, cream of tartar, salt, vanilla and almond extract into the bowl of an electric mixer; beat on medium speed with electric mixer until soft peaks form. (Do not beat until stiff, no matter what any recipe says!) Slowly add the 3/4 cup sugar, beating on medium-high speed until combined.</p>
+		<p>Reduce speed to low; slowly mix in the flour-sugar mixture just until incorporated.</p>
+		<p>Gently spoon batter into a 10-inch aluminum tube pan. Gently cut through batter with a butter knife. This breaks up any air bubbles in the batter. One time around is sufficient. (And don’t bang the pan on the counter!)</p>
+		<p>Bake until top of cake is golden brown and crusty, and top springs back when lightly touched, 30-40 minutes. Remove cake from oven; turn pan upside down. (Many tube pans come with little tabs that accommodate this necessary step. Otherwise, place pan upside down on a few ramekins — anything stable that puts air between the pan top and the counter.) Let stand until completely cool, about 11/2 hours.</p>
+		<p>To remove cake from pan, carefully loosen all pan edges including the tube’s with a butter knife. Invert onto your serving platter. To frost and fill, halve cake horizontally with a serrated knife, using a gentle sawing motion. Fill center and frost cake with whipped cream frosting.</p>
+		<p><strong>Cook’s note: </strong>To make the fortified whipped cream frosting. Before starting frosting, put the beaters and mixer bowl in the freezer to chill. Put 11/2 tablespoons cold water in ramekin; sprinkle on 3/4 teaspoon unflavored gelatin. Let stand 5 minutes. Place ramekin in skillet filled with 1/2 inch water; heat, stirring constantly, until gelatin is clear and dissolved. Let cool, about 5 minutes. Place 11/2 cups chilled whipping cream in the chilled bowl of an electric mixer; beat on medium speed until cream begins to thicken. Add gelatin mixture, 3 tablespoons sifted confectioners’ sugar and 11/2 teaspoons vanilla. Continue beating until soft mounds fall. Remove bowl from mixer; finish whipping by hand with a balloon whisk until cream thickens a bit more and holds its shape.</p>
+		<p>Adapted from several recipes and tested by the Chicago Tribune. Nutrition information includes frosting.</p>
+		<p>324<strong> calories</strong> (36% from <strong>fat</strong>), 13 grams <strong>fat</strong> (8 gram <strong>sat</strong>. <strong>fat</strong>), 46 grams <strong>carbohydrates</strong>, 6 grams <strong>protein</strong>, 138 mg <strong>sodium</strong>, 49 mg <strong>cholesterol</strong>, 0 grams <strong>fiber</strong>.</p>
+	`, `
+		Title: "Mexican Tomato-colored Rice (with Fresh Vegetables)"
+		Serving size: "About 31/2 cups (4 servings)"
+		Total time: "45 minutes"
+		Prep time: "20 minutes"
+		Nutrition data: "294 calories (18% from fat), 6 grams fat (1 gram sat. fat), 52 grams carbohydrates, 7 grams protein, 662 mg sodium, 0 mg cholesterol, 4 grams fiber."
+		I: "11/2 tablespoons vegetable oil"
+		I: "1 cup long- or medium-grain rice"
+		I: "1 small onion, finely chopped"
+		I: "1 large clove garlic, peeled, finely diced"
+		I: "1 ripe, medium-small tomato, roasted or boiled, cored and peeled, or half of a 15-ounce can tomatoes, drained"
+		I: "11/2 cups broth (preferably poultry) or water"
+		I: "Salt, about 1/2 teaspoon if using salted broth, 1 teaspoon if using unsalted broth or water"
+		I: "1 cup fresh or (defrosted) frozen peas, optional"
+		I: "1 large carrot, peeled, chopped into 1/4-inch dice, optional"
+		I: "Several sprigs fresh cilantro or flat-leaf parsley"
+		Intro: "Lorena Jones, Chronicle Books publishing director for Food & Drink and Lifestyle, praises Rick Bayless for the context he provides not only in recipe headnotes but ingredient lists. This recipe from Bayless’ “Authentic Mexican: Regional Cooking From the Heart of Mexico,” published in 1987 by William Morrow, is one of her favorites. “If Americans make this unassuming but delicious rice dish instead of buying boxed pilaf, they would take a big step toward bringing true flavor and healthfulness to their weeknight meals,” she wrote in an e-mail."
+		D: "About 40 minutes before serving, measure the oil into a 11/2- to 2-quart saucepan set over medium heat. Add the rice and onion; cook, stirring regularly, until both are lightly browned, 7-10 minutes. Mix in the garlic; cook a minute longer."
+		D: "While the rice is frying, prepare the tomato: Seed it, if you like, by cutting it in half width-wise and squeezing out the seeds, then puree it in a blender or food processor. Pour the broth or water into a small saucepan, add the salt and bring just to a simmer."
+		D: "Add the pureed tomato to the browned rice and cook for a minute, stirring several times. Add the simmering broth, stir the rice, scrape down the sides of the pot, cover and reduce the heat to medium-low. Cook, 15 minutes; turn off the heat, and let the rice stand, covered, until the grains are tender (but not splayed), 5-10 minutes."
+		D: "While the rice is cooking, simmer the fresh peas until tender (4 to 20 minutes, depending on size and freshness), then drain and set aside; frozen peas only need to be defrosted. Separately, simmer the carrot 5 to 8 minutes, drain and add to the fresh or defrosted peas."
+		D: "When the rice is tender, add the optional vegetables and fluff with a fork to separate the grains and stop the cooking. Scoop the rice into a warm serving dish, decorate it with fresh coriander or parsley, and it is ready to serve."
+
+		Title: "Angel No-fool Cake"
+		Serving size: "10 servings"
+		Total time: "1 hour, 10 minutes"
+		Prep time: "40 minutes"
+		Nutrition data: "324 calories (36% from fat), 13 grams fat (8 gram sat. fat), 46 grams carbohydrates, 6 grams protein, 138 mg sodium, 49 mg cholesterol, 0 grams fiber."
+		I: "1 cup cake flour"
+		I: "7/8 cup sugar plus 3/4 cup sugar, divided"
+		I: "12 egg whites"
+		I: "11/2 teaspoons cream of tartar"
+		I: "1/4 teaspoon salt"
+		I: "11/2 teaspoons vanilla"
+		I: "1/2 teaspoon almond extract"
+		I: "Fortified whipped frosting (see cook’s note)"
+		D: "And what about angel food cake? This recipe resulted from a quest by the Tribune’s Renee Enna to find a foolproof cake. After years of looking and trying different recipes, she combined the best of a recipe from Betty Crocker and a recipe found online and attributed only to Charlotte J. That cake, with adjustments by Enna, was featured four years ago with her Good Eating story about her quest. It still holds up as a foolproof recipe."
+		D: "Preheat the oven to 375 degrees. Measure the cake flour and 7/8 cup sugar into a bowl (for 7/8 cup, measure a cup, then remove 2 tablespoons); sift together. Set aside."
+		D: "Combine the egg whites, cream of tartar, salt, vanilla and almond extract into the bowl of an electric mixer; beat on medium speed with electric mixer until soft peaks form. (Do not beat until stiff, no matter what any recipe says!) Slowly add the 3/4 cup sugar, beating on medium-high speed until combined."
+		D: "Reduce speed to low; slowly mix in the flour-sugar mixture just until incorporated."
+		D: "Gently spoon batter into a 10-inch aluminum tube pan. Gently cut through batter with a butter knife. This breaks up any air bubbles in the batter. One time around is sufficient. (And don’t bang the pan on the counter!)"
+		D: "Bake until top of cake is golden brown and crusty, and top springs back when lightly touched, 30-40 minutes. Remove cake from oven; turn pan upside down. (Many tube pans come with little tabs that accommodate this necessary step. Otherwise, place pan upside down on a few ramekins — anything stable that puts air between the pan top and the counter.) Let stand until completely cool, about 11/2 hours."
+		D: "To remove cake from pan, carefully loosen all pan edges including the tube’s with a butter knife. Invert onto your serving platter. To frost and fill, halve cake horizontally with a serrated knife, using a gentle sawing motion. Fill center and frost cake with whipped cream frosting."
+		D: "Cook’s note: To make the fortified whipped cream frosting. Before starting frosting, put the beaters and mixer bowl in the freezer to chill. Put 11/2 tablespoons cold water in ramekin; sprinkle on 3/4 teaspoon unflavored gelatin. Let stand 5 minutes. Place ramekin in skillet filled with 1/2 inch water; heat, stirring constantly, until gelatin is clear and dissolved. Let cool, about 5 minutes. Place 11/2 cups chilled whipping cream in the chilled bowl of an electric mixer; beat on medium speed until cream begins to thicken. Add gelatin mixture, 3 tablespoons sifted confectioners’ sugar and 11/2 teaspoons vanilla. Continue beating until soft mounds fall. Remove bowl from mixer; finish whipping by hand with a balloon whisk until cream thickens a bit more and holds its shape."
+	`)
+}
+
+func TestRecipeIntegration12(t *testing.T) {
+	testRecipes(t, "http://www.freep.com/story/life/food/recipes/2015/09/03/cheyenne-burger-recipe/71605098/", `
+			<p><span class="-newsgate-element-cci-howto--begin"></span></p>
+			<p><span class="-newsgate-paragraph-cci-howto-head-">    <b>Cheyenne Burger</b>  </span></p>
+			<p><b>Makes:</b> 4 (generous) burgers / <b>Preparation time:</b> 10 minutes / <b>Total time:</b> 30 minutes</p>
+			<p><span class="-newsgate-paragraph-cci-howto-components-">1<sup>1</sup>/<sub>2</sub> pounds ground chuck (or ground turkey)</span></p>
+			<p><span class="-newsgate-paragraph-cci-howto-components-">Kosher salt and freshly ground black pepper to taste</span></p>
+			<p><span class="-newsgate-paragraph-cci-howto-components-">1<sup>1</sup>/<sub>2</sub> tablespoons canola oil</span></p>
+			<p><span class="-newsgate-paragraph-cci-howto-components-">4 slices (<sup>1</sup>/<sub>2</sub> ounce each) smoked sharp cheddar cheese</span></p>
+			<p><span class="-newsgate-paragraph-cci-howto-components-">4 hamburger buns</span></p>
+			<p><span class="-newsgate-paragraph-cci-howto-components-">    <sup>1</sup>/<sub>2</sub> cup favorite barbecue sauce</span></p>
+			<p><span class="-newsgate-paragraph-cci-howto-components-">8 slices crisp-cooked bacon</span></p>
+			<p><span class="-newsgate-paragraph-cci-howto-components-">Fried onion rings, optional</span></p>
+			<p><span class="-newsgate-paragraph-cci-howto-components-">Chopped fresh flat-leaf parsley, optional</span></p>
+			<p>Divide the meat into 4 equal portions. Form each portion loosely into a <sup>3</sup>/<sub>4</sub>-inch-thick burger; make a deep depression in the center of each with your thumb. Season both sides with salt and pepper.</p>
+			<p>Preheat the grill to high. Brush burgers with the oil. Grill them until nicely seared on the first side, about 3 minutes. Flip and sear them on the second side, about 4 minutes for medium-rare. During the last minute of cooking, top with cheese and cover to melt the cheese.</p>
+			<p>Place the burgers on the bun bottoms and slather each with barbecue sauce. Top with bacon, onion rings if using, parsley and bun tops. Serve immediately.</p>
+			<p><span class="-newsgate-paragraph-cci-howto-volume-">Adapted from “Bobby Flay’s Burgers, Fries and Shakes” (Crown Publishing, $25.95). Tested by Susan Selasky in the Free Press Test Kitchen. Analysis without onion rings.</span></p>
+			<p><span class="-newsgate-paragraph-cci-howto-volume-">586 <b>calories</b> (44% from <b>fat</b>), 29 grams <b>fat</b> (12 grams <b>sat. fat</b>), 34 grams <b>carbohydrates</b>, 50 grams <b>protein</b>, 1,078 mg <b>sodium</b>, 134 mg <b>cholesterol</b>, 2 grams <b>fiber</b>.</span></p>
+			<p><span class="-newsgate-element-cci-howto--end"></span></p>
+	`, `
+		Title: "Cheyenne Burger"
+		Serving size: "4 (generous) burgers"
+		Total time: "30 minutes"
+		Prep time: "10 minutes"
+		Nutrition data: "586 calories (44% from fat), 29 grams fat (12 grams sat. fat), 34 grams carbohydrates, 50 grams protein, 1,078 mg sodium, 134 mg cholesterol, 2 grams fiber."
+		I: "1 1/2 pounds ground chuck (or ground turkey)"
+		I: "Kosher salt and freshly ground black pepper to taste"
+		I: "1 1/2 tablespoons canola oil"
+		I: "4 slices (1/2 ounce each) smoked sharp cheddar cheese"
+		I: "4 hamburger buns"
+		I: "1/2 cup favorite barbecue sauce"
+		I: "8 slices crisp-cooked bacon"
+		I: "Fried onion rings, optional"
+		I: "Chopped fresh flat-leaf parsley, optional"
+		D: "Divide the meat into 4 equal portions. Form each portion loosely into a 3/4-inch-thick burger; make a deep depression in the center of each with your thumb. Season both sides with salt and pepper."
+		D: "Preheat the grill to high. Brush burgers with the oil. Grill them until nicely seared on the first side, about 3 minutes. Flip and sear them on the second side, about 4 minutes for medium-rare. During the last minute of cooking, top with cheese and cover to melt the cheese."
+		D: "Place the burgers on the bun bottoms and slather each with barbecue sauce. Top with bacon, onion rings if using, parsley and bun tops. Serve immediately."
+	`)
+}
+
 /* template
 
-func TestRecipeIntegration10(t *testing.T) {
+func TestRecipeIntegration12(t *testing.T) {
 	testRecipes(t, "URL", `
 	`, `
 		XXX
@@ -614,9 +759,13 @@ func testRecipes(t *testing.T, url string, html string, expected string) {
 	expected = strings.TrimSpace(strings.Join(trimLines(strings.Split(expected, "\n")), "\n"))
 
 	if actual != expected {
-		ds := diff(expected, actual)
-		ds = strings.Join(addPrefixToLines(fixLineColons(strings.Split(ds, "\n")), "> "), "\n")
-		t.Errorf("Got (diff'd against expected value):\n%s", ds)
+		if expected == "XXX" {
+			t.Errorf("Got:\n%s", actual)
+		} else {
+			ds := diff(expected, actual)
+			ds = strings.Join(addPrefixToLines(fixLineColons(strings.Split(ds, "\n")), "> "), "\n")
+			t.Errorf("Got (diff'd against expected value):\n%s", ds)
+		}
 	}
 }
 

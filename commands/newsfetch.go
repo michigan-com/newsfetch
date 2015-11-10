@@ -73,6 +73,7 @@ func AddCommands() {
 	cmdRecipes.AddCommand(cmdReprocessRecipeById)
 	cmdRecipes.AddCommand(cmdExtractRecipiesFromUrl)
 	cmdRecipes.AddCommand(cmdExtractRecipiesFromSearch)
+	cmdRecipes.AddCommand(cmdVerifyRecipies)
 	NewsfetchCmd.AddCommand(cmdRecipes)
 }
 

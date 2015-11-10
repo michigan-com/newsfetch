@@ -7,18 +7,6 @@ import (
 	"github.com/michigan-com/newsfetch/extraction/split"
 )
 
-var ignoredWords = makeTable(`
-    from to on in of with
-    a an the
-    him her them
-    our
-    out
-    all
-    this that
-    not
-    be is are
-`)
-
 type unwantedInformationRec struct {
 	label          string
 	threshold      int

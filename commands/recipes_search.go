@@ -24,6 +24,8 @@ type RecipeStats struct {
 	articlesIgnoredAsExistingCount     int
 	articlesIgnoredInWrongSectionCount int
 
+	TotalURLsWithRecipesCount int
+
 	URLsWithoutRecipes []string
 }
 
@@ -34,11 +36,17 @@ func (lhs *RecipeStats) merge(rhs RecipeStats) {
 	lhs.articlesIgnoredAsDuplicatesCount += rhs.articlesIgnoredAsDuplicatesCount
 	lhs.articlesIgnoredAsExistingCount += rhs.articlesIgnoredAsExistingCount
 	lhs.articlesIgnoredInWrongSectionCount += rhs.articlesIgnoredInWrongSectionCount
+	lhs.TotalURLsWithRecipesCount += rhs.TotalURLsWithRecipesCount
 	lhs.URLsWithoutRecipes = append(lhs.URLsWithoutRecipes, rhs.URLsWithoutRecipes...)
 }
 
 func (r RecipeStats) String() string {
-	return fmt.Sprintf("%d recipes in %d articles, plus %d articles without recipes; total %d articles processed, %d ignored (%d dups, %d existing, %d wrong section)", r.RecipeCount, (r.articlesProcessedCount - r.ArticlesWithoutRecipesCount), r.ArticlesWithoutRecipesCount, r.articlesProcessedCount, r.articlesIgnoredAsDuplicatesCount+r.articlesIgnoredAsExistingCount+r.articlesIgnoredInWrongSectionCount, r.articlesIgnoredAsDuplicatesCount, r.articlesIgnoredAsExistingCount, r.articlesIgnoredInWrongSectionCount)
+	withRecipesPercentage := 0
+	if r.TotalURLsWithRecipesCount+r.ArticlesWithoutRecipesCount > 0 {
+		withRecipesPercentage = r.TotalURLsWithRecipesCount * 100 / (r.TotalURLsWithRecipesCount + r.ArticlesWithoutRecipesCount)
+	}
+
+	return fmt.Sprintf("%d recipes in %d articles, plus %d articles without recipes; total %d articles processed, %d ignored (%d dups, %d existing, %d wrong section); in total, %d of %d articles (%d%%) have recipes.", r.RecipeCount, (r.articlesProcessedCount - r.ArticlesWithoutRecipesCount), r.ArticlesWithoutRecipesCount, r.articlesProcessedCount, r.articlesIgnoredAsDuplicatesCount+r.articlesIgnoredAsExistingCount+r.articlesIgnoredInWrongSectionCount, r.articlesIgnoredAsDuplicatesCount, r.articlesIgnoredAsExistingCount, r.articlesIgnoredInWrongSectionCount, r.TotalURLsWithRecipesCount, (r.TotalURLsWithRecipesCount + r.ArticlesWithoutRecipesCount), withRecipesPercentage)
 }
 
 var cmdExtractRecipiesFromSearch = &cobra.Command{
@@ -99,6 +107,7 @@ var cmdExtractRecipiesFromSearch = &cobra.Command{
 			pageStats.articlesIgnoredAsExistingCount = len(unprocessedFilteredURLs) - len(processableURLs)
 			pageStats.articlesIgnoredInWrongSectionCount = len(urls) - len(filteredURLs)
 			pageStats.URLsWithoutRecipes = result.URLsWithoutRecipes
+			pageStats.TotalURLsWithRecipesCount = (pageStats.articlesProcessedCount - pageStats.ArticlesWithoutRecipesCount) + pageStats.articlesIgnoredAsExistingCount
 
 			overallStats.merge(pageStats)
 

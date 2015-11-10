@@ -34,3 +34,13 @@ func SaveRecipes(mongoUri string, recipes []*m.Recipe) error {
 
 	return nil
 }
+
+func LoadAllRecipes(mongoUri string) ([]*m.Recipe, error) {
+	session := lib.DBConnect(mongoUri)
+	defer lib.DBClose(session)
+
+	collection := session.DB("").C("Recipe")
+	var result []*m.Recipe
+	err := collection.Find(nil).All(&result)
+	return result, err
+}
