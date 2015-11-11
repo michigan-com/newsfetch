@@ -4,4 +4,4 @@ config.json
 newsfetch
 env.sh
 conf/supervisor.conf
-
+.DS_Store
