@@ -1,10 +1,11 @@
 package recipe_parsing
 
 import (
-	"golang.org/x/net/html"
 	"regexp"
 	"strings"
 	"unicode"
+
+	"golang.org/x/net/html"
 
 	gq "github.com/PuerkitoBio/goquery"
 	m "github.com/michigan-com/newsfetch/model"
@@ -224,7 +225,6 @@ func fixupTextNodesBeforeSubSupInNode(parent *html.Node) {
 			if prev := child.PrevSibling; prev != nil && prev.Type == html.TextNode {
 				if endsWithDigit(prev.Data) {
 					prev.Data = prev.Data + " "
-					println("Fixup applied")
 				}
 			}
 
