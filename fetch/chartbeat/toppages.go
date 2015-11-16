@@ -92,7 +92,7 @@ func (t TopPages) Fetch(urls []string, session *mgo.Session) mc.Snapshot {
 
 	// The snapshot object that will be saved
 	snapshotDoc := mc.TopPagesSnapshotDocument{}
-	snapshotDoc.Articles = SortTopArticles(topArticles[0:100])
+	snapshotDoc.Articles = SortTopArticles(topArticles)[0:100]
 	snapshotDoc.Created_at = time.Now()
 
 	// For the top 100 pages, make sure we've processed the body and generated
