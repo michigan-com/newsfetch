@@ -1,6 +1,11 @@
 CHANGELOG
 =========
 
+v0.2.11 2015-11-06
+-----------------
+
+* Chartbeat command now processes summaries if a given article is not yet processed
+
 v0.2.9 2015-11-06
 -----------------
 
