@@ -7,13 +7,15 @@ import (
 	"sync"
 	"time"
 
+	"gopkg.in/mgo.v2"
+
 	"github.com/michigan-com/newsfetch/lib"
 	m "github.com/michigan-com/newsfetch/model/chartbeat"
 )
 
 type Recent struct {}
 
-func (r Recent) Fetch(urls []string) m.Snapshot {
+func (r Recent) Fetch(urls []string, session *mgo.Session) m.Snapshot {
 	var wait sync.WaitGroup
 	queue := make(chan *m.RecentResp, len(urls))
 

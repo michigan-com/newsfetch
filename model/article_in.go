@@ -1,4 +1,4 @@
-package fetch
+package model
 
 import (
 	"encoding/json"
@@ -8,12 +8,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/michigan-com/newsfetch/lib"
-	m "github.com/michigan-com/newsfetch/model"
 )
-
-var artDebugger = lib.NewCondLogger("newsfetch:fetch:article")
 
 type ArticleIn struct {
 	Site    string
@@ -81,7 +76,7 @@ func (a *ArticleIn) GetData() error {
 		json_url = fmt.Sprintf("%s/%s", a.Url, "json")
 	}
 
-	artDebugger.Println("Fetching: ", json_url)
+	Debugger.Println("Fetching: ", json_url)
 
 	resp, err := http.Get(json_url)
 	if err != nil {
@@ -110,12 +105,12 @@ func (a *ArticleIn) GetData() error {
 
 func (a *ArticleIn) IsValid() bool {
 	if a.Article == nil {
-		artDebugger.Println("Article struct missing ...")
+		Debugger.Println("Article struct missing ...")
 		return false
 	}
 
 	if a.Article.Id == 0 {
-		artDebugger.Println("Article ID missing ...")
+		Debugger.Println("Article ID missing ...")
 		return false
 	}
 
@@ -139,7 +134,7 @@ func (a *ArticleIn) isBlacklisted() bool {
 	return false
 }
 
-func (a *ArticleIn) Process(article *m.Article) error {
+func (a *ArticleIn) Process(article *Article) error {
 	art := a.Article
 	ssts := art.Ssts
 
@@ -148,7 +143,7 @@ func (a *ArticleIn) Process(article *m.Article) error {
 	timestamp, aerr := time.Parse("2006-1-2T15:04:05.0000000", art.Metadata.Dates.Timestamp)
 	if aerr != nil {
 		timestamp = time.Now()
-		artDebugger.Println("Error parsing timestamp: ", aerr)
+		Debugger.Println("Error parsing timestamp: ", aerr)
 	}
 
 	article.Source = a.Site
@@ -165,24 +160,24 @@ func (a *ArticleIn) Process(article *m.Article) error {
 	return nil
 }
 
-func (a *ArticleIn) ProcessPhoto(article *m.Article) error {
+func (a *ArticleIn) ProcessPhoto(article *Article) error {
 	art := a.Article
 
 	if art.Photo == nil {
 		err := fmt.Sprintf("Failed to find photo object: %s", a)
-		artDebugger.Println(err)
+		Debugger.Println(err)
 		return fmt.Errorf(err)
 	}
 
 	if art.Photo.AssetMetadata == nil {
 		err := fmt.Sprintf("Failed to find asset_metadata object: %s", a)
-		artDebugger.Println(err)
+		Debugger.Println(err)
 		return fmt.Errorf(err)
 	}
 
 	if art.Photo.AssetMetadata.Attrs == nil {
 		err := fmt.Sprintf("Failed to find photo.attrs object: %s", a)
-		artDebugger.Println(err)
+		Debugger.Println(err)
 		return fmt.Errorf(err)
 	}
 
@@ -204,15 +199,15 @@ func (a *ArticleIn) ProcessPhoto(article *m.Article) error {
 	swidth, _ := strconv.Atoi(attrs.Swidth)
 	sheight, _ := strconv.Atoi(attrs.Sheight)
 
-	article.Photo = &m.Photo{
+	article.Photo = &Photo{
 		attrs.Caption,
 		attrs.Credit,
-		m.PhotoInfo{
+		PhotoInfo{
 			photoUrl,
 			owidth,
 			oheight,
 		},
-		m.PhotoInfo{
+		PhotoInfo{
 			thumbUrl,
 			swidth,
 			sheight,

@@ -8,6 +8,8 @@ import (
 	"sync"
 	"time"
 
+	"gopkg.in/mgo.v2"
+
 	m "github.com/michigan-com/newsfetch/model/chartbeat"
 )
 
@@ -19,7 +21,7 @@ func (q QuickStatsSort) Len() int           { return len(q) }
 func (q QuickStatsSort) Swap(i, j int)      { q[i], q[j] = q[j], q[i] }
 func (q QuickStatsSort) Less(i, j int) bool { return q[i].Visits > q[j].Visits }
 
-func (q Quickstats) Fetch(urls []string) m.Snapshot {
+func (q Quickstats) Fetch(urls []string, session *mgo.Session) m.Snapshot {
 
 	var urlWait sync.WaitGroup
 	statQueue := make(chan *m.QuickStats, len(urls))

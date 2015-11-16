@@ -7,12 +7,14 @@ import (
 	"sync"
 	"time"
 
+	"gopkg.in/mgo.v2"
+
 	m "github.com/michigan-com/newsfetch/model/chartbeat"
 )
 
 type Referrers struct {}
 
-func (r Referrers) Fetch(urls []string) m.Snapshot {
+func (r Referrers) Fetch(urls []string, session *mgo.Session) m.Snapshot {
 	var wait sync.WaitGroup
 	statQueue := make(chan *m.Referrers, len(urls))
 

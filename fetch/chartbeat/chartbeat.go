@@ -19,7 +19,7 @@ var chartbeatDebugger = lib.NewCondLogger("newsfetch:fetch:chartbeat")
 var chartbeatError = lib.NewCondLogger("newsfetch:fetch:chartbeat:error")
 
 type ChartbeatFetch interface {
-	Fetch([]string) m.Snapshot
+	Fetch([]string, *mgo.Session) m.Snapshot
 }
 
 // Types
@@ -32,7 +32,7 @@ type Beat interface {
 type ChartbeatApi struct {
 	Url           ChartbeatUrl
 	MapiEndpoints string         // comma-separated list of mapi endpoints to hit e.g. "quickstats,toppages,traffic-series"
-	Fetch         ChartbeatFetch // Interface in fetch/ that will fetch the chartbeat info
+	Fetch         ChartbeatFetch // Interface in fetch/chartbeat/ that will fetch the chartbeat info
 }
 
 type ChartbeatUrl struct {
@@ -50,13 +50,12 @@ func (u ChartbeatUrl) Urls(apiKey string) []string {
 
 func (c ChartbeatApi) Run(session *mgo.Session, apiKey string) {
 	urls := c.Url.Urls(apiKey)
-	snapshot := c.Fetch.Fetch(urls)
+	snapshot := c.Fetch.Fetch(urls, session)
 
 	if session != nil {
 		snapshot.Save(session)
 	}
 
-	// TODO hit mapi
 	endpoints := strings.Split(c.MapiEndpoints, ",")
 	for _, endpoint := range endpoints {
 		url := fmt.Sprintf("https://api.michigan.com/%s/", endpoint)
@@ -75,6 +74,7 @@ var TrafficSeriesApi = ChartbeatApi{
 	"traffic-series",
 	TrafficSeries{},
 }
+
 var QuickStatsApi = ChartbeatApi{
 	ChartbeatUrl{"live/quickstats/v4", "all_platforms=1&loyalty=1"},
 	"quickstats,mobile-series",

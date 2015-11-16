@@ -8,6 +8,8 @@ import (
 	"sync"
 	"time"
 
+	"gopkg.in/mgo.v2"
+
 	m "github.com/michigan-com/newsfetch/model/chartbeat"
 )
 
@@ -62,7 +64,7 @@ func (h *TrafficSeries) SignalMapi() {
 	}
 }
 
-func (h TrafficSeries) Fetch(urls []string) m.Snapshot {
+func (h TrafficSeries) Fetch(urls []string, session *mgo.Session) m.Snapshot {
 	var wait sync.WaitGroup
 	var start int
 	var end int

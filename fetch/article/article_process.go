@@ -6,8 +6,11 @@ import (
 	"strings"
 
 	"github.com/michigan-com/newsfetch/extraction"
+	"github.com/michigan-com/newsfetch/lib"
 	m "github.com/michigan-com/newsfetch/model"
 )
+
+var artDebugger = lib.NewCondLogger("newsfetch:fetch:article")
 
 // Processor object that contains the Article to be saved
 // as well as the body text
@@ -28,7 +31,7 @@ func ParseArticleAtURL(articleUrl string, runExtraction bool) *ArticleProcess {
 	processor := &ArticleProcess{}
 	article := &m.Article{}
 
-	articleIn := NewArticleIn(articleUrl)
+	articleIn := m.NewArticleIn(articleUrl)
 	if articleIn == nil {
 		processor.Err = fmt.Errorf("Article Url was blacklisted")
 		return processor

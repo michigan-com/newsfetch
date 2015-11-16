@@ -7,12 +7,14 @@ import (
 	"sync"
 	"time"
 
+	"gopkg.in/mgo.v2"
+
 	m "github.com/michigan-com/newsfetch/model/chartbeat"
 )
 
 type TopGeo struct{}
 
-func (t TopGeo) Fetch(urls []string) m.Snapshot {
+func (t TopGeo) Fetch(urls []string, session *mgo.Session) m.Snapshot {
 	var urlWait sync.WaitGroup
 	geoQueue := make(chan *m.TopGeo, len(urls))
 

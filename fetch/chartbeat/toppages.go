@@ -12,6 +12,7 @@ import (
 	"github.com/michigan-com/newsfetch/lib"
 	m "github.com/michigan-com/newsfetch/model"
 	mc "github.com/michigan-com/newsfetch/model/chartbeat"
+	a "github.com/michigan-com/newsfetch/fetch/article"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -29,9 +30,10 @@ func (a ByVisits) Less(i, j int) bool { return a[i].Visits > a[j].Visits }
 	Fetch the top pages data for each url in the urls parameter. Url expected
 	to be http://api.chartbeat.com/live/toppages/v3
 */
-func (t TopPages) Fetch(urls []string) mc.Snapshot {
+func (t TopPages) Fetch(urls []string, session *mgo.Session) mc.Snapshot {
 	chartbeatDebugger.Println("Fetching chartbeat top pages")
 	topArticles := make([]*mc.TopArticle, 0, 100*len(urls))
+	topArticlesProcessed := make([]*m.Article, 0, 100 * len(urls))
 	articleQueue := make(chan *mc.TopArticle, 100*len(urls))
 
 	var wg sync.WaitGroup
@@ -81,17 +83,55 @@ func (t TopPages) Fetch(urls []string) mc.Snapshot {
 	chartbeatDebugger.Println("Done")
 	close(articleQueue)
 
-	for article := range articleQueue {
-		topArticles = append(topArticles, article)
+	for topArticle := range articleQueue {
+		topArticles = append(topArticles, topArticle)
 	}
 
 	chartbeatDebugger.Printf("Num article: %d", len(topArticles))
-
 	chartbeatDebugger.Println("Done fetching and parsing URLs...")
 
+	// The snapshot object that will be saved
+	snapshotDoc := mc.TopPagesSnapshotDocument{}
+	snapshotDoc.Articles = SortTopArticles(topArticles[0:100])
+	snapshotDoc.Created_at = time.Now()
+
+	// For the top 100 pages, make sure we've processed the body and generated
+	// an Article{} document (and summary)
+	var articleBodyWait sync.WaitGroup
+	articleCol := session.DB("").C("Article")
+	for index, topArticle := range snapshotDoc.Articles {
+		// Process each article
+		go func(url string, index int) {
+			articleBodyWait.Add(1)
+
+			// First, see if the article exists in the DB. if it does, don't worry about it
+			article := &m.Article{}
+			url = "http://" + url
+			articleCol.Find(bson.M{ "url": url }).One(&article)
+
+			if article.Id.Valid() {
+				articleBodyWait.Done()
+				return
+			}
+
+			chartbeatDebugger.Printf("Processing article %d (url %s)", index, url)
+
+			processor := a.ParseArticleAtURL(url, true)
+			if processor.Err != nil {
+				chartbeatError.Println("Failed to process article: ", processor.Err)
+			} else {
+				topArticlesProcessed = append(topArticlesProcessed, processor.Article)
+			}
+
+			articleBodyWait.Done()
+		}(topArticle.Url, index)
+	}
+	articleBodyWait.Wait()
+
+	// Compile the snapshot
 	snapshot := mc.TopPagesSnapshot{}
-	snapshot.Articles = SortTopArticles(topArticles)
-	snapshot.Created_at = time.Now()
+	snapshot.Document = snapshotDoc
+	snapshot.Articles = topArticlesProcessed
 	return snapshot
 }
 

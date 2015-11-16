@@ -5,20 +5,29 @@ import (
 
 	"gopkg.in/mgo.v2/bson"
 	"gopkg.in/mgo.v2"
+
+	m "github.com/michigan-com/newsfetch/model"
 )
 
 /*
  * DATA GOING OUT
  */
-type TopPagesSnapshot struct {
+type TopPagesSnapshotDocument struct {
 	Id         bson.ObjectId `bson:"_id,omitempty"`
 	Created_at time.Time     `bson:"created_at"`
 	Articles   []*TopArticle `bson:"articles"`
 }
 
+// Because toppages saves articles in addition to a Snapshot, need a second
+// storage container for the snapshot alone
+type TopPagesSnapshot struct {
+	Document TopPagesSnapshotDocument
+	Articles []*m.Article
+}
+
 func (t TopPagesSnapshot) Save(session *mgo.Session) {
 	snapshotCollection := session.DB("").C("Toppages")
-	err := snapshotCollection.Insert(t)
+	err := snapshotCollection.Insert(t.Document)
 
 	if err != nil {
 		debugger.Printf("Failed to insert TopPages snapshot: %v", err)
@@ -26,6 +35,17 @@ func (t TopPagesSnapshot) Save(session *mgo.Session) {
 	}
 
 	removeOldSnapshots(snapshotCollection)
+
+	t.saveArticleSummaries(session)
+}
+
+func (t TopPagesSnapshot) saveArticleSummaries(session *mgo.Session) {
+	for _, article := range t.Articles {
+		_, err := article.Save(session)
+		if err != nil {
+			debugger.Printf("Failed to save article %s", article.Url)
+		}
+	}
 }
 
 type TopArticle struct {
