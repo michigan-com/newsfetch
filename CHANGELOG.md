@@ -5,6 +5,7 @@ v0.2.12
 -------
 
 * New dateline extractor
+* Removed subhead from article body extractor
 
 v0.2.11 2015-11-06
 -----------------
