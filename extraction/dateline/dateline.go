@@ -65,3 +65,24 @@ func isSkipped(r rune) bool {
 func isNotSkipped(r rune) bool {
 	return !isSkipped(r)
 }
+
+func RmDateline(text string) string {
+	emDashes := []string{"—", "--"}
+	words := strings.Fields(text)
+
+	wcount := maxAlternativeDatelineWords
+	if len(words) < maxAlternativeDatelineWords {
+		wcount = len(words)
+	}
+
+	truncate := strings.Join(words[:wcount], " ")
+
+	for _, dash := range emDashes {
+		dateline := strings.Index(truncate, dash)
+		if dateline >= 0 {
+			return strings.Trim(text[dateline+len(dash):], " ")
+		}
+	}
+
+	return text
+}

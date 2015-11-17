@@ -16,10 +16,11 @@ func TestRemoveDatelineUppercase(t *testing.T) {
 func TestRemoveDatelineAlternative(t *testing.T) {
 	o(t, "Orlando, Fla. -- Hello, world!", "Hello, world!")
 	o(t, "Some unrelated text which is not a dateline -- Hello, world!", "Some unrelated text which is not a dateline -- Hello, world!")
+	o(t, "ANYWHERE Mich. — Hello, world!", "Hello, world!")
 }
 
 func o(t *testing.T, input string, expected string) {
-	actual := RemoveDateline(input)
+	actual := RmDateline(input)
 	if actual != expected {
 		t.Errorf("For %#v expected %#v, got %#v", input, expected, actual)
 	}

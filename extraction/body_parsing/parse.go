@@ -66,7 +66,7 @@ func ExtractBodyFromDocument(doc *gq.Document, fromJSON bool, includeTitle bool)
 	})
 
 	if len(paragraphStrings) > 0 {
-		paragraphStrings[0] = dateline.RemoveDateline(paragraphStrings[0])
+		paragraphStrings[0] = dateline.RmDateline(paragraphStrings[0])
 	}
 
 	content := make([]string, 0, len(paragraphStrings)+1)
