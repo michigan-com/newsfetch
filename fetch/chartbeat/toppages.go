@@ -9,10 +9,10 @@ import (
 	"time"
 
 	e "github.com/michigan-com/newsfetch/extraction"
+	a "github.com/michigan-com/newsfetch/fetch/article"
 	"github.com/michigan-com/newsfetch/lib"
 	m "github.com/michigan-com/newsfetch/model"
 	mc "github.com/michigan-com/newsfetch/model/chartbeat"
-	a "github.com/michigan-com/newsfetch/fetch/article"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -33,7 +33,7 @@ func (a ByVisits) Less(i, j int) bool { return a[i].Visits > a[j].Visits }
 func (t TopPages) Fetch(urls []string, session *mgo.Session) mc.Snapshot {
 	chartbeatDebugger.Println("Fetching chartbeat top pages")
 	topArticles := make([]*mc.TopArticle, 0, 100*len(urls))
-	topArticlesProcessed := make([]*m.Article, 0, 100 * len(urls))
+	topArticlesProcessed := make([]*m.Article, 0, 100*len(urls))
 	articleQueue := make(chan *mc.TopArticle, 100*len(urls))
 
 	var wg sync.WaitGroup
@@ -92,7 +92,7 @@ func (t TopPages) Fetch(urls []string, session *mgo.Session) mc.Snapshot {
 
 	// The snapshot object that will be saved
 	snapshotDoc := mc.TopPagesSnapshotDocument{}
-	snapshotDoc.Articles = SortTopArticles(topArticles)[0:100]
+	snapshotDoc.Articles = SortTopArticles(topArticles)
 	snapshotDoc.Created_at = time.Now()
 
 	// For the top 100 pages, make sure we've processed the body and generated
@@ -107,7 +107,7 @@ func (t TopPages) Fetch(urls []string, session *mgo.Session) mc.Snapshot {
 			// First, see if the article exists in the DB. if it does, don't worry about it
 			article := &m.Article{}
 			url = "http://" + url
-			articleCol.Find(bson.M{ "url": url }).One(&article)
+			articleCol.Find(bson.M{"url": url}).One(&article)
 
 			if article.Id.Valid() {
 				articleBodyWait.Done()
