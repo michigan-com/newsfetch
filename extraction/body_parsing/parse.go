@@ -53,16 +53,17 @@ func ExtractBodyFromDocument(doc *gq.Document, fromJSON bool, includeTitle bool)
 			return ""
 		}
 
-		marker := ""
+		//marker := ""
 
 		for _, selector := range [...]string{"span.-newsgate-paragraph-cci-subhead-lead-", "span.-newsgate-paragraph-cci-subhead-"} {
 			if el := paragraph.Find(selector); el.Length() > 0 {
-				marker = "### "
+				//marker = "### "
+				return ""
 				break
 			}
 		}
 
-		return marker + text
+		return text
 	})
 
 	if len(paragraphStrings) > 0 {
