@@ -107,7 +107,7 @@ var directionRules = `
     $make
     @confusing_action
 
-    # need some kind of assertion (like “starts a sentance” or “preceded by an adverb” or “after a comma”)
+    # need some kind of assertion (like “starts a sentence” or “preceded by an adverb” or “after a comma”)
     :@confusing_action
     $mix
     $warm

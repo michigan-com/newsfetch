@@ -376,7 +376,7 @@ func otag(t *testing.T, classifier *fuz.Classifier, tag string, inputs string) {
 		r := classifier.Process(input)
 		actual, _ := r.GetTagMatchString(tag, fuz.Raw)
 
-		inputAdjusted := fuz.AdjustWordBoundariesInString(input)
+		inputAdjusted := fuz.CanonicalString(input)
 
 		if actual != inputAdjusted {
 			if actual != "" {

@@ -363,7 +363,7 @@ func Stem(s string) string {
 }
 
 // handle cases where SplitIntoWords mutates the words
-func AdjustWordBoundariesInString(input string) string {
+func CanonicalString(input string) string {
 	words := SplitIntoWords(input)
 	list := make([]string, 0, len(words))
 	for _, word := range words {

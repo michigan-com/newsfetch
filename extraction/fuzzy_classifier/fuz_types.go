@@ -91,6 +91,10 @@ const (
 	Trimmed
 )
 
+func (r *Result) RangeCoversEntireInput(rang Range) bool {
+	return rang.Pos == 0 && rang.Len == len(r.Words)
+}
+
 func (r *Result) GetWordString(i int, format WordFormat) string {
 	switch format {
 	case Raw:
@@ -115,6 +119,29 @@ func (r *Result) GetTagMatchString(tag string, format WordFormat) (string, bool)
 		return r.GetRangeString(rang, format), true
 	}
 	return "", false
+}
+
+func (r *Result) GetTagMatch(tag string) (Range, bool) {
+	for _, rang := range r.TagsByName[tag] {
+		return rang, true
+	}
+	return Range{Pos: -1, Len: 0}, false
+}
+
+func (r *Result) GetAllTagMatchStrings(tag string, format WordFormat) []string {
+	result := make([]string, 0, len(r.TagsByName[tag]))
+	for _, rang := range r.TagsByName[tag] {
+		result = append(result, r.GetRangeString(rang, format))
+	}
+	return result
+}
+
+func (r *Result) HasTag(tag string) bool {
+	return len(r.TagsByName[tag]) > 0
+}
+
+func (r *Result) HasTagAt(tag string, pos int) bool {
+	return len(r.TagsByPos[pos][tag]) > 0
 }
 
 func (r *Result) AddTag(tag string, pos int, length int) {

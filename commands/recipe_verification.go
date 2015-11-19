@@ -6,7 +6,6 @@ import (
 	"sort"
 	"strings"
 	"time"
-	"unicode"
 
 	fuz "github.com/michigan-com/newsfetch/extraction/fuzzy_classifier"
 	rp "github.com/michigan-com/newsfetch/extraction/recipe_parsing"
@@ -33,8 +32,7 @@ var cmdVerifyRecipies = &cobra.Command{
 		}
 		fmt.Fprintf(os.Stderr, "Loaded %d recipes.\n", len(recipes))
 
-		classifier := rp.NewIngredientClassifier()
-		dc := rp.NewDirectionClassifier()
+		matcher := rp.NewMatcher()
 
 		incorrect := new(UniqueStringList)
 		matched := new(UniqueStringList)
@@ -49,48 +47,38 @@ var cmdVerifyRecipies = &cobra.Command{
 
 			var problematicHere []string
 			for _, ingred := range recipe.Ingredients {
-				s := strings.TrimSpace(ingred.Text)
+				s := fuz.CanonicalString(ingred.Text)
 
-				s = strings.Replace(s, "½", "1/2", -1)
-				s = strings.Replace(s, "¼", "1/4", -1)
-				s = strings.Replace(s, "¾", "3/4", -1)
+				subheadm := matcher.MatchIngredientSubhead(s)
+				im := matcher.MatchIngredient(s)
+				dm := matcher.MatchDirection(s)
 
-				runes := []rune(s)
-
-				adjusted := s
-				adjusted = strings.Replace(adjusted, "(optional)", "", 1)
-
-				if IsEntirelyUppercase(adjusted) {
+				if subheadm.Confidence >= rp.Likely {
 					continue
 				}
 
-				_ = runes
-				if unicode.IsDigit(runes[0]) {
-					continue
-				}
-
-				r := classifier.Process(s)
-
-				if _, incor := r.GetTagMatchString("@not_ingredient", fuz.Raw); incor {
+				switch im.Confidence {
+				case rp.Negative:
 					incorrect.Add(s)
-					continue
-				}
-
-				totalIngredients++
-
-				ms, _ := r.GetTagMatchString("@ingredient", fuz.Raw)
-				if ms == s {
+				case rp.Perfect:
 					matchedIngredients++
 					matched.Add(s + "\n")
-				} else {
-					if ms != "" {
-						partial.Add(fmt.Sprintf("± %s\n  → %s", ms, s))
-					} else {
-						unmatched.Add(s)
-					}
+					totalIngredients++
+				case rp.Likely:
+					totalIngredients++
+				case rp.Possible:
+					partial.Add(fmt.Sprintf("± %s\n  → %s", im.Rationale, s))
 					problematicHere = append(problematicHere, s)
+					totalIngredients++
+				case rp.None:
+					unmatched.Add(s)
+					problematicHere = append(problematicHere, s)
+					totalIngredients++
 				}
 
+				if dm.Confidence >= rp.Likely {
+					// TODO: report conflict
+				}
 			}
 
 			stats.RecipeTotal++
@@ -107,10 +95,9 @@ var cmdVerifyRecipies = &cobra.Command{
 			}
 
 			for _, dir := range recipe.Instructions {
-				s := strings.TrimSpace(dir.Text)
-				r := dc.Process(s)
-				_, ok := r.GetTagMatchString("@direction", fuz.Raw)
-				if !ok {
+				s := fuz.CanonicalString(dir.Text)
+				dm := matcher.MatchDirection(s)
+				if dm.Confidence < rp.Likely {
 					problematicDirections.Add(s)
 				}
 			}
@@ -173,10 +160,6 @@ var cmdVerifyRecipies = &cobra.Command{
 
 		getElapsedTime(&startTime)
 	},
-}
-
-func IsEntirelyUppercase(s string) bool {
-	return s == strings.ToUpper(s) && strings.IndexFunc(s, unicode.IsLetter) != -1
 }
 
 type UniqueStringList struct {
