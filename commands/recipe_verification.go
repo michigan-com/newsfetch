@@ -34,12 +34,14 @@ var cmdVerifyRecipies = &cobra.Command{
 		fmt.Fprintf(os.Stderr, "Loaded %d recipes.\n", len(recipes))
 
 		classifier := rp.NewIngredientClassifier()
+		dc := rp.NewDirectionClassifier()
 
 		incorrect := new(UniqueStringList)
 		matched := new(UniqueStringList)
 		partial := new(UniqueStringList)
 		unmatched := new(UniqueStringList)
 		problematic := new(UniqueStringList)
+		problematicDirections := new(UniqueStringList)
 
 		for _, recipe := range recipes {
 			totalIngredients := 0
@@ -63,9 +65,9 @@ var cmdVerifyRecipies = &cobra.Command{
 				}
 
 				_ = runes
-				// if unicode.IsDigit(runes[0]) {
-				// 	continue
-				// }
+				if unicode.IsDigit(runes[0]) {
+					continue
+				}
 
 				r := classifier.Process(s)
 
@@ -103,6 +105,15 @@ var cmdVerifyRecipies = &cobra.Command{
 			if unmatchedIngredients <= 3 {
 				problematic.AddList(problematicHere)
 			}
+
+			for _, dir := range recipe.Instructions {
+				s := strings.TrimSpace(dir.Text)
+				r := dc.Process(s)
+				_, ok := r.GetTagMatchString("@direction", fuz.Raw)
+				if !ok {
+					problematicDirections.Add(s)
+				}
+			}
 		}
 
 		if false {
@@ -127,6 +138,14 @@ var cmdVerifyRecipies = &cobra.Command{
 			fmt.Printf("----------------------------------------\n")
 			for _, s := range problematic.List {
 				fmt.Printf("%s\n", s)
+			}
+			fmt.Printf("----------------------------------------\n")
+		}
+
+		if true {
+			fmt.Printf("----------------------------------------\n")
+			for _, s := range problematicDirections.List {
+				fmt.Printf("\n%s\n", s)
 			}
 			fmt.Printf("----------------------------------------\n")
 		}

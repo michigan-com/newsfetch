@@ -2,7 +2,7 @@ package fuzzy_classifier
 
 import (
 	_ "errors"
-	_ "fmt"
+	"fmt"
 	"strings"
 	"unicode"
 
@@ -19,9 +19,9 @@ func (c *Classifier) Process(input string) *Result {
 	tagCount := 10 //len(c.categories)
 	r.TagsByName = make(map[string][]Range, tagCount)
 
-	r.TagsByPos = make([]map[string]Range, len(r.Words))
+	r.TagsByPos = make([]map[string][]Range, len(r.Words))
 	for pos, _ := range r.Words {
-		r.TagsByPos[pos] = make(map[string]Range, tagCount)
+		r.TagsByPos[pos] = make(map[string][]Range, tagCount)
 	}
 
 	r.TagDefs = c.TagDefs
@@ -71,7 +71,7 @@ func (c *Classifier) Process(input string) *Result {
 		skippable := make([][]int, len(r.Words))
 		for wi, _ := range r.Words {
 			for _, tag := range category.skippableTags {
-				if tagging, ok := r.TagsByPos[wi][tag]; ok {
+				for _, tagging := range r.TagsByPos[wi][tag] {
 					if !intSliceContainsValue(skippable[wi], tagging.Len) {
 						last := wi + tagging.Len - 1
 						skippable[last] = append(skippable[last], tagging.Len)
@@ -180,7 +180,7 @@ func matchScheme(r *Result, tag string, reqs []Requirement, skippable [][]int, s
 				first = wi
 			}
 			if first != 0 {
-				if matchLen := matchReq(r, req, wi-1); matchLen > 0 {
+				for _, matchLen := range matchReq(r, req, wi-1) {
 					last := wi + matchLen - 1
 					if cur[last] == 0 || cur[last] > first {
 						cur[last] = first
@@ -198,7 +198,7 @@ func matchScheme(r *Result, tag string, reqs []Requirement, skippable [][]int, s
 
 			if req.repeating {
 				if first := cur[wi-1]; first != 0 {
-					if matchLen := matchReq(r, req, wi-1); matchLen > 0 {
+					for _, matchLen := range matchReq(r, req, wi-1) {
 						last := wi + matchLen - 1
 						if cur[last] == 0 || cur[last] > first {
 							cur[last] = first
@@ -269,29 +269,31 @@ func matchScheme(r *Result, tag string, reqs []Requirement, skippable [][]int, s
 	}
 }
 
-// returns the length of the match or 0 if not matched
-func matchReq(r *Result, req Requirement, wi int) int {
+// returns the lengths of the matches
+func matchReq(r *Result, req Requirement, wi int) []int {
 	switch req.typ {
 	case ReqLiteral:
 		if req.stem == r.Words[wi].Normalized {
-			return 1
+			return []int{1}
 		} else {
-			return 0
+			return nil
 		}
 
 	case ReqStem:
 		if req.stem == r.Words[wi].Stem {
-			return 1
+			return []int{1}
 		} else {
-			return 0
+			return nil
 		}
 
 	case ReqTag:
-		if tagging, ok := r.TagsByPos[wi][req.tag]; ok {
-			return tagging.Len
-		} else {
-			return 0
+		var result []int
+		for _, tagging := range r.TagsByPos[wi][req.tag] {
+			if !intSliceContainsValue(result, tagging.Len) {
+				result = append(result, tagging.Len)
+			}
 		}
+		return result
 
 	default:
 		panic("Unknown requirement type")
@@ -301,8 +303,35 @@ func matchReq(r *Result, req Requirement, wi int) int {
 func SplitIntoWords(input string) []Word {
 	fields := strings.Fields(input)
 
-	words := make([]Word, 0, len(fields))
+	// split words like '2-point', '1-inch' into two words ('2', 'pound')
+	mapped := make([]string, 0, len(fields))
 	for _, word := range fields {
+		trimmed := strings.TrimFunc(word, split.IsTrimmableRune)
+		if dash := strings.IndexRune(trimmed, '-'); dash >= 0 {
+			left := trimmed[:dash]
+			right := trimmed[dash+1:]
+
+			// fmt.Printf("SplitIntoWords dashed %#v, left = %#v, right = %#v, reg(left) = %#v, reg(right) = %#v, num(left) = %#v\n", word, left, right, split.IsRegularWord(left), split.IsRegularWord(right), ClassifyNumberString(left))
+
+			if !split.IsRegularWord(left) && split.IsRegularWord(right) && ClassifyNumberString(left) != NumClassNone {
+				idx := strings.Index(word, left)
+				if idx < 0 {
+					panic(fmt.Sprintf("Cannot find %#v in %#v", left, word))
+				}
+				dash := idx + len(left)
+				fullLeft := word[:dash]
+				fullRight := word[dash+1:]
+
+				mapped = append(mapped, fullLeft)
+				mapped = append(mapped, fullRight)
+				continue
+			}
+		}
+		mapped = append(mapped, word)
+	}
+
+	words := make([]Word, 0, len(mapped))
+	for _, word := range mapped {
 		trimmed := strings.TrimFunc(word, split.IsTrimmableRune)
 		trimmed = cleanupWord(trimmed)
 		if len(trimmed) == 0 {
@@ -331,6 +360,16 @@ func Normalize(s string) string {
 
 func Stem(s string) string {
 	return stemmer.Stem(s, false)
+}
+
+// handle cases where SplitIntoWords mutates the words
+func AdjustWordBoundariesInString(input string) string {
+	words := SplitIntoWords(input)
+	list := make([]string, 0, len(words))
+	for _, word := range words {
+		list = append(list, word.Raw)
+	}
+	return strings.Join(list, " ")
 }
 
 // from https://github.com/kljensen/snowball/blob/master/english/common.go

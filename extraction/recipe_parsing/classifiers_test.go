@@ -7,41 +7,58 @@ import (
 	fuz "github.com/michigan-com/newsfetch/extraction/fuzzy_classifier"
 )
 
+func TestIngredientClassifierSeparateForDebugging(t *testing.T) {
+	c := NewIngredientClassifier()
+	otag(t, c, "@ingredient", `1 tablespoon lemon juice`)
+}
+
+func TestIngredientClassifierNewBatch(t *testing.T) {
+	c := NewIngredientClassifier()
+	otag(t, c, "@ingredient", `
+# 10 large basil leaves, divided
+# 1/4 cup plus 4 teaspoons granulated sugar, divided
+# 1/2 cup white rum
+# 5 to 6 large russet potatoes, scrubbed
+# 12 ounces bacon
+# 2 cups sharp cheddar
+# 1 can (14 ounces) artichoke hearts, drained
+# 6 extra-large eggs
+# 5 tablespoons freshly grated Parmesan cheese, divided
+# 1 fully baked 9-inch pie shell (crumb, shortbread or flaky)
+# 1 cup (2 sticks) butter, softened
+# 4 ounces unsweetened chocolate, melted and cooled
+# 2 ripe avocados, peeled, pitted, diced
+# 2 ripe plum tomatoes, washed, cored, diced
+# 6 hard-cooked eggs, peeled, quartered
+# 2 cups fresh basil leaves
+# 1/2 cup olive oil, divided
+# 2 large, about 1 1/4 pounds, (or 4 small) skin-on, boneless chicken breasts, trimmed of excess fat
+# 4 bone-in pork chops about 1-inch thick (about 2 pounds total)
+# 2 strips orange zest, plus 1/2 cup orange juice and 2 oranges such as Cara Cara, peeled and with pith removed and flesh cut into segments
+# 1 1/2 pounds asparagus (about 1 1/2 bunches), rinsed
+# 1 small Yukon Gold potato (about 6 ounces), peeled and thinly sliced
+# 1 pound fresh raw shrimp (size of choice)
+# 1 pound fresh large bay scallops or sea scallops
+# 1 cup shredded fresh cilantro, plus more for garnish
+# 2 cups fresh raspberries and blueberries
+# 4 cups Oat and Nut Granola with Dried Fruit (see recipe) or good-quality store-bought granola
+# 4 sprigs fresh mint, for garnish
+# 12 to 16 lemon or orange slices at least 1/4- to 1/3-inch thick
+# 1/2 cup fat-free, reduced-sodium vegetable broth
+# 1 cup fresh corn kernels cut from cob (about 2 ears)
+# 1 tablespoon trans fat-free margarine
+
+## too weird
+# 2 strips orange zest, plus 1/2 cup orange juice and 2 oranges such as Cara Cara, peeled and with pith removed and flesh cut into segments
+# Nonfat chicken broth instead of milk.
+# Peeled, whole garlic cloves; mash them in with the potatoes.
+
+	`)
+}
+
 func TestIngredientClassifier(t *testing.T) {
 	c := NewIngredientClassifier()
 	otag(t, c, "@ingredient", `
-#4 bone-in pork chops about 1-inch thick (about 2 pounds total)
-#2 strips orange zest, plus 1/2 cup orange juice and 2 oranges such as Cara Cara, peeled and with pith removed and flesh cut into segments
-#1/4 cup fresh parsley leaves, chopped
-#2 small heads cauliflower
-#1 clove garlic
-#2 tablespoons crumbled feta cheese
-#3 medium-large zucchini (about 1 1/2 pounds)
-#2 cups low-sodium chicken or vegetable broth, warmed to hot
-#1 tablespoon lemon juice
-#4 center-cut salmon fillets, about 5 ounces each
-#12 to 16 lemon or orange slices at least 1/4- to 1/3-inch thick
-#8 bone-in, skin-on chicken thighs (about 2 1/2 pounds)
-#2 tablespoons roughly chopped fresh chives or parsley (optional)
-#1 pound whole strawberries, washed, hulled
-#1 recipe whole wheat yeast dough
-#1 cup halved red or yellow cherry tomatoes, gently squeezed to remove seeds
-#1 tablespoon chopped fresh rosemary leaves
-#4 boneless strip steaks (about 9 to 11 ounces each) 1 inch thick, trimmed of excess fat
-#8 to 10 cups mixed salad greens
-#1/2 cup blue cheese crumbles
-#3 large egg whites
-#3 cups nonfat plain yogurt
-#2 teaspoons pure vanilla extract
-#1/2 cup orange juice
-#2 tablespoons maple syrup, optional
-#2 tablespoons butter, cut into pieces, optional
-
-# Roasted garlic.
-# Nonfat chicken broth instead of milk.
-# Peeled, whole garlic cloves; mash them in with the potatoes.
-# Peeled and quartered rutabaga, celery root, turnip or parsnip.
-
 1 garlic clove, peeled and crushed
 1 stick salted butter, softened
 1 stick softened butter, see note
@@ -51,6 +68,34 @@ func TestIngredientClassifier(t *testing.T) {
 11/2 cups all-purpose flour, plus more for dusting
 4 large cage-free egg yolks
 1 to 11/2 tablespoons water, plus more as needed
+4 bone-in pork chops about 1-inch thick (about 2 pounds total)
+1/4 cup fresh parsley leaves, chopped
+2 small heads cauliflower
+1 clove garlic
+2 tablespoons crumbled feta cheese
+3 medium-large zucchini (about 1 1/2 pounds)
+2 cups low-sodium chicken or vegetable broth, warmed to hot
+1 tablespoon lemon juice
+4 center-cut salmon fillets, about 5 ounces each
+12 to 16 lemon or orange slices at least 1/4- to 1/3-inch thick
+8 bone-in, skin-on chicken thighs (about 2 1/2 pounds)
+2 tablespoons roughly chopped fresh chives or parsley (optional)
+1 pound whole strawberries, washed, hulled
+1 recipe whole wheat yeast dough
+1 cup halved red or yellow cherry tomatoes, gently squeezed to remove seeds
+1 tablespoon chopped fresh rosemary leaves
+4 boneless strip steaks (about 9 to 11 ounces each) 1 inch thick, trimmed of excess fat
+8 to 10 cups mixed salad greens
+1/2 cup blue cheese crumbles
+3 large egg whites
+3 cups nonfat plain yogurt
+2 teaspoons pure vanilla extract
+1/2 cup orange juice
+2 tablespoons maple syrup, optional
+2 tablespoons butter, cut into pieces, optional
+
+Roasted garlic.
+Peeled and quartered rutabaga, celery root, turnip or parsnip.
 
 Freshly grated Romano or Parmesan cheese, about 1/2 cup
 Leaves from 1 bunch Thai basil or sweet basil
@@ -331,7 +376,9 @@ func otag(t *testing.T, classifier *fuz.Classifier, tag string, inputs string) {
 		r := classifier.Process(input)
 		actual, _ := r.GetTagMatchString(tag, fuz.Raw)
 
-		if actual != input {
+		inputAdjusted := fuz.AdjustWordBoundariesInString(input)
+
+		if actual != inputAdjusted {
 			if actual != "" {
 				t.Errorf("In %#v only matched %#v", input, actual)
 			} else {

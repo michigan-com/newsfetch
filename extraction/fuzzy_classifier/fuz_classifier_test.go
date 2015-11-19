@@ -7,6 +7,13 @@ import (
 	"github.com/michigan-com/newsfetch/extraction/diff"
 )
 
+func TestClassifierSplitIntoStrings(t *testing.T) {
+	assertSplitResult(t, "Foo bar.", "Foo\nbar.")
+	assertSplitResult(t, "2-pound", "2\npound")
+	assertSplitResult(t, "(2-pound)", "(2\npound)")
+	assertSplitResult(t, "--2-pound--", "--2\npound--")
+}
+
 func TestClassifierBuiltInTags(t *testing.T) {
 	classifier := NewFuzzyClassifier()
 
@@ -491,6 +498,28 @@ func assertClassificationResult(t *testing.T, c *Classifier, input string, expec
 
 	if actual != expected {
 		t.Errorf("Classification result mismatch for %#v.", strings.TrimSpace(input))
+		t.Logf("Diff:\n%v", diff.LineDiff(expected, actual))
+		// t.Logf("actual %#v != expected %#v", actual, expected)
+		t.Log("------------------------------")
+		t.Logf("Actual:\n%v", actual)
+		t.Log("------------------------------")
+		t.Logf("Expected:\n%v", expected)
+	}
+}
+
+func assertSplitResult(t *testing.T, input string, expected string) {
+	words := SplitIntoWords(input)
+
+	list := make([]string, 0, len(words))
+	for _, word := range words {
+		list = append(list, word.Raw)
+	}
+
+	actual := diff.TrimLinesInString(strings.Join(list, "\n"))
+	expected = diff.TrimLinesInString(expected)
+
+	if actual != expected {
+		t.Errorf("SplitIntoWords mismatch for %#v.", strings.TrimSpace(input))
 		t.Logf("Diff:\n%v", diff.LineDiff(expected, actual))
 		// t.Logf("actual %#v != expected %#v", actual, expected)
 		t.Log("------------------------------")

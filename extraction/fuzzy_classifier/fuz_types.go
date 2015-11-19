@@ -63,7 +63,7 @@ type Requirement struct {
 
 type Result struct {
 	Words      []Word
-	TagsByPos  []map[string]Range
+	TagsByPos  []map[string][]Range
 	TagsByName map[string][]Range
 
 	TagDefs       []*TagDef
@@ -140,10 +140,13 @@ func (r *Result) AddTag(tag string, pos int, length int) {
 		r.RemoveTagInstancesCoveredByRange(tag, rang)
 	}
 
-	r.TagsByPos[pos][tag] = rang
-
-	ranges := append(r.TagsByName[tag], rang)
-	r.TagsByName[tag] = ranges
+	rangeMap := r.TagsByPos[pos]
+	if findRangeInList(rang, rangeMap[tag]) < 0 {
+		rangeMap[tag] = append(rangeMap[tag], rang)
+	}
+	if findRangeInList(rang, r.TagsByName[tag]) < 0 {
+		r.TagsByName[tag] = append(r.TagsByName[tag], rang)
+	}
 }
 
 func (r *Result) RemoveTagInstancesCoveredByRange(tag string, limit Range) {
@@ -165,8 +168,14 @@ func (r *Result) RemoveTagInstancesCoveredByRange(tag string, limit Range) {
 		if rang.Pos >= limit.Pos && (rang.Pos+rang.Len) <= (limit.Pos+limit.Len) {
 			// delete from r.TagsByPos too
 			rangeMap := r.TagsByPos[rang.Pos]
-			if rangeMap[tag] == rang {
-				delete(rangeMap, tag)
+			if list := rangeMap[tag]; list != nil {
+				if newList, found := removeRangeFromList(rang, list); found {
+					if len(newList) == 0 {
+						delete(rangeMap, tag)
+					} else {
+						rangeMap[tag] = newList
+					}
+				}
 			}
 		} else {
 			// keep
@@ -183,4 +192,28 @@ func (r *Result) IsTagCoveringRange(tag string, covered Range) bool {
 		}
 	}
 	return false
+}
+
+func findRangeInList(rang Range, ranges []Range) int {
+	for idx, r := range ranges {
+		if r.Pos == rang.Pos && r.Len == rang.Len {
+			return idx
+		}
+	}
+	return -1
+}
+
+func removeRangeFromList(rang Range, ranges []Range) ([]Range, bool) {
+	idx := findRangeInList(rang, ranges)
+	if idx < 0 {
+		return ranges, false
+	}
+
+	result := make([]Range, 0, len(ranges))
+	for i, r := range ranges {
+		if i != idx {
+			result = append(result, r)
+		}
+	}
+	return result, true
 }
