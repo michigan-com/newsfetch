@@ -99,7 +99,7 @@ func (t TopPages) Fetch(urls []string, session *mgo.Session) mc.Snapshot {
 	// an Article{} document (and summary)
 	var articleBodyWait sync.WaitGroup
 	articleCol := session.DB("").C("Article")
-	for index, topArticle := range snapshotDoc.Articles {
+	for index, topArticle := range snapshotDoc.Articles[0:100] {
 		// Process each article
 		go func(url string, index int) {
 			articleBodyWait.Add(1)

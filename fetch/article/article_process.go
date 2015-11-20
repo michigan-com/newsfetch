@@ -31,7 +31,7 @@ func ParseArticleAtURL(articleUrl string, runExtraction bool) *ArticleProcess {
 	processor := &ArticleProcess{}
 	article := &m.Article{}
 
-	articleIn := m.NewArticleIn(articleUrl)
+	articleIn := NewArticleIn(articleUrl)
 	if articleIn == nil {
 		processor.Err = fmt.Errorf("Article Url was blacklisted")
 		return processor
@@ -57,8 +57,7 @@ func ParseArticleAtURL(articleUrl string, runExtraction bool) *ArticleProcess {
 	var html string
 	var bodyExtract *m.ExtractedBody
 	if runExtraction {
-		html = articleIn.BodyHTML()
-		bodyExtract = extraction.ExtractDataFromHTMLString(html, articleUrl, false)
+		bodyExtract = extraction.ExtractDataFromDocument(articleIn.Doc, articleIn.Url, false, false)
 
 		if bodyExtract.Text != "" {
 			artDebugger.Printf(

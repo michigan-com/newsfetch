@@ -140,8 +140,11 @@ var cmdGetArticles = &cobra.Command{
 				go func(url string) {
 					defer wg.Done()
 					// http://stackoverflow.com/questions/26574594/best-practice-to-maintain-a-mgo-session
-					gosesh := session.Copy()
-					defer gosesh.Close()
+					var gosesh *mgo.Session
+					if session != nil {
+						gosesh := session.Copy()
+						defer gosesh.Close()
+					}
 
 					isNew := processArticle(url, gosesh)
 					if isNew {

@@ -16,6 +16,13 @@ type ExtractedBody struct {
 	Messages   *Messages
 }
 
+// TODO only use the Sections array for this, don't have section/subsection distinction
+type ExtractedSection struct {
+	Section    string
+	Subsection string
+	Sections   []string
+}
+
 func (e *ExtractedBody) String() string {
 	return fmt.Sprintf("<ExtractedBody %s\n %s>\n", e.Text, e.Messages)
 }

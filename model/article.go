@@ -23,6 +23,7 @@ type Article struct {
 	Subheadline string         `bson:"subheadline" json:"subheadline"`
 	Section     string         `bson:"section" json:"section"`
 	Subsection  string         `bson:"subsection" json:"subsection"`
+	Sections    []string       `bson:"sections" json"sections"`
 	Source      string         `bson:"source" json:"source"`
 	Created_at  time.Time      `bson:"created_at" json:"created_at"`
 	Updated_at  time.Time      `bson:"updated_at" json:"updated_at"`
@@ -71,6 +72,7 @@ func (article *Article) Save(session *mgo.Session) (bool, error) {
 			"section":     article.Section,
 			"subsection":  article.Subsection,
 			"source":      article.Source,
+			"sections":    article.Sections,
 			"updated_at":  article.Updated_at,
 			"timestamp":   article.Timestamp,
 			"url":         article.Url,

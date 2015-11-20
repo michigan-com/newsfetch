@@ -16,7 +16,12 @@ func ExtractDataFromHTMLString(html string, url string, includeTitle bool) *m.Ex
 		return nil
 	}
 
-	extracted := body_parsing.ExtractBodyFromDocument(doc, true, includeTitle)
+	return ExtractDataFromDocument(doc, url, includeTitle, true)
+}
+
+func ExtractDataFromDocument(doc *gq.Document, url string, includeTitle bool, fromJson bool) *m.ExtractedBody {
+
+	extracted := body_parsing.ExtractBodyFromDocument(doc, fromJson, includeTitle)
 	for _, recipe := range extracted.RecipeData.Recipes {
 		recipe.Url = url
 	}

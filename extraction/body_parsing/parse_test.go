@@ -2,6 +2,7 @@ package body_parsing
 
 import (
 	"bytes"
+	"fmt"
 	"strings"
 	"testing"
 
@@ -45,4 +46,10 @@ func TestSubheadRemoval(t *testing.T) {
 		t.Fatal("Actiual text does not match expected text")
 	}
 
+}
+func TestPhotoExtraction(t *testing.T) {
+	t.Skip()
+	doc, _ := goquery.NewDocument("http://www.freep.com/story/sports/nfl/lions/2015/11/20/jim-caldwell-hot-seat-lions/76103780/")
+	photo := ExtractPhotoInfo(doc)
+	fmt.Printf("%v", photo)
 }
