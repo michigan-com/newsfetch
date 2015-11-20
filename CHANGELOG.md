@@ -4,6 +4,11 @@ CHANGELOG
 v0.2.12
 -------
 
+* Scrape article HTML instead of JSON url (JSON urls died)
+
+v0.2.12
+-------
+
 * New dateline extractor
 * Removed subhead from article body extractor
 
