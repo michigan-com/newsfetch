@@ -21,4 +21,5 @@ var Sections = []string{
 	"news",
 	"life",
 	"sports",
+	"business",
 }
