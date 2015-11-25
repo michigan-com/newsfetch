@@ -47,6 +47,7 @@ func AddFlags() {
 
 	cmdChartbeat.PersistentFlags().IntVarP(&loop, "loop", "l", -1, "Specify the internval in seconds to loop the fetching of the toppages api")
 	cmdChartbeat.PersistentFlags().BoolVarP(&noUpdate, "no-update", "n", false, "If present, mapi will not be updated")
+	cmdChartbeat.PersistentFlags().StringVarP(&siteStr, "sites", "i", "all", "Comma separated list of Gannett sites to fetch articles from")
 }
 
 func AddCommands() {

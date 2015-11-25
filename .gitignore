@@ -3,5 +3,6 @@ go/
 config.json
 newsfetch
 env.sh
+usat.sh
 conf/supervisor.conf
 .DS_Store

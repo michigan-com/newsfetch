@@ -25,7 +25,7 @@ type ChartbeatFetch interface {
 // Types
 // Beat type to be called from command package
 type Beat interface {
-	Run(*mgo.Session, string)
+	Run(*mgo.Session, string, []string)
 }
 
 // ChartbeatApi to be used in the chartbeat package
@@ -40,16 +40,16 @@ type ChartbeatUrl struct {
 	ChartbeatParams   string // Urls params for chartbeat url, "" to specify none
 }
 
-func (u ChartbeatUrl) Urls(apiKey string) []string {
-	urls, err := FormatChartbeatUrls(u.ChartbeatEndpoint, lib.Sites, apiKey)
+func (u ChartbeatUrl) Urls(apiKey string, sites []string) []string {
+	urls, err := FormatChartbeatUrls(u.ChartbeatEndpoint, sites, apiKey)
 	if err != nil {
 		chartbeatDebugger.Println(err)
 	}
 	return AddUrlParams(urls, u.ChartbeatParams)
 }
 
-func (c ChartbeatApi) Run(session *mgo.Session, apiKey string) {
-	urls := c.Url.Urls(apiKey)
+func (c ChartbeatApi) Run(session *mgo.Session, apiKey string, sites []string) {
+	urls := c.Url.Urls(apiKey, sites)
 	snapshot := c.Fetch.Fetch(urls, session)
 
 	if session != nil {

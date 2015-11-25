@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"strings"
 	"sync"
 	"time"
 
@@ -88,6 +89,14 @@ func RunChartbeatCommands(beats []f.Beat) {
 		defer lib.DBClose(session)
 	}
 
+	var sites []string
+
+	if siteStr == "all" {
+		sites = lib.Sites
+	} else {
+		sites = strings.Split(siteStr, ",")
+	}
+
 	for {
 		startTime := time.Now()
 
@@ -103,7 +112,7 @@ func RunChartbeatCommands(beats []f.Beat) {
 					_copy = session.Copy()
 					defer _copy.Close()
 				}
-				beat.Run(_copy, globalConfig.ChartbeatApiKey)
+				beat.Run(_copy, globalConfig.ChartbeatApiKey, sites)
 				beatWait.Done()
 			}(beat)
 		}
