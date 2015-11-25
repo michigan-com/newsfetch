@@ -23,7 +23,12 @@ type SummaryResponse struct {
 }
 
 func processSummaries() (*SummaryResponse, error) {
-	url := "http://brevity.detroitnow.io/newsfetch-summarize/"
+	brevityDomain := "brevity.detroitnow.io"
+	if globalConfig.BrevityDomain != "" {
+		brevityDomain = globalConfig.BrevityDomain
+	}
+
+	url := fmt.Sprintf("http://%s/newsfetch-summarize/", brevityDomain)
 	artDebugger.Println("Fetching: ", url)
 
 	resp, err := http.Get(url)
