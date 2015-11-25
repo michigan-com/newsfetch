@@ -32,7 +32,7 @@ func ExtractBodyFromDocument(doc *gq.Document, fromJSON bool, includeTitle bool)
 	if fromJSON {
 		paragraphs = doc.Find("p")
 	} else {
-		if doc.Find(".longform-body").First == nil {
+		if len(doc.Find(".longform-body").Nodes) == 0 {
 			paragraphs = doc.Find("div[itemprop=articleBody] > p")
 		} else {
 			paragraphs = doc.Find("div[itemprop=articleBody] > .longform-body > p")
