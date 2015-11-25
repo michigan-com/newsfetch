@@ -97,6 +97,11 @@ func RunChartbeatCommands(beats []f.Beat) {
 		sites = strings.Split(siteStr, ",")
 	}
 
+	gnapiDomain := "api.michigan.com"
+	if globalConfig.GnapiDomain != "" {
+		gnapiDomain = globalConfig.GnapiDomain
+	}
+
 	for {
 		startTime := time.Now()
 
@@ -112,7 +117,7 @@ func RunChartbeatCommands(beats []f.Beat) {
 					_copy = session.Copy()
 					defer _copy.Close()
 				}
-				beat.Run(_copy, globalConfig.ChartbeatApiKey, sites)
+				beat.Run(_copy, globalConfig.ChartbeatApiKey, gnapiDomain, sites)
 				beatWait.Done()
 			}(beat)
 		}

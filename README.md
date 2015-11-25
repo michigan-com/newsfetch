@@ -43,7 +43,9 @@ Run the executable:
 
 * `MONGO_URI` -- Save article, chartbeat, or recipe data to mongodb.
 * `CHARTBEAT_API_KEY` -- API key for chartbeat, required for any `chartbeat` command.
-* `DEBUG` -- Conditional debugging (DEBUG=*, DEBUG=logger, DEBUG="logger,debugger").
+* `DEBUG` -- Conditional debugging (DEBUG=\*, DEBUG=logger, DEBUG="logger,debugger").
+* `GNAPI_DOMAIN` -- Domain for API endpoints, primarily used by the chartbeat command to send trigger to API that it got new data
+* `BREVITY_DOMAIN` -- Domain for brevity endpoint which does summarization
 
 ### Fetch Articles
 

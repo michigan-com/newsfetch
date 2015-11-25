@@ -25,7 +25,7 @@ type ChartbeatFetch interface {
 // Types
 // Beat type to be called from command package
 type Beat interface {
-	Run(*mgo.Session, string, []string)
+	Run(*mgo.Session, string, string, []string)
 }
 
 // ChartbeatApi to be used in the chartbeat package
@@ -48,7 +48,7 @@ func (u ChartbeatUrl) Urls(apiKey string, sites []string) []string {
 	return AddUrlParams(urls, u.ChartbeatParams)
 }
 
-func (c ChartbeatApi) Run(session *mgo.Session, apiKey string, sites []string) {
+func (c ChartbeatApi) Run(session *mgo.Session, apiKey, gnapiDomain string, sites []string) {
 	urls := c.Url.Urls(apiKey, sites)
 	snapshot := c.Fetch.Fetch(urls, session)
 
@@ -58,7 +58,8 @@ func (c ChartbeatApi) Run(session *mgo.Session, apiKey string, sites []string) {
 
 	endpoints := strings.Split(c.MapiEndpoints, ",")
 	for _, endpoint := range endpoints {
-		url := fmt.Sprintf("https://api.michigan.com/%s/", endpoint)
+		url := fmt.Sprintf("https://%s/%s/", gnapiDomain, endpoint)
+		chartbeatDebugger.Println(url)
 		resp, err := http.Get(url)
 		if err != nil {
 			chartbeatDebugger.Printf("Failed to update mapi url %s", url)
