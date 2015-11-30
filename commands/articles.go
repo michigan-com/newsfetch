@@ -25,6 +25,10 @@ type SummaryResponse struct {
 func processSummaries() (*SummaryResponse, error) {
 	lib.Logger.Println("Sending request to brevity to process summaries")
 
+	if globalConfig.SummaryVENV == "" {
+		return nil, fmt.Errorf("Missing SUMMARY_VENV environtment variable, skipping summarizer")
+	}
+
 	cmd := fmt.Sprintf("%s/bin/python", globalConfig.SummaryVENV)
 	pyScript := fmt.Sprintf("%s/bin/summary.py", globalConfig.SummaryVENV)
 
@@ -159,18 +163,22 @@ var cmdGetArticles = &cobra.Command{
 		close(ach)
 		wg.Wait()
 
+		lib.Logger.Println("New articles: ", newArticles)
+		lib.Logger.Println("Updated articles: ", updatedArticles)
+		getElapsedTime(&startTime)
+
+		summaryTime := time.Now()
+
 		sumRes, err := processSummaries()
 		if err != nil {
 			lib.Logger.Println("Summarizer failed: ", err)
 			return
 		}
 
-		lib.Logger.Println("New articles: ", newArticles)
-		lib.Logger.Println("Updated articles: ", updatedArticles)
 		lib.Logger.Println("Skipped article summaries: ", sumRes.Skipped)
 		lib.Logger.Println("Summarized articles: ", sumRes.Summarized)
 
-		getElapsedTime(&startTime)
+		getElapsedTime(&summaryTime)
 	},
 }
 
