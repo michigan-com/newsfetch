@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os/exec"
 	"strings"
 	"sync"
 	"time"
@@ -23,6 +24,22 @@ type SummaryResponse struct {
 }
 
 func processSummaries() (*SummaryResponse, error) {
+	lib.Logger.Println("Sending request to brevity to process summaries")
+
+	scriptDir := "/Users/ebower/go/src/github.com/michigan-com/newsfetch"
+	cmd := fmt.Sprintf("%s/summary.sh", scriptDir)
+
+	out, err := exec.Command(cmd, globalConfig.MongoUrl).Output()
+	if err != nil {
+		artDebugger.Println(err)
+		return nil, err
+	}
+
+	fmt.Printf(string(out))
+	return &SummaryResponse{Skipped: 0, Summarized: 0}, nil
+}
+
+func oprocessSummaries() (*SummaryResponse, error) {
 	brevityDomain := "brevity.detroitnow.io"
 	if globalConfig.BrevityDomain != "" {
 		brevityDomain = globalConfig.BrevityDomain
@@ -163,10 +180,10 @@ var cmdGetArticles = &cobra.Command{
 		close(ach)
 		wg.Wait()
 
-		lib.Logger.Println("Sending request to brevity to process summaries")
 		sumRes, err := processSummaries()
 		if err != nil {
 			lib.Logger.Println("Summarizer failed: ", err)
+			return
 		}
 
 		lib.Logger.Println("New articles: ", newArticles)
