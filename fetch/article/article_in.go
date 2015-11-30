@@ -3,7 +3,6 @@ package fetch
 import (
 	"fmt"
 	"regexp"
-	"strings"
 	"time"
 
 	gq "github.com/PuerkitoBio/goquery"
@@ -64,21 +63,7 @@ func (a *ArticleIn) IsValid() bool {
 }
 
 func (a *ArticleIn) isBlacklisted() bool {
-	blacklist := []string{
-		"/videos/",
-		"/police-blotter/",
-		"/interactives/",
-		"facebook.com",
-		"/errors/404",
-	}
-
-	for _, item := range blacklist {
-		if strings.Contains(a.Url, item) {
-			return true
-		}
-	}
-
-	return false
+	return lib.IsBlacklisted(a.Url)
 }
 
 func (a *ArticleIn) Process(article *m.Article) error {
