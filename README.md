@@ -45,6 +45,7 @@ Run the executable:
 * `CHARTBEAT_API_KEY` -- API key for chartbeat, required for any `chartbeat` command.
 * `DEBUG` -- Conditional debugging (DEBUG=\*, DEBUG=logger, DEBUG="logger,debugger").
 * `GNAPI_DOMAIN` -- Domain for API endpoints, primarily used by the chartbeat command to send trigger to API that it got new data
+* `SUMMARY_VENV` -- Location of virtual environment to activate the summarizer python script
 
 ### Fetch Articles
 

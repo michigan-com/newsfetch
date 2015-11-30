@@ -25,13 +25,12 @@ type SummaryResponse struct {
 func processSummaries() (*SummaryResponse, error) {
 	lib.Logger.Println("Sending request to brevity to process summaries")
 
-	//scriptDir := "/Users/ebower/go/src/github.com/michigan-com/newsfetch"
-	//cmd := fmt.Sprintf("%s/summary.sh", scriptDir)
-	cmd := "./summary.sh"
+	cmd := fmt.Sprintf("%s/bin/python", globalConfig.SummaryVENV)
+	pyScript := fmt.Sprintf("%s/bin/summary.py", globalConfig.SummaryVENV)
 
-	lib.Logger.Printf("Executing command: %s %s", cmd, globalConfig.MongoUrl)
+	lib.Logger.Printf("Executing command: %s %s %s", cmd, pyScript, globalConfig.MongoUrl)
 
-	out, err := exec.Command(cmd, globalConfig.MongoUrl).Output()
+	out, err := exec.Command(cmd, pyScript, globalConfig.MongoUrl).Output()
 	if err != nil {
 		return nil, err
 	}

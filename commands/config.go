@@ -8,6 +8,7 @@ type GlobalConfig struct {
 	MongoUrl        string `envconfig:"mongo_uri"`
 	ChartbeatApiKey string `envconfig:"chartbeat_api_key"`
 	GnapiDomain     string `envconfig:"gnapi_domain"`
+	SummaryVENV     string `envconfig:"summary_venv"`
 }
 
 var globalConfig GlobalConfig
