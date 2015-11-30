@@ -3,7 +3,6 @@ package commands
 import (
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"os/exec"
 	"strings"
 	"sync"
@@ -26,42 +25,23 @@ type SummaryResponse struct {
 func processSummaries() (*SummaryResponse, error) {
 	lib.Logger.Println("Sending request to brevity to process summaries")
 
-	scriptDir := "/Users/ebower/go/src/github.com/michigan-com/newsfetch"
-	cmd := fmt.Sprintf("%s/summary.sh", scriptDir)
+	//scriptDir := "/Users/ebower/go/src/github.com/michigan-com/newsfetch"
+	//cmd := fmt.Sprintf("%s/summary.sh", scriptDir)
+	cmd := "./summary.sh"
+
+	lib.Logger.Printf("Executing command: %s %s", cmd, globalConfig.MongoUrl)
 
 	out, err := exec.Command(cmd, globalConfig.MongoUrl).Output()
 	if err != nil {
-		artDebugger.Println(err)
 		return nil, err
 	}
 
-	fmt.Printf(string(out))
-	return &SummaryResponse{Skipped: 0, Summarized: 0}, nil
-}
-
-func oprocessSummaries() (*SummaryResponse, error) {
-	brevityDomain := "brevity.detroitnow.io"
-	if globalConfig.BrevityDomain != "" {
-		brevityDomain = globalConfig.BrevityDomain
-	}
-
-	url := fmt.Sprintf("http://%s/newsfetch-summarize/", brevityDomain)
-	artDebugger.Println("Fetching: ", url)
-
-	resp, err := http.Get(url)
-	defer resp.Body.Close()
-
-	var jso []byte
-	summResp := SummaryResponse{}
-	decoder := json.NewDecoder(resp.Body)
-	err = decoder.Decode(&summResp)
-	if err != nil {
+	summResp := &SummaryResponse{}
+	if err := json.Unmarshal(out, summResp); err != nil {
 		return nil, err
 	}
 
-	json.Unmarshal(jso, summResp)
-
-	return &summResp, nil
+	return summResp, nil
 }
 
 func processArticle(articleUrl string, session *mgo.Session) bool {

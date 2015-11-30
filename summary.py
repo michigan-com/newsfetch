@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import sys
+import json
 
 from pymongo import MongoClient
 from bson import CodecOptions
@@ -43,7 +44,7 @@ def process_article_summaries(db, override=False):
         }).count()
 
     for article in articles:
-        print("Processing {} ...".format(article['article_id']))
+        #print("Processing {} ...".format(article['article_id']))
         summary = summarize(article['headline'], article['body'])
         col.update({ '_id': article['_id'] }, { '$set': { 'summary': summary } })
         summarized += 1
@@ -69,6 +70,5 @@ if __name__ == '__main__':
 
     disconnect(client)
 
-    print("Skipped: {}".format(results['skipped']))
-    print("Summarized: {}".format(results['summarized']))
+    print(json.dumps(results))
 
