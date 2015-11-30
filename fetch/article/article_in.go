@@ -69,6 +69,7 @@ func (a *ArticleIn) isBlacklisted() bool {
 		"/police-blotter/",
 		"/interactives/",
 		"facebook.com",
+		"/errors/404",
 	}
 
 	for _, item := range blacklist {
