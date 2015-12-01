@@ -45,9 +45,9 @@ func AddFlags() {
 	cmdBody.Flags().StringVarP(&articleUrl, "url", "u", url, "URL of Gannett article")
 	cmdBody.Flags().BoolVarP(&includeTitle, "title", "t", false, "Place title of article on the first line of output")
 
+	cmdChartbeat.PersistentFlags().StringVarP(&siteStr, "sites", "i", "all", "Comma separated list of Gannett sites to fetch articles from")
 	cmdChartbeat.PersistentFlags().IntVarP(&loop, "loop", "l", -1, "Specify the internval in seconds to loop the fetching of the toppages api")
 	cmdChartbeat.PersistentFlags().BoolVarP(&noUpdate, "no-update", "n", false, "If present, mapi will not be updated")
-	cmdChartbeat.PersistentFlags().StringVarP(&siteStr, "sites", "i", "all", "Comma separated list of Gannett sites to fetch articles from")
 }
 
 func AddCommands() {
