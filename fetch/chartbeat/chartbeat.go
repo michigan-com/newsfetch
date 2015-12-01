@@ -58,7 +58,7 @@ func (c ChartbeatApi) Run(session *mgo.Session, apiKey, gnapiDomain string, site
 
 	endpoints := strings.Split(c.MapiEndpoints, ",")
 	for _, endpoint := range endpoints {
-		url := fmt.Sprintf("https://%s/%s/", gnapiDomain, endpoint)
+		url := fmt.Sprintf("%s/%s/", gnapiDomain, endpoint)
 		chartbeatDebugger.Println(url)
 		resp, err := http.Get(url)
 		if err != nil {
