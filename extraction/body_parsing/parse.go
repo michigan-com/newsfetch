@@ -8,9 +8,10 @@ import (
 	gq "github.com/PuerkitoBio/goquery"
 	"github.com/michigan-com/newsfetch/extraction/classify"
 	"github.com/michigan-com/newsfetch/extraction/dateline"
-	"github.com/michigan-com/newsfetch/extraction/recipe_parsing"
+	"github.com/michigan-com/newsfetch/extraction/recipeparser"
 	"github.com/michigan-com/newsfetch/lib"
 	m "github.com/michigan-com/newsfetch/model"
+	"github.com/michigan-com/newsfetch/util/messages"
 )
 
 var Debugger = lib.NewCondLogger("newsfetch:extraction:body_parsing")
@@ -26,7 +27,7 @@ func withoutEmptyStrings(strings []string) []string {
 }
 
 func ExtractBodyFromDocument(doc *gq.Document, fromJSON bool, includeTitle bool) *m.ExtractedBody {
-	msg := new(m.Messages)
+	msg := new(messages.Messages)
 
 	var paragraphs *gq.Selection
 	if fromJSON {
@@ -88,7 +89,7 @@ func ExtractBodyFromDocument(doc *gq.Document, fromJSON bool, includeTitle bool)
 	content = append(content, withoutEmptyStrings(paragraphStrings)...)
 
 	body := strings.Join(content, "\n")
-	recipeData, recipeMsg := recipe_parsing.ExtractRecipes(doc)
+	recipeData, recipeMsg := recipeparser.ExtractRecipes(doc)
 	msg.AddMessages("recipes", recipeMsg)
 	extracted := m.ExtractedBody{body, recipeData, msg}
 	return &extracted

@@ -1,12 +1,13 @@
 package fetch
 
 import (
-	"github.com/michigan-com/newsfetch/lib"
-	m "github.com/michigan-com/newsfetch/model"
 	"gopkg.in/mgo.v2/bson"
+
+	"github.com/michigan-com/newsfetch/lib"
+	"github.com/michigan-com/newsfetch/model/recipetypes"
 )
 
-func SaveRecipes(mongoUri string, recipes []*m.Recipe) error {
+func SaveRecipes(mongoUri string, recipes []*recipetypes.Recipe) error {
 	session := lib.DBConnect(mongoUri)
 	defer lib.DBClose(session)
 
@@ -35,12 +36,12 @@ func SaveRecipes(mongoUri string, recipes []*m.Recipe) error {
 	return nil
 }
 
-func LoadAllRecipes(mongoUri string) ([]*m.Recipe, error) {
+func LoadAllRecipes(mongoUri string) ([]*recipetypes.Recipe, error) {
 	session := lib.DBConnect(mongoUri)
 	defer lib.DBClose(session)
 
 	collection := session.DB("").C("Recipe")
-	var result []*m.Recipe
+	var result []*recipetypes.Recipe
 	err := collection.Find(nil).All(&result)
 	return result, err
 }

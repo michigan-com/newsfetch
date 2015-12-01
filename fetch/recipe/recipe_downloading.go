@@ -6,6 +6,7 @@ import (
 	"github.com/michigan-com/newsfetch/extraction"
 	"github.com/michigan-com/newsfetch/lib"
 	m "github.com/michigan-com/newsfetch/model"
+	"github.com/michigan-com/newsfetch/model/recipetypes"
 )
 
 var recipeDebugger = lib.NewCondLogger("newsfetch:fetch:recipe")
@@ -32,12 +33,12 @@ func DownloadAndSaveRecipesForArticle(mongoUrl string, article *m.Article) error
 }
 
 type DownloadRecipesResult struct {
-	Recipes            []*m.Recipe
+	Recipes            []*recipetypes.Recipe
 	URLs               []string
 	URLsWithoutRecipes []string
 }
 
-func DownloadRecipesForArticle(article *m.Article) []*m.Recipe {
+func DownloadRecipesForArticle(article *m.Article) []*recipetypes.Recipe {
 	return DownloadRecipesFromUrls([]string{article.Url}).Recipes
 }
 
