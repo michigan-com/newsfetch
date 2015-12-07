@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"regexp"
 	"strconv"
+	"strings"
 )
 
 func GetArticleId(url string) int {
@@ -48,4 +49,22 @@ func GetHost(inputUrl string) (string, error) {
 	}
 
 	return match[1], nil
+}
+
+func IsBlacklisted(url string) bool {
+	blacklist := []string{
+		"/videos/",
+		"/police-blotter/",
+		"/interactives/",
+		"facebook.com",
+		"/errors/404",
+	}
+
+	for _, item := range blacklist {
+		if strings.Contains(url, item) {
+			return true
+		}
+	}
+
+	return false
 }

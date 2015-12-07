@@ -59,7 +59,7 @@ func (t TopPages) Fetch(urls []string, session *mgo.Session) mc.Snapshot {
 
 				// this means we can't find an article ID. It's probably a section front,
 				// so ignore
-				if articleId < 0 {
+				if articleId < 0 || lib.IsBlacklisted(articleUrl) {
 					continue
 				}
 
