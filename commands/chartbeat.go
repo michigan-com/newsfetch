@@ -97,7 +97,7 @@ func RunChartbeatCommands(beats []f.Beat) {
 		sites = strings.Split(siteStr, ",")
 	}
 
-	gnapiDomain := "api.michigan.com"
+	gnapiDomain := "https://api.michigan.com"
 	if globalConfig.GnapiDomain != "" {
 		gnapiDomain = globalConfig.GnapiDomain
 	}
