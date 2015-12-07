@@ -26,6 +26,7 @@ type TrafficSeries struct {
 		Lansing     *m.TrafficSeriesIn `json:"lansingstatejournal.com"`
 		Livingston  *m.TrafficSeriesIn `json:"livingstondaily.com"`
 		Herald      *m.TrafficSeriesIn `json:"thetimesherald.com"`
+		UsaToday    *m.TrafficSeriesIn `json:"usatoday.com"`
 	} `json:"data"`
 }
 
@@ -44,6 +45,8 @@ func (h *TrafficSeries) GetSeries() *m.TrafficSeriesIn {
 		return h.Data.Livingston
 	} else if h.Data.Herald != nil {
 		return h.Data.Herald
+	} else if h.Data.UsaToday != nil {
+		return h.Data.UsaToday
 	}
 
 	return nil
