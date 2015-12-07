@@ -53,8 +53,6 @@ func (q QuickStatsSnapshot) saveMobileSeries(session *mgo.Session) {
 	debugger.Printf("%v", query)
 	query.One(&mobileSeries)
 
-	debugger.Printf("Mobile series: %v", mobileSeries)
-
 	if !mobileSeries.Id.Valid() {
 		// This means there's no mobile series for today
 		mobileSeries.Date = today
@@ -67,7 +65,6 @@ func (q QuickStatsSnapshot) saveMobileSeries(session *mgo.Session) {
 		mobileTotal += stat.PlatformEngaged.M
 	}
 	mobileSeries.AddSeriesValue(mobileTotal)
-	debugger.Printf("mobileSeries.Series = %v", mobileSeries.Series)
 	mobileSeries.Save(session)
 }
 
