@@ -95,8 +95,12 @@ func ExtractBodyFromDocument(doc *gq.Document, fromJSON bool, includeTitle bool)
 }
 
 func ExtractTitleFromDocument(doc *gq.Document) string {
-	title := doc.Find("h1[itemprop=headline]")
-	return strings.TrimSpace(title.Text())
+	title := doc.Find("h1[itemprop=headline]").Text()
+
+	if title == "" {
+		title = doc.Find("h1[itemprop=name]").Text()
+	}
+	return strings.TrimSpace(title)
 }
 
 func ExtractSubheadlineFromDocument(doc *gq.Document) (subheadline string) {

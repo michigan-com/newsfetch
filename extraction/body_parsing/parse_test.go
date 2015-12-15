@@ -53,3 +53,23 @@ func TestPhotoExtraction(t *testing.T) {
 	photo := ExtractPhotoInfo(doc)
 	fmt.Printf("%v", photo)
 }
+
+func TestTitleExtraction(t *testing.T) {
+	urls := []string{
+		"http://www.freep.com/picture-gallery/sports/high-school/2015/12/13/2015-free-press-dream-team-banquet/77265886/",
+		"http://www.freep.com/story/sports/college/michigan-state/joe-rexrode/2015/12/15/michigan-state-football-basketball/77355566/",
+		"http://www.detroitnews.com/picture-gallery/sports/nba/pistons/2015/11/30/pistons-116-rockets-105/76590382/",
+	}
+
+	for _, url := range urls {
+		doc, err := goquery.NewDocument(url)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		title := ExtractTitleFromDocument(doc)
+		if title == "" {
+			t.Fatal("Failed to parse title from %s", url)
+		}
+	}
+}
