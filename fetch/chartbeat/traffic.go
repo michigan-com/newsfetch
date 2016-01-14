@@ -18,7 +18,9 @@ type TrafficSeries struct {
 		Start int `json:"start"`
 		End   int `json:"end"`
 		// frequency is the data sample interval in minutes
-		Frequency   int                `json:"frequency"`
+		Frequency int `json:"frequency"`
+
+		// Michigan.com
 		Freep       *m.TrafficSeriesIn `json:"freep.com"`
 		DetroitNews *m.TrafficSeriesIn `json:"detroitnews.com"`
 		BattleCreek *m.TrafficSeriesIn `json:"battlecreekenquirer.com"`
@@ -26,7 +28,24 @@ type TrafficSeries struct {
 		Lansing     *m.TrafficSeriesIn `json:"lansingstatejournal.com"`
 		Livingston  *m.TrafficSeriesIn `json:"livingstondaily.com"`
 		Herald      *m.TrafficSeriesIn `json:"thetimesherald.com"`
-		UsaToday    *m.TrafficSeriesIn `json:"usatoday.com"`
+
+		// Usat
+		UsaToday *m.TrafficSeriesIn `json:"usatoday.com"`
+
+		// Tennessean
+		Tennessean *m.TrafficSeriesIn `json:"tennessean.com"`
+
+		// Central Ohio omg why are there so many sites help
+		Mansfield        *m.TrafficSeriesIn `json:"mansfieldnewsjournal.com"`
+		Newark           *m.TrafficSeriesIn `json:"newarkadvocate.com"`
+		Zanesville       *m.TrafficSeriesIn `json:"zanesvilletimesrecorder.com"`
+		Chillicothe      *m.TrafficSeriesIn `json:"chillicothegazette.com"`
+		Lancaster        *m.TrafficSeriesIn `json:"lancastereaglegazette.com"`
+		Marion           *m.TrafficSeriesIn `json:"marionstar.com"`
+		TheNewsMessenger *m.TrafficSeriesIn `json:"thenews-messenger.com"`
+		Coshocton        *m.TrafficSeriesIn `json:"coshoctontribune.com"`
+		Bucyrus          *m.TrafficSeriesIn `json:"bucyrustelegraphforum.com"`
+		PortClinton      *m.TrafficSeriesIn `json:"portclintonnewsherald.com"`
 	} `json:"data"`
 }
 
@@ -47,6 +66,28 @@ func (h *TrafficSeries) GetSeries() *m.TrafficSeriesIn {
 		return h.Data.Herald
 	} else if h.Data.UsaToday != nil {
 		return h.Data.UsaToday
+	} else if h.Data.Tennessean != nil {
+		return h.Data.Tennessean
+	} else if h.Data.Mansfield != nil {
+		return h.Data.Mansfield
+	} else if h.Data.Newark != nil {
+		return h.Data.Newark
+	} else if h.Data.Zanesville != nil {
+		return h.Data.Zanesville
+	} else if h.Data.Chillicothe != nil {
+		return h.Data.Chillicothe
+	} else if h.Data.Lancaster != nil {
+		return h.Data.Lancaster
+	} else if h.Data.Marion != nil {
+		return h.Data.Marion
+	} else if h.Data.TheNewsMessenger != nil {
+		return h.Data.TheNewsMessenger
+	} else if h.Data.Coshocton != nil {
+		return h.Data.Coshocton
+	} else if h.Data.Bucyrus != nil {
+		return h.Data.Bucyrus
+	} else if h.Data.PortClinton != nil {
+		return h.Data.PortClinton
 	}
 
 	return nil
