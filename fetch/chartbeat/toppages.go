@@ -95,11 +95,21 @@ func (t TopPages) Fetch(urls []string, session *mgo.Session) mc.Snapshot {
 	snapshotDoc.Articles = SortTopArticles(topArticles)
 	snapshotDoc.Created_at = time.Now()
 
-	// For the top 100 pages, make sure we've processed the body and generated
+	// For the top 50 pages, make sure we've processed the body and generated
 	// an Article{} document (and summary)
 	var articleBodyWait sync.WaitGroup
 	articleCol := session.DB("").C("Article")
-	for index, topArticle := range snapshotDoc.Articles {
+
+	numToSummarize := 50
+	if len(snapshotDoc.Articles) < numToSummarize {
+		numToSummarize = len(snapshotDoc.Articles)
+	}
+
+	chartbeatDebugger.Printf("Number summarizing: %d", numToSummarize)
+
+	for i := 0; i < numToSummarize; i++  {
+		topArticle := snapshotDoc.Articles[i]
+
 		// Process each article
 		go func(url string, index int) {
 			articleBodyWait.Add(1)
@@ -124,7 +134,7 @@ func (t TopPages) Fetch(urls []string, session *mgo.Session) mc.Snapshot {
 			}
 
 			articleBodyWait.Done()
-		}(topArticle.Url, index)
+		}(topArticle.Url, i)
 	}
 	articleBodyWait.Wait()
 
