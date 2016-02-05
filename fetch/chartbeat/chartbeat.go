@@ -78,7 +78,7 @@ var TrafficSeriesApi = ChartbeatApi{
 
 var QuickStatsApi = ChartbeatApi{
 	ChartbeatUrl{"live/quickstats/v4", "all_platforms=1&loyalty=1"},
-	"quickstats,mobile-series",
+	"quickstats",
 	Quickstats{},
 }
 
