@@ -50,7 +50,7 @@ func (q QuickStatsSnapshot) saveMobileSeries(session *mgo.Session) {
 	}).
 		Sort("-_id")
 
-	debugger.Printf("%v", query)
+	//debugger.Printf("%v", query)
 	query.One(&mobileSeries)
 
 	if !mobileSeries.Id.Valid() {

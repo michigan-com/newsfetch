@@ -15,7 +15,7 @@ type MobileSeries struct {
 }
 
 func (m *MobileSeries) AddSeriesValue(value int) {
-	debugger.Printf("Series while in AddSeriesValue: %v", m.Series)
+	//debugger.Printf("Series while in AddSeriesValue: %v", m.Series)
 	seriesSlice := m.Series[0:len(m.Series)]
 	seriesSlice = append(seriesSlice, value)
 	m.Series = seriesSlice
