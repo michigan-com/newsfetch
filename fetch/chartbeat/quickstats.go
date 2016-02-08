@@ -7,6 +7,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"fmt"
+	"errors"
 
 	"gopkg.in/mgo.v2"
 
@@ -49,6 +51,7 @@ func (q Quickstats) Fetch(urls []string, session *mgo.Session) m.Snapshot {
 		quickStats = append(quickStats, stats)
 	}
 
+
 	snapshot := m.QuickStatsSnapshot{}
 	snapshot.Created_at = time.Now()
 	snapshot.Stats = SortQuickStats(quickStats)
@@ -81,6 +84,10 @@ func GetQuickStats(url string) (*m.QuickStats, error) {
 	if err != nil {
 		chartbeatError.Printf("Failed to parse json body from url %s: %v", url, err)
 		return nil, err
+	} else if quickStatsResp.Data == nil || quickStatsResp.Data.Stats == nil {
+		err = errors.New(fmt.Sprintf("Data or Stats is nil for url %s", url))
+		chartbeatError.Println(err)
+		return nil, err
 	}
 
 	quickStats := quickStatsResp.Data.Stats
@@ -90,6 +97,9 @@ func GetQuickStats(url string) (*m.QuickStats, error) {
 }
 
 func SortQuickStats(quickStats []*m.QuickStats) []*m.QuickStats {
-	sort.Sort(QuickStatsSort(quickStats))
+	chartbeatDebugger.Println("quickstat length %s", len(quickStats));
+	if len(quickStats) > 0 {
+		sort.Sort(QuickStatsSort(quickStats))
+	}
 	return quickStats
 }
