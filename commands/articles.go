@@ -23,7 +23,7 @@ type SummaryResponse struct {
 }
 
 func processSummaries() (*SummaryResponse, error) {
-	lib.Logger.Println("Sending request to brevity to process summaries")
+	artDebugger.Println("Sending request to brevity to process summaries")
 
 	if globalConfig.SummaryVENV == "" {
 		return nil, fmt.Errorf("Missing SUMMARY_VENV environtment variable, skipping summarizer")
@@ -32,7 +32,7 @@ func processSummaries() (*SummaryResponse, error) {
 	cmd := fmt.Sprintf("%s/bin/python", globalConfig.SummaryVENV)
 	pyScript := fmt.Sprintf("%s/bin/summary.py", globalConfig.SummaryVENV)
 
-	lib.Logger.Printf("Executing command: %s %s %s", cmd, pyScript, globalConfig.MongoUrl)
+	artDebugger.Printf("Executing command: %s %s %s", cmd, pyScript, globalConfig.MongoUrl)
 
 	out, err := exec.Command(cmd, pyScript, globalConfig.MongoUrl).Output()
 	if err != nil {
