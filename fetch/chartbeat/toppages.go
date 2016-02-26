@@ -126,7 +126,6 @@ func (t TopPages) Fetch(urls []string, session *mgo.Session) mc.Snapshot {
 			chartbeatDebugger.Printf("Processing article %d (url %s)", index, url)
 
 			processor := a.ParseArticleAtURL(url, true)
-			chartbeatDebugger.Printf("Processor.Err: %v", processor.Err)
 			if processor.Err != nil {
 				chartbeatError.Println("Failed to process article: ", processor.Err)
 			} else {
@@ -138,8 +137,6 @@ func (t TopPages) Fetch(urls []string, session *mgo.Session) mc.Snapshot {
 	}
 
 	articleBodyWait.Wait()
-
-	chartbeatDebugger.Println("Done waiting")
 
 	// Compile the snapshot
 	snapshot := mc.TopPagesSnapshot{}
