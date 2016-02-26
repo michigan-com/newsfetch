@@ -48,6 +48,7 @@ func processSummaries() (*SummaryResponse, error) {
 }
 
 func processArticle(articleUrl string, session *mgo.Session) bool {
+	artDebugger.Println("article url ", articleUrl)
 	processor := a.ParseArticleAtURL(articleUrl, true)
 	if processor.Err != nil {
 		artDebugger.Println("Failed to process article: ", processor.Err)

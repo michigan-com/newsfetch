@@ -61,9 +61,10 @@ func ParseArticleAtURL(articleUrl string, runExtraction bool) *ArticleProcess {
 
 		if bodyExtract.Text != "" {
 			artDebugger.Printf(
-				"Extracted extracted contains %d characters, %d paragraphs.",
+				"Extracted extracted contains %d characters, %d paragraphs. for article %s",
 				len(strings.Split(bodyExtract.Text, "")),
 				len(strings.Split(bodyExtract.Text, "\n\n")),
+				articleIn.Url,
 			)
 			article.BodyText = bodyExtract.Text
 		}
