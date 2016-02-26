@@ -126,7 +126,12 @@ func RunChartbeatCommands(beats []f.Beat) {
 
 		getElapsedTime(&startTime)
 
-		processSummaries()
+		sumRes, err := processSummaries()
+		if err != nil {
+			chartbeatDebugger.Println("Summarizer failed: ", err)
+		} else {
+			chartbeatDebugger.Printf("%v", sumRes)
+		}
 
 		if loop != -1 {
 			chartbeatDebugger.Printf("Looping! Sleeping for %d seconds...", loop)

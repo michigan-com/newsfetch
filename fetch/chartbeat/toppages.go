@@ -109,11 +109,10 @@ func (t TopPages) Fetch(urls []string, session *mgo.Session) mc.Snapshot {
 
 	for i := 0; i < numToSummarize; i++  {
 		topArticle := snapshotDoc.Articles[i]
+		articleBodyWait.Add(1)
 
 		// Process each article
 		go func(url string, index int) {
-			articleBodyWait.Add(1)
-
 			// First, see if the article exists in the DB. if it does, don't worry about it
 			article := &m.Article{}
 			url = "http://" + url
