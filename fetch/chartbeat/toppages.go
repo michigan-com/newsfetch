@@ -120,7 +120,6 @@ func (t TopPages) Fetch(urls []string, session *mgo.Session) mc.Snapshot {
 			articleCol.Find(bson.M{"url": url}).One(&article)
 
 			if article.Id.Valid() {
-				chartbeatDebugger.Println("Found already existing article ", url)
 				articleBodyWait.Done()
 				return
 			}
@@ -139,6 +138,8 @@ func (t TopPages) Fetch(urls []string, session *mgo.Session) mc.Snapshot {
 	}
 
 	articleBodyWait.Wait()
+
+	chartbeatDebugger.Println("Done waiting")
 
 	// Compile the snapshot
 	snapshot := mc.TopPagesSnapshot{}
