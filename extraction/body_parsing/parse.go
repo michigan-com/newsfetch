@@ -4,6 +4,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"fmt"
 
 	gq "github.com/PuerkitoBio/goquery"
 	"github.com/michigan-com/newsfetch/extraction/classify"
@@ -95,11 +96,18 @@ func ExtractBodyFromDocument(doc *gq.Document, fromJSON bool, includeTitle bool)
 }
 
 func ExtractTitleFromDocument(doc *gq.Document) string {
-	title := doc.Find("h1[itemprop=headline]").Text()
+	headlineOptions := []string{"headline", "name", "name headline", "headline name"}
+	title := ""
 
-	if title == "" {
-		title = doc.Find("h1[itemprop=name]").Text()
+	for _, option := range headlineOptions {
+		findString := fmt.Sprintf("h1[itemprop=\"%s\"]", option)
+		Debugger.Println("Looking for ", findString)
+		title = doc.Find(findString).Text()
+		if title != "" {
+			break
+		}
 	}
+
 	return strings.TrimSpace(title)
 }
 
