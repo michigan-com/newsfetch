@@ -101,7 +101,6 @@ func ExtractTitleFromDocument(doc *gq.Document) string {
 
 	for _, option := range headlineOptions {
 		findString := fmt.Sprintf("h1[itemprop=\"%s\"]", option)
-		Debugger.Println("Looking for ", findString)
 		title = doc.Find(findString).Text()
 		if title != "" {
 			break
@@ -199,7 +198,8 @@ func ExtractPhotoInfo(doc *gq.Document) (photo *m.Photo) {
 	caption := doc.Find(".cutline").Text()
 	credit := doc.Find(".credit").Text()
 
-	if ogImage == "" || thumbImage == "" {
+
+	if ogImage == "" {
 		return
 	}
 
@@ -215,6 +215,10 @@ func ExtractPhotoInfo(doc *gq.Document) (photo *m.Photo) {
 		photo.Thumbnail.Url = thumbImage
 		photo.Thumbnail.Width = thumbWidth
 		photo.Thumbnail.Height = thumbHeight
+	} else {
+		photo.Thumbnail.Url = ogImage
+		photo.Thumbnail.Width = ogWidth
+		photo.Thumbnail.Height = ogHeight
 	}
 
 	return
