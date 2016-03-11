@@ -10,21 +10,10 @@ import (
 
   "github.com/michigan-com/newsfetch/lib"
   m "github.com/michigan-com/newsfetch/model/chartbeat"
+  h "github.com/michigan-com/newsfetch/model/historical"
 )
 
 var histDebugger = lib.NewCondLogger("newsfetch:commands:historical")
-
-type Referrer struct {
-  Site string `bson:"site"`
-  TotalViewers float64 `bson:"visitors"`
-  PublicationsCount []bson.M `bson:"publicationsCount"`
-}
-
-type HistoricalEntry struct {
-	Id        bson.ObjectId `bson:"_id,omitempty"`
-	Timestamp time.Time     `bson:"timestamp"`
-	Referrers    []Referrer   `bson:"referrers"`
-}
 
 type ByVisits []Referrer
 
@@ -39,8 +28,8 @@ var cmdHistorical = &cobra.Command{
 	Short: "Compile a history data to keep track of", Run: func(cmd *cobra.Command, args []string) {
 		startTime = time.Now()
     referrerSnapshot := m.ReferrersSnapshot{}
-    var newRecord = HistoricalEntry{}
-    var referrerMap = make(map[string]Referrer)
+    var newRecord = h.HistoricalEntry{}
+    var referrerMap = make(map[string]h.Referrer)
   	var session *mgo.Session
   	if globalConfig.MongoUrl != "" {
   		session = lib.DBConnect(globalConfig.MongoUrl)
@@ -85,7 +74,7 @@ var cmdHistorical = &cobra.Command{
       }
     }
 
-    referrers := make([]Referrer, 0, len(referrerMap))
+    referrers := make([]h.Referrer, 0, len(referrerMap))
     for _, ref := range referrerMap {
       if ref.TotalViewers >= MIN_VISITS {
         referrers = append(referrers, ref)
