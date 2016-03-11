@@ -23,7 +23,7 @@ type Referrer struct {
 type HistoricalEntry struct {
 	Id        bson.ObjectId `bson:"_id,omitempty"`
 	Timestamp time.Time     `bson:"timestamp"`
-	Series    []Referrer   `bson:"series"`
+	Referrers    []Referrer   `bson:"referrers"`
 }
 
 type ByVisits []Referrer
@@ -36,7 +36,7 @@ var MIN_VISITS = 5.0
 
 var cmdHistorical = &cobra.Command{
 	Use:   "historical",
-	Short: "Compile series data for a day", Run: func(cmd *cobra.Command, args []string) {
+	Short: "Compile a history data to keep track of", Run: func(cmd *cobra.Command, args []string) {
 		startTime = time.Now()
     referrerSnapshot := m.ReferrersSnapshot{}
     var newRecord = HistoricalEntry{}
@@ -85,18 +85,19 @@ var cmdHistorical = &cobra.Command{
       }
     }
 
-    series := make([]Referrer, 0, len(referrerMap))
+    referrers := make([]Referrer, 0, len(referrerMap))
     for _, ref := range referrerMap {
       if ref.TotalViewers >= MIN_VISITS {
-        series = append(series, ref)
+        referrers = append(referrers, ref)
       }
     }
-    sort.Sort(ByVisits(series))
+    sort.Sort(ByVisits(referrers))
 
     newRecord.Timestamp = time.Now()
-    newRecord.Series = series
+    newRecord.Referrers = referrers
 
     saveCollection := session.DB("").C("History")
+
     saveCollection.Insert(newRecord)
 
     if err != nil {
