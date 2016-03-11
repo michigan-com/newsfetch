@@ -15,7 +15,7 @@ import (
 
 var histDebugger = lib.NewCondLogger("newsfetch:commands:historical")
 
-type ByVisits []Referrer
+type ByVisits []h.Referrer
 
 func (a ByVisits) Len() int { return len(a) }
 func (a ByVisits) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
@@ -45,6 +45,7 @@ var cmdHistorical = &cobra.Command{
 
     for _, sourceRef := range referrerSnapshot.Referrers {
       source := sourceRef.Source
+			histDebugger.Printf("snapshot is %s", referrerSnapshot)
 
       for site, value := range sourceRef.Referrers {
         numValue := value.(float64)
@@ -53,7 +54,7 @@ var cmdHistorical = &cobra.Command{
 
         if _, ok := referrerMap[site]; !ok {
           pubViews := make ([]bson.M, 0,  len(referrerSnapshot.Referrers))
-          referrerMap[site] = Referrer{
+          referrerMap[site] = h.Referrer{
             Site: site,
             TotalViewers: numValue,
             PublicationsCount: append(pubViews, bson.M{
