@@ -68,6 +68,7 @@ func AddCommands() {
 		cmdArticles,
 		cmdVersion,
 		cmdChartbeat,
+		cmdHistorical,
 	)
 
 	cmdRecipes.AddCommand(cmdReprocessRecipies)
