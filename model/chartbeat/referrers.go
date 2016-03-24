@@ -2,7 +2,7 @@ package model
 
 import (
 	"time"
-
+	"errors"
   "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -26,8 +26,9 @@ func (r ReferrersSnapshot) Save(session *mgo.Session) {
 
 	latest := &ReferrersSnapshot{};
 
-	err = historyCollection.Find(bson.M{}).Sort("created_at").One(latest)
-	if err == Error("not found") || latest.Created_at.After(time.Now().Add(time.Duration(5)* time.Minute)) {
+	err = historyCollection.Find(bson.M{}).Sort("-created_at").One(latest)
+	fiveMinutesAgo := time.Now().Add(-time.Duration(5)* time.Minute)
+	if err == errors.New("not found") || latest.Created_at.Before(fiveMinutesAgo) {
     debugger.Printf("Saved a Snapshot to ReferrerHistory Collection")
 		r.Expire_at = r.Expire_at.Add(time.Duration(24*7)* time.Hour)
 		historyCollection.Insert(r)
