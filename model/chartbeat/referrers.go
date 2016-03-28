@@ -26,7 +26,7 @@ func (r ReferrersSnapshot) Save(session *mgo.Session) {
 		ExpireAfter: 24*7 * time.Hour,
 	}
 
-	err := collection.EnsureIndex(shortIndex)
+	err := realtimeCollection.EnsureIndex(shortIndex)
 
 	if err != nil {
 		debugger.Printf("Failed to ensure Index on Referrers collection: %v", err)
