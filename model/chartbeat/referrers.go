@@ -11,14 +11,36 @@ type ReferrersSnapshot struct {
 	Id         bson.ObjectId `bson:"_id,omitempty"`
 	Created_at time.Time     `bson:"created_at"`
 	Referrers  []*Referrers  `bson:"referrers"`
-	Expire_at  time.Time     `bson:"expire_at"`
 }
 
 func (r ReferrersSnapshot) Save(session *mgo.Session) {
-  collection := session.DB("").C("Referrers")
+  realtimeCollection := session.DB("").C("Referrers")
   historyCollection := session.DB("").C("ReferrerHistory")
-	r.Expire_at = r.Created_at.Add(time.Duration(30)* time.Second)
-  err := collection.Insert(r)
+
+	shortIndex := mgo.Index{
+	    Key: []string{"created_at"},
+			ExpireAfter: 30 * time.Second,
+	}
+	longIndex := mgo.Index{
+	    Key: []string{"created_at"},
+			ExpireAfter: 24*7 * time.Hour,
+	}
+
+	err := collection.EnsureIndex(shortIndex)
+
+	if err != nil {
+    debugger.Printf("Failed to ensure Index on Referrers collection: %v", err)
+    return
+  }
+
+	err = historyCollection.EnsureIndex(longIndex)
+
+	if err != nil {
+    debugger.Printf("Failed to ensure Index on ReferrerHistory collection: %v", err)
+    return
+  }
+
+  err = realtimeCollection.Insert(r)
   if err != nil {
     debugger.Printf("Failed to insert Referrers snapshot: %v", err)
     return
@@ -26,15 +48,14 @@ func (r ReferrersSnapshot) Save(session *mgo.Session) {
 
 	latest := &ReferrersSnapshot{};
 
-	err = historyCollection.Find(bson.M{}).Sort("-created_at").One(latest)
 	fiveMinutesAgo := time.Now().Add(-time.Duration(5)* time.Minute)
+
+	err = historyCollection.Find(bson.M{}).Sort("-created_at").One(latest)
+
 	if err == errors.New("not found") || latest.Created_at.Before(fiveMinutesAgo) {
     debugger.Printf("Saved a Snapshot to ReferrerHistory Collection")
-		r.Expire_at = r.Expire_at.Add(time.Duration(24*7)* time.Hour)
 		historyCollection.Insert(r)
 	}
-	// remove once indexes are inforced
-  removeOldSnapshots(collection)
 }
 
 type Referrers struct {
