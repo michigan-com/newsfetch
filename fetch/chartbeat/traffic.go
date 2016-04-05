@@ -46,6 +46,12 @@ type TrafficSeries struct {
 		Coshocton        *m.TrafficSeriesIn `json:"coshoctontribune.com"`
 		Bucyrus          *m.TrafficSeriesIn `json:"bucyrustelegraphforum.com"`
 		PortClinton      *m.TrafficSeriesIn `json:"portclintonnewsherald.com"`
+
+		// Central Ohio omg why are there so many sites help
+		DesMoines        *m.TrafficSeriesIn `json:"desmoinesregister.com"`
+		PressCitizen           *m.TrafficSeriesIn `json:"press-citizen.com"`
+		Juice       *m.TrafficSeriesIn `json:"dmjuice.com"`
+		HawkCentral      *m.TrafficSeriesIn `json:"hawkcentral.com"`
 	} `json:"data"`
 }
 
@@ -88,6 +94,14 @@ func (h *TrafficSeries) GetSeries() *m.TrafficSeriesIn {
 		return h.Data.Bucyrus
 	} else if h.Data.PortClinton != nil {
 		return h.Data.PortClinton
+	} else if h.Data.DesMoines != nil {
+		return h.Data.DesMoines
+	} else if h.Data.PressCitizen != nil {
+		return h.Data.PressCitizen
+	} else if h.Data.Juice != nil {
+		return h.Data.Juice
+	} else if h.Data.HawkCentral != nil {
+		return h.Data.HawkCentral
 	}
 
 	return nil

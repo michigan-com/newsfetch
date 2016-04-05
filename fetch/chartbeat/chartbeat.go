@@ -62,7 +62,7 @@ func (c ChartbeatApi) Run(session *mgo.Session, apiKey, gnapiDomain string, site
 		chartbeatDebugger.Println(url)
 		resp, err := http.Get(url)
 		if err != nil {
-			chartbeatDebugger.Printf("Failed to update mapi url %s", url)
+			chartbeatDebugger.Printf("Failed to update mapi url %s: %v", url, err)
 			return
 		}
 		resp.Body.Close()
