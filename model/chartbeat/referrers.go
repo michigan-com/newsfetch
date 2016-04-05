@@ -2,8 +2,8 @@ package model
 
 import (
 	"time"
-
-  "gopkg.in/mgo.v2"
+	"errors"
+	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -14,15 +14,48 @@ type ReferrersSnapshot struct {
 }
 
 func (r ReferrersSnapshot) Save(session *mgo.Session) {
-  collection := session.DB("").C("Referrers")
-  err := collection.Insert(r)
+	realtimeCollection := session.DB("").C("Referrers")
+	historyCollection := session.DB("").C("ReferrerHistory")
 
-  if err != nil {
-    debugger.Printf("Failed to insert Referrers snapshot: %v", err)
-    return
-  }
+	shortIndex := mgo.Index{
+		Key: []string{"created_at"},
+		ExpireAfter: 30 * time.Second,
+	}
+	longIndex := mgo.Index{
+		Key: []string{"created_at"},
+		ExpireAfter: 24*7 * time.Hour,
+	}
 
-  removeOldSnapshots(collection)
+	err := realtimeCollection.EnsureIndex(shortIndex)
+
+	if err != nil {
+		debugger.Printf("Failed to ensure Index on Referrers collection: %v", err)
+		return
+	}
+
+	err = historyCollection.EnsureIndex(longIndex)
+
+	if err != nil {
+		debugger.Printf("Failed to ensure Index on ReferrerHistory collection: %v", err)
+		return
+	}
+
+	err = realtimeCollection.Insert(r)
+	if err != nil {
+		debugger.Printf("Failed to insert Referrers snapshot: %v", err)
+		return
+	}
+
+	latest := &ReferrersSnapshot{};
+
+	fiveMinutesAgo := time.Now().Add(-time.Duration(5)* time.Minute)
+
+	err = historyCollection.Find(bson.M{}).Sort("-created_at").One(latest)
+
+	if err == errors.New("not found") || latest.Created_at.Before(fiveMinutesAgo) {
+		debugger.Printf("Saved a Snapshot to ReferrerHistory Collection")
+		historyCollection.Insert(r)
+	}
 }
 
 type Referrers struct {
